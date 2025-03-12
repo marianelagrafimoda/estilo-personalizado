@@ -1,0 +1,124 @@
+
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Menu, ShoppingCart, X, User } from 'lucide-react';
+import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
+import Cart from './Cart';
+
+const Navbar: React.FC = () => {
+  const { totalItems } = useCart();
+  const { isAuthenticated, isAdmin, logout } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+  const toggleCart = () => setIsCartOpen(!isCartOpen);
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur shadow-sm py-2' : 'bg-transparent py-4'}`}>
+        <div className="container-custom mx-auto flex justify-between items-center">
+          <Link to="/" className="flex items-center space-x-2">
+            <img src="/logo.svg" alt="GrafiModa" className="h-10" />
+            <span className="font-serif text-xl font-medium">GrafiModa</span>
+          </Link>
+          
+          <div className="hidden md:flex items-center space-x-8">
+            <Link to="/" className="text-foreground hover:text-lilac-dark transition-colors">Inicio</Link>
+            <Link to="/#productos" className="text-foreground hover:text-lilac-dark transition-colors">Productos</Link>
+            {isAuthenticated && isAdmin ? (
+              <Link to="/admin" className="text-foreground hover:text-lilac-dark transition-colors">
+                Panel de Administración
+              </Link>
+            ) : null}
+            {isAuthenticated ? (
+              <button onClick={logout} className="text-foreground hover:text-lilac-dark transition-colors">
+                Cerrar Sesión
+              </button>
+            ) : (
+              <Link to="/login" className="text-foreground hover:text-lilac-dark transition-colors">
+                Iniciar Sesión
+              </Link>
+            )}
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={toggleCart}
+              className="relative p-2 hover:bg-lilac/10 rounded-full transition-colors"
+              aria-label="Ver carrito"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-lilac text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
+            </button>
+            
+            <button 
+              onClick={toggleMobileMenu} 
+              className="p-2 md:hidden hover:bg-lilac/10 rounded-full transition-colors"
+              aria-label="Menú"
+            >
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+        
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-md animate-slide-up">
+            <div className="container-custom mx-auto py-4 flex flex-col space-y-4">
+              <Link to="/" onClick={toggleMobileMenu} className="text-foreground hover:text-lilac-dark py-2 transition-colors">
+                Inicio
+              </Link>
+              <Link to="/#productos" onClick={toggleMobileMenu} className="text-foreground hover:text-lilac-dark py-2 transition-colors">
+                Productos
+              </Link>
+              {isAuthenticated && isAdmin ? (
+                <Link to="/admin" onClick={toggleMobileMenu} className="text-foreground hover:text-lilac-dark py-2 transition-colors">
+                  Panel de Administración
+                </Link>
+              ) : null}
+              {isAuthenticated ? (
+                <button 
+                  onClick={() => {
+                    logout();
+                    toggleMobileMenu();
+                  }} 
+                  className="text-left text-foreground hover:text-lilac-dark py-2 transition-colors"
+                >
+                  Cerrar Sesión
+                </button>
+              ) : (
+                <Link to="/login" onClick={toggleMobileMenu} className="text-foreground hover:text-lilac-dark py-2 transition-colors">
+                  Iniciar Sesión
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
+      </nav>
+      
+      {/* Cart Drawer */}
+      <Cart isOpen={isCartOpen} onClose={toggleCart} />
+      
+      {/* Spacer to push content below fixed navbar */}
+      <div className="h-[70px]"></div>
+    </>
+  );
+};
+
+export default Navbar;
