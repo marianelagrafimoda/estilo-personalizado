@@ -13,20 +13,40 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
   const { toast } = useToast();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   
   const availableSizes = product.sizes.filter(size => size.available);
   
   const handleAddToCart = () => {
-    if (selectedSize) {
-      addToCart(product, selectedSize);
+    if (selectedSize && selectedColor) {
+      // Check if we have stock
+      if (product.stockQuantity <= 0) {
+        toast({
+          title: "Sin stock",
+          description: "Este producto está agotado actualmente.",
+          variant: "destructive",
+          duration: 3000,
+        });
+        return;
+      }
+      
+      addToCart(product, selectedSize, selectedColor);
       toast({
         title: "¡Producto agregado!",
-        description: `${product.title} en talla ${selectedSize} se agregó al carrito.`,
+        description: `${product.title} en talla ${selectedSize} y color ${selectedColor} se agregó al carrito.`,
         duration: 3000,
       });
-      // Reset selected size after adding to cart
+      // Reset selected options after adding to cart
       setSelectedSize(null);
+      setSelectedColor(null);
+    } else {
+      toast({
+        title: "Selección incompleta",
+        description: "Por favor, selecciona talla y color",
+        variant: "destructive",
+        duration: 3000,
+      });
     }
   };
 
@@ -65,17 +85,30 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           className="w-full h-full object-cover transition-transform duration-700 transform group-hover:scale-105"
         />
         <div className={`absolute inset-0 bg-gradient-to-t from-black/50 to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-70' : 'opacity-0'}`}></div>
+        
+        {/* Price tag positioned in the bottom right */}
+        <div className="absolute bottom-2 right-2 bg-white/80 text-black font-bold px-3 py-1 rounded-full shadow">
+          ${product.price.toFixed(2)}
+        </div>
+        
+        {/* Stock indication */}
+        {product.stockQuantity <= 5 && product.stockQuantity > 0 && (
+          <div className="absolute top-2 left-2 bg-amber-500 text-white text-xs px-2 py-1 rounded">
+            ¡Solo quedan {product.stockQuantity}!
+          </div>
+        )}
+        {product.stockQuantity === 0 && (
+          <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+            Agotado
+          </div>
+        )}
       </div>
       
       <div className="p-4">
         <h3 className="font-serif text-xl font-medium mb-2">{product.title}</h3>
         <p className="text-sm mb-3 line-clamp-2" style={{ opacity: 0.9 }}>{product.description}</p>
         
-        <div className="flex justify-between items-center mb-3">
-          <span className="font-medium text-lg">${product.price.toFixed(2)}</span>
-        </div>
-        
-        {availableSizes.length > 0 ? (
+        {availableSizes.length > 0 && product.stockQuantity > 0 ? (
           <>
             <div className="mb-3">
               <p className="text-sm font-medium mb-1">Tallas disponibles:</p>
@@ -96,11 +129,30 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               </div>
             </div>
             
+            <div className="mb-3">
+              <p className="text-sm font-medium mb-1">Colores disponibles:</p>
+              <div className="flex flex-wrap gap-2">
+                {product.colors.map((color) => (
+                  <button
+                    key={color.id}
+                    onClick={() => setSelectedColor(color.id)}
+                    className={`w-8 h-8 rounded-full border-2 transition-transform ${
+                      selectedColor === color.id
+                        ? 'border-lilac transform scale-110'
+                        : 'border-transparent hover:border-gray-300'
+                    }`}
+                    style={{ backgroundColor: color.hex }}
+                    title={color.name}
+                  />
+                ))}
+              </div>
+            </div>
+            
             <button
               onClick={handleAddToCart}
-              disabled={!selectedSize}
+              disabled={!selectedSize || !selectedColor}
               className={`w-full flex items-center justify-center space-x-2 py-2 px-4 rounded-md transition-colors ${
-                selectedSize
+                selectedSize && selectedColor
                   ? 'bg-lilac hover:bg-lilac-dark text-black font-medium'
                   : 'bg-gray-200 text-gray-500 cursor-not-allowed'
               }`}

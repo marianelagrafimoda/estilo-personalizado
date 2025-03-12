@@ -12,6 +12,18 @@ interface CartProps {
 const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
   const { items, removeFromCart, updateQuantity, totalPrice } = useCart();
 
+  // Find color name from product color id
+  const getColorName = (item: any) => {
+    const color = item.product.colors.find((c: any) => c.id === item.selectedColor);
+    return color ? color.name : item.selectedColor;
+  };
+
+  // Find color hex from product color id
+  const getColorHex = (item: any) => {
+    const color = item.product.colors.find((c: any) => c.id === item.selectedColor);
+    return color ? color.hex : "#CCCCCC";
+  };
+
   return (
     <>
       {/* Overlay */}
@@ -55,7 +67,7 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
             ) : (
               <ul className="divide-y">
                 {items.map((item, index) => (
-                  <li key={`${item.product.id}-${item.selectedSize}-${index}`} className="p-4">
+                  <li key={`${item.product.id}-${item.selectedSize}-${item.selectedColor}-${index}`} className="p-4">
                     <div className="flex gap-4">
                       {/* Product Image */}
                       <div className="w-20 h-20 rounded overflow-hidden shrink-0">
@@ -69,13 +81,23 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
                       {/* Product Details */}
                       <div className="flex-1">
                         <h3 className="font-medium">{item.product.title}</h3>
-                        <p className="text-sm text-gray-600 mt-1">Talla: {item.selectedSize}</p>
+                        <div className="flex flex-col gap-1 mt-1">
+                          <p className="text-sm text-gray-600">Talla: {item.selectedSize}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600">Color:</span>
+                            <span 
+                              className="w-4 h-4 rounded-full inline-block border" 
+                              style={{ backgroundColor: getColorHex(item) }}
+                            ></span>
+                            <span className="text-sm text-gray-600">{getColorName(item)}</span>
+                          </div>
+                        </div>
                         <p className="text-sm font-medium mt-1">${item.product.price.toFixed(2)}</p>
                         
                         {/* Quantity Controls */}
                         <div className="flex items-center mt-2">
                           <button 
-                            onClick={() => updateQuantity(item.product.id, item.selectedSize, item.quantity - 1)}
+                            onClick={() => updateQuantity(item.product.id, item.selectedSize, item.selectedColor, item.quantity - 1)}
                             className="p-1 rounded border hover:bg-gray-100 transition-colors"
                             aria-label="Decrease quantity"
                           >
@@ -85,7 +107,7 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
                           <span className="w-8 text-center">{item.quantity}</span>
                           
                           <button 
-                            onClick={() => updateQuantity(item.product.id, item.selectedSize, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.product.id, item.selectedSize, item.selectedColor, item.quantity + 1)}
                             className="p-1 rounded border hover:bg-gray-100 transition-colors"
                             aria-label="Increase quantity"
                           >
@@ -93,7 +115,7 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
                           </button>
                           
                           <button 
-                            onClick={() => removeFromCart(item.product.id, item.selectedSize)}
+                            onClick={() => removeFromCart(item.product.id, item.selectedSize, item.selectedColor)}
                             className="ml-auto p-1 text-red-500 hover:bg-red-50 rounded-full transition-colors"
                             aria-label="Remove item"
                           >

@@ -10,7 +10,11 @@ import {
   Edit3, 
   Save, 
   X, 
-  Palette
+  Palette,
+  Package,
+  Plus,
+  Trash2,
+  CircleDashed
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -25,7 +29,7 @@ import {
 } from '../components/ui/card';
 import { useAuth } from '../contexts/AuthContext';
 import { useSiteInfo } from '../contexts/SiteContext';
-import { useProducts } from '../contexts/ProductContext';
+import { useProducts, Color } from '../contexts/ProductContext';
 import { useToast } from '../hooks/use-toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -51,6 +55,7 @@ const AdminPage: React.FC = () => {
   const [newServiceTitle, setNewServiceTitle] = useState(siteInfo.serviceTitle);
   const [newServiceDesc, setNewServiceDesc] = useState(siteInfo.serviceDescription);
   const [newFaqTitle, setNewFaqTitle] = useState(siteInfo.faqTitle);
+  const [newUniqueStyleTitle, setNewUniqueStyleTitle] = useState(siteInfo.uniqueStyleTitle);
   
   // Product States
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -60,13 +65,23 @@ const AdminPage: React.FC = () => {
     price: 0,
     imageUrl: '',
     cardColor: '#C8B6E2', // Color lila por defecto
+    stockQuantity: 0,
     sizes: [
       { id: 's', name: 'S', available: true },
       { id: 'm', name: 'M', available: true },
       { id: 'l', name: 'L', available: true },
       { id: 'xl', name: 'XL', available: true }
+    ],
+    colors: [
+      { id: 'white', name: 'Blanco', hex: '#FFFFFF' }
     ]
   });
+  
+  // New color states
+  const [newColorName, setNewColorName] = useState('');
+  const [newColorHex, setNewColorHex] = useState('#FFFFFF');
+  const [editingNewColorName, setEditingNewColorName] = useState('');
+  const [editingNewColorHex, setEditingNewColorHex] = useState('#FFFFFF');
 
   React.useEffect(() => {
     // Redirect non-admin users
@@ -86,7 +101,8 @@ const AdminPage: React.FC = () => {
       designDescription: newDesignDesc,
       serviceTitle: newServiceTitle,
       serviceDescription: newServiceDesc,
-      faqTitle: newFaqTitle
+      faqTitle: newFaqTitle,
+      uniqueStyleTitle: newUniqueStyleTitle
     });
     toast({
       title: "¡Actualizado!",
@@ -104,6 +120,44 @@ const AdminPage: React.FC = () => {
 
   const removeCarouselImage = (image: string) => {
     setNewCarouselImages(newCarouselImages.filter(img => img !== image));
+  };
+
+  const handleAddProductColor = () => {
+    if (newColorName && newColorHex) {
+      const colorId = newColorName.toLowerCase().replace(/\s+/g, '-');
+      const newColors = [
+        ...newProduct.colors,
+        { id: colorId, name: newColorName, hex: newColorHex }
+      ];
+      setNewProduct({...newProduct, colors: newColors});
+      setNewColorName('');
+      setNewColorHex('#FFFFFF');
+    }
+  };
+
+  const handleRemoveProductColor = (colorId: string) => {
+    const newColors = newProduct.colors.filter(color => color.id !== colorId);
+    setNewProduct({...newProduct, colors: newColors});
+  };
+
+  const handleAddEditingColor = () => {
+    if (editingProduct && editingNewColorName && editingNewColorHex) {
+      const colorId = editingNewColorName.toLowerCase().replace(/\s+/g, '-');
+      const newColors = [
+        ...editingProduct.colors,
+        { id: colorId, name: editingNewColorName, hex: editingNewColorHex }
+      ];
+      setEditingProduct({...editingProduct, colors: newColors});
+      setEditingNewColorName('');
+      setEditingNewColorHex('#FFFFFF');
+    }
+  };
+
+  const handleRemoveEditingColor = (colorId: string) => {
+    if (editingProduct) {
+      const newColors = editingProduct.colors.filter((color: Color) => color.id !== colorId);
+      setEditingProduct({...editingProduct, colors: newColors});
+    }
   };
 
   const handleAddProduct = () => {
@@ -125,11 +179,15 @@ const AdminPage: React.FC = () => {
         price: 0,
         imageUrl: '',
         cardColor: '#C8B6E2',
+        stockQuantity: 0,
         sizes: [
           { id: 's', name: 'S', available: true },
           { id: 'm', name: 'M', available: true },
           { id: 'l', name: 'L', available: true },
           { id: 'xl', name: 'XL', available: true }
+        ],
+        colors: [
+          { id: 'white', name: 'Blanco', hex: '#FFFFFF' }
         ]
       });
       
@@ -256,9 +314,19 @@ const AdminPage: React.FC = () => {
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-gray-200">
-                  <h3 className="text-lg font-medium mb-3">Sección "Por qué elegirnos"</h3>
+                  <h3 className="text-lg font-medium mb-3">Textos Personalizables</h3>
                   
                   <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Título Personalización</label>
+                      <Input
+                        value={newUniqueStyleTitle}
+                        onChange={(e) => setNewUniqueStyleTitle(e.target.value)}
+                        placeholder="¿Quieres un estilo realmente único?"
+                        className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                      />
+                    </div>
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Título Materiales</label>
@@ -458,6 +526,18 @@ const AdminPage: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
+                  <label className="text-sm font-medium">Cantidad en Stock</label>
+                  <Input
+                    type="number"
+                    value={newProduct.stockQuantity || ''}
+                    onChange={(e) => setNewProduct({...newProduct, stockQuantity: parseInt(e.target.value) || 0})}
+                    placeholder="0"
+                    min="0"
+                    className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                  />
+                </div>
+                
+                <div className="space-y-2">
                   <label className="text-sm font-medium flex items-center">
                     <Palette className="w-4 h-4 mr-2" />
                     Color de la Tarjeta
@@ -499,6 +579,58 @@ const AdminPage: React.FC = () => {
                         {size.name}
                       </button>
                     ))}
+                  </div>
+                </div>
+                
+                <div className="space-y-3 border-t pt-4 mt-2">
+                  <label className="text-sm font-medium">Colores Disponibles</label>
+                  
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {newProduct.colors.map((color) => (
+                      <div key={color.id} className="flex items-center gap-2 bg-gray-100 p-1 pr-2 rounded">
+                        <div 
+                          className="w-6 h-6 rounded-full" 
+                          style={{ backgroundColor: color.hex }}
+                        ></div>
+                        <span className="text-sm">{color.name}</span>
+                        <button 
+                          onClick={() => handleRemoveProductColor(color.id)}
+                          className="text-red-500 hover:text-red-700 ml-1"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex flex-wrap md:flex-nowrap gap-2">
+                    <Input
+                      value={newColorName}
+                      onChange={(e) => setNewColorName(e.target.value)}
+                      placeholder="Nombre del color"
+                      className="border-lilac/30 focus:border-lilac focus:ring-lilac flex-1"
+                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={newColorHex}
+                        onChange={(e) => setNewColorHex(e.target.value)}
+                        className="w-10 h-10 rounded border p-1"
+                      />
+                      <Input
+                        value={newColorHex}
+                        onChange={(e) => setNewColorHex(e.target.value)}
+                        placeholder="#FFFFFF"
+                        className="border-lilac/30 focus:border-lilac focus:ring-lilac w-24"
+                      />
+                    </div>
+                    <Button 
+                      onClick={handleAddProductColor}
+                      className="bg-lilac hover:bg-lilac-dark flex-shrink-0"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Agregar Color
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -555,6 +687,19 @@ const AdminPage: React.FC = () => {
                             />
                           </div>
                           
+                          <div className="flex items-center space-x-2">
+                            <Package className="w-4 h-4 text-gray-500" />
+                            <span className="text-sm font-medium">Stock:</span>
+                            <Input
+                              type="number"
+                              value={editingProduct.stockQuantity || ''}
+                              onChange={(e) => setEditingProduct({...editingProduct, stockQuantity: parseInt(e.target.value) || 0})}
+                              placeholder="0"
+                              min="0"
+                              className="border-lilac/30"
+                            />
+                          </div>
+                          
                           <div className="space-y-2">
                             <label className="text-sm font-medium flex items-center">
                               <Palette className="w-4 h-4 mr-2" />
@@ -592,6 +737,58 @@ const AdminPage: React.FC = () => {
                                   {size.name}
                                 </button>
                               ))}
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <p className="text-sm font-medium mb-1">Colores:</p>
+                            
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              {editingProduct.colors.map((color: Color) => (
+                                <div key={color.id} className="flex items-center gap-2 bg-gray-100 p-1 pr-2 rounded">
+                                  <div 
+                                    className="w-6 h-6 rounded-full" 
+                                    style={{ backgroundColor: color.hex }}
+                                  ></div>
+                                  <span className="text-xs">{color.name}</span>
+                                  <button 
+                                    onClick={() => handleRemoveEditingColor(color.id)}
+                                    className="text-red-500 hover:text-red-700 ml-1"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-2">
+                              <Input
+                                value={editingNewColorName}
+                                onChange={(e) => setEditingNewColorName(e.target.value)}
+                                placeholder="Nombre"
+                                className="border-lilac/30 flex-1 text-sm"
+                              />
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="color"
+                                  value={editingNewColorHex}
+                                  onChange={(e) => setEditingNewColorHex(e.target.value)}
+                                  className="w-8 h-8 rounded border p-1"
+                                />
+                                <Input
+                                  value={editingNewColorHex}
+                                  onChange={(e) => setEditingNewColorHex(e.target.value)}
+                                  placeholder="#FFFFFF"
+                                  className="border-lilac/30 w-20 text-sm"
+                                />
+                              </div>
+                              <Button 
+                                size="sm"
+                                onClick={handleAddEditingColor}
+                                className="bg-lilac hover:bg-lilac-dark"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </Button>
                             </div>
                           </div>
                         </CardContent>
@@ -632,6 +829,12 @@ const AdminPage: React.FC = () => {
                             ></div>
                             <span className="text-xs">{product.cardColor || '#C8B6E2'}</span>
                           </div>
+                          
+                          {/* Stock indicator */}
+                          <div className="absolute top-2 right-2 px-2 py-1 bg-white/80 rounded-md flex items-center">
+                            <Package className="w-4 h-4 mr-1 text-gray-600" />
+                            <span className="text-xs font-medium">{product.stockQuantity || 0}</span>
+                          </div>
                         </div>
                         <CardContent className="p-4">
                           <h3 className="font-medium text-lg">{product.title}</h3>
@@ -648,6 +851,20 @@ const AdminPage: React.FC = () => {
                                 ))}
                             </div>
                           </div>
+                          
+                          {/* Display available colors */}
+                          {product.colors && product.colors.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-1">
+                              {product.colors.map(color => (
+                                <div 
+                                  key={color.id}
+                                  className="w-5 h-5 rounded-full border border-gray-200" 
+                                  style={{ backgroundColor: color.hex }}
+                                  title={color.name}
+                                ></div>
+                              ))}
+                            </div>
+                          )}
                         </CardContent>
                         <CardFooter className="p-4 pt-0 flex justify-between">
                           <Button 
@@ -656,6 +873,7 @@ const AdminPage: React.FC = () => {
                             onClick={() => handleDeleteProduct(product.id)}
                             className="border-red-300 text-red-500 hover:bg-red-50"
                           >
+                            <Trash2 className="w-4 h-4 mr-1" />
                             Eliminar
                           </Button>
                           <Button 

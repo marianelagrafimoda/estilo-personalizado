@@ -17,13 +17,19 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
   const { siteInfo } = useSiteInfo();
   const { items, totalPrice } = useCart();
   
+  // Helper function to get color name
+  const getColorName = (item: any) => {
+    const color = item.product.colors.find((c: any) => c.id === item.selectedColor);
+    return color ? color.name : item.selectedColor;
+  };
+  
   const generateWhatsAppMessage = () => {
     if (mode === 'cart' && items.length > 0) {
       // Mensaje para pedido desde carrito
       let message = "¡Hola! Me gustaría hacer el siguiente pedido:\n\n";
       
       items.forEach((item) => {
-        message += `- ${item.quantity}x ${item.product.title} (Talla: ${item.selectedSize}) - $${(item.product.price * item.quantity).toFixed(2)}\n`;
+        message += `- ${item.quantity}x ${item.product.title} (Talla: ${item.selectedSize}, Color: ${getColorName(item)}) - $${(item.product.price * item.quantity).toFixed(2)}\n`;
       });
       
       message += `\nTotal: $${totalPrice.toFixed(2)}`;

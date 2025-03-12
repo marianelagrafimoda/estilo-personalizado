@@ -70,6 +70,20 @@ a, button {
   transform: scale(1.1) rotate(5deg);
 }
 
+/* Color selection button animation */
+button.color-option {
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+button.color-option:hover {
+  transform: scale(1.15);
+}
+
+button.color-option.selected {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 2px white, 0 0 0 4px rgba(200, 182, 226, 0.8);
+}
+
 /* Loading indicators */
 .loading-dots span {
   animation-name: loading;
@@ -130,5 +144,17 @@ a, button {
 @media (min-width: 1280px) {
   .container-custom {
     max-width: 1280px;
+  }
+}
+
+/* Mobile-first design for admin panel */
+@media (max-width: 768px) {
+  .admin-panels {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .admin-panel {
+    margin-bottom: 1.5rem;
   }
 }

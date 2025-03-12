@@ -7,6 +7,12 @@ export interface Size {
   available: boolean;
 }
 
+export interface Color {
+  id: string;
+  name: string;
+  hex: string;
+}
+
 export interface Product {
   id: string;
   title: string;
@@ -14,7 +20,9 @@ export interface Product {
   price: number;
   imageUrl: string;
   sizes: Size[];
-  cardColor: string; // Nueva propiedad para el color
+  colors: Color[];
+  stockQuantity: number;
+  cardColor: string;
 }
 
 interface ProductContextType {
@@ -52,6 +60,12 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           price: 15.99,
           imageUrl: '/placeholder.svg',
           cardColor: '#C8B6E2', // Color por defecto (lila)
+          stockQuantity: 25,
+          colors: [
+            { id: 'white', name: 'Blanco', hex: '#FFFFFF' },
+            { id: 'black', name: 'Negro', hex: '#000000' },
+            { id: 'blue', name: 'Azul', hex: '#0EA5E9' }
+          ],
           sizes: [
             { id: 's', name: 'S', available: true },
             { id: 'm', name: 'M', available: true },
@@ -66,6 +80,11 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           price: 29.99,
           imageUrl: '/placeholder.svg',
           cardColor: '#E6DEFF', // Color lila claro
+          stockQuantity: 15,
+          colors: [
+            { id: 'gray', name: 'Gris', hex: '#888888' },
+            { id: 'black', name: 'Negro', hex: '#000000' }
+          ],
           sizes: [
             { id: 's', name: 'S', available: false },
             { id: 'm', name: 'M', available: true },
@@ -80,6 +99,11 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           price: 12.99,
           imageUrl: '/placeholder.svg',
           cardColor: '#A78BDA', // Color lila oscuro
+          stockQuantity: 30,
+          colors: [
+            { id: 'white', name: 'Blanco', hex: '#FFFFFF' },
+            { id: 'red', name: 'Rojo', hex: '#EF4444' }
+          ],
           sizes: [
             { id: 'uni', name: 'Única', available: true }
           ]
