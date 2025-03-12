@@ -9,7 +9,8 @@ import {
   ShoppingBag, 
   Edit3, 
   Save, 
-  X 
+  X, 
+  Palette
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -25,6 +26,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useSiteInfo } from '../contexts/SiteContext';
 import { useProducts } from '../contexts/ProductContext';
+import { useToast } from '../hooks/use-toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -33,18 +35,31 @@ const AdminPage: React.FC = () => {
   const { isAuthenticated, isAdmin } = useAuth();
   const { siteInfo, updateSiteInfo } = useSiteInfo();
   const { products, updateProduct, addProduct, removeProduct } = useProducts();
+  const { toast } = useToast();
   
+  // Site Info States
   const [newSlogan, setNewSlogan] = useState(siteInfo.slogan);
   const [newWhatsappNumber, setNewWhatsappNumber] = useState(siteInfo.whatsappNumber);
   const [newCarouselImages, setNewCarouselImages] = useState<string[]>(siteInfo.carouselImages);
   const [newCarouselImage, setNewCarouselImage] = useState('');
   
+  // Textos editables
+  const [newMaterialsTitle, setNewMaterialsTitle] = useState(siteInfo.materialsTitle);
+  const [newMaterialsDesc, setNewMaterialsDesc] = useState(siteInfo.materialsDescription);
+  const [newDesignTitle, setNewDesignTitle] = useState(siteInfo.designTitle);
+  const [newDesignDesc, setNewDesignDesc] = useState(siteInfo.designDescription);
+  const [newServiceTitle, setNewServiceTitle] = useState(siteInfo.serviceTitle);
+  const [newServiceDesc, setNewServiceDesc] = useState(siteInfo.serviceDescription);
+  const [newFaqTitle, setNewFaqTitle] = useState(siteInfo.faqTitle);
+  
+  // Product States
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [newProduct, setNewProduct] = useState({
     title: '',
     description: '',
     price: 0,
     imageUrl: '',
+    cardColor: '#C8B6E2', // Color lila por defecto
     sizes: [
       { id: 's', name: 'S', available: true },
       { id: 'm', name: 'M', available: true },
@@ -64,9 +79,20 @@ const AdminPage: React.FC = () => {
     updateSiteInfo({
       slogan: newSlogan,
       whatsappNumber: newWhatsappNumber,
-      carouselImages: newCarouselImages
+      carouselImages: newCarouselImages,
+      materialsTitle: newMaterialsTitle,
+      materialsDescription: newMaterialsDesc,
+      designTitle: newDesignTitle,
+      designDescription: newDesignDesc,
+      serviceTitle: newServiceTitle,
+      serviceDescription: newServiceDesc,
+      faqTitle: newFaqTitle
     });
-    alert('Información del sitio actualizada con éxito');
+    toast({
+      title: "¡Actualizado!",
+      description: "Información del sitio actualizada con éxito",
+      duration: 3000,
+    });
   };
 
   const addCarouselImage = () => {
@@ -98,6 +124,7 @@ const AdminPage: React.FC = () => {
         description: '',
         price: 0,
         imageUrl: '',
+        cardColor: '#C8B6E2',
         sizes: [
           { id: 's', name: 'S', available: true },
           { id: 'm', name: 'M', available: true },
@@ -106,9 +133,18 @@ const AdminPage: React.FC = () => {
         ]
       });
       
-      alert('Producto agregado con éxito');
+      toast({
+        title: "¡Producto agregado!",
+        description: "El producto ha sido agregado exitosamente",
+        duration: 3000,
+      });
     } else {
-      alert('Por favor complete todos los campos requeridos');
+      toast({
+        title: "Error",
+        description: "Por favor complete todos los campos requeridos",
+        variant: "destructive",
+        duration: 3000,
+      });
     }
   };
 
@@ -124,13 +160,22 @@ const AdminPage: React.FC = () => {
     if (editingProduct) {
       updateProduct(editingProduct.id, editingProduct);
       setEditingProduct(null);
-      alert('Producto actualizado con éxito');
+      toast({
+        title: "¡Actualizado!",
+        description: "Producto actualizado con éxito",
+        duration: 3000,
+      });
     }
   };
 
   const handleDeleteProduct = (productId: string) => {
     if (window.confirm('¿Está seguro que desea eliminar este producto?')) {
       removeProduct(productId);
+      toast({
+        title: "Producto eliminado",
+        description: "El producto ha sido eliminado exitosamente",
+        duration: 3000,
+      });
     }
   };
 
@@ -164,7 +209,7 @@ const AdminPage: React.FC = () => {
         </div>
 
         <Tabs defaultValue="site-info" className="w-full">
-          <TabsList className="w-full mb-8 bg-lilac/20 p-1 rounded-lg">
+          <TabsList className="w-full mb-8 bg-lilac/20 p-1 rounded-lg flex flex-wrap">
             <TabsTrigger value="site-info" className="flex-1 data-[state=active]:bg-lilac data-[state=active]:text-white">
               <Settings className="w-4 h-4 mr-2" />
               Información del Sitio
@@ -208,6 +253,88 @@ const AdminPage: React.FC = () => {
                   <p className="text-xs text-gray-500">
                     Incluya el código de país con el signo +
                   </p>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <h3 className="text-lg font-medium mb-3">Sección "Por qué elegirnos"</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Título Materiales</label>
+                        <Input
+                          value={newMaterialsTitle}
+                          onChange={(e) => setNewMaterialsTitle(e.target.value)}
+                          placeholder="Título para sección de materiales"
+                          className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Descripción Materiales</label>
+                        <Input
+                          value={newMaterialsDesc}
+                          onChange={(e) => setNewMaterialsDesc(e.target.value)}
+                          placeholder="Descripción para sección de materiales"
+                          className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Título Diseño</label>
+                        <Input
+                          value={newDesignTitle}
+                          onChange={(e) => setNewDesignTitle(e.target.value)}
+                          placeholder="Título para sección de diseño"
+                          className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Descripción Diseño</label>
+                        <Input
+                          value={newDesignDesc}
+                          onChange={(e) => setNewDesignDesc(e.target.value)}
+                          placeholder="Descripción para sección de diseño"
+                          className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Título Atención</label>
+                        <Input
+                          value={newServiceTitle}
+                          onChange={(e) => setNewServiceTitle(e.target.value)}
+                          placeholder="Título para sección de atención"
+                          className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Descripción Atención</label>
+                        <Input
+                          value={newServiceDesc}
+                          onChange={(e) => setNewServiceDesc(e.target.value)}
+                          placeholder="Descripción para sección de atención"
+                          className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <h3 className="text-lg font-medium mb-3">Sección "Preguntas Frecuentes"</h3>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Título FAQ</label>
+                    <Input
+                      value={newFaqTitle}
+                      onChange={(e) => setNewFaqTitle(e.target.value)}
+                      placeholder="Título para sección de FAQ"
+                      className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                    />
+                  </div>
                 </div>
               </CardContent>
               <CardFooter>
@@ -331,6 +458,27 @@ const AdminPage: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center">
+                    <Palette className="w-4 h-4 mr-2" />
+                    Color de la Tarjeta
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="color"
+                      value={newProduct.cardColor}
+                      onChange={(e) => setNewProduct({...newProduct, cardColor: e.target.value})}
+                      className="w-10 h-10 rounded border p-1"
+                    />
+                    <Input
+                      value={newProduct.cardColor}
+                      onChange={(e) => setNewProduct({...newProduct, cardColor: e.target.value})}
+                      placeholder="#C8B6E2"
+                      className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
                   <label className="text-sm font-medium">Tallas Disponibles</label>
                   <div className="flex flex-wrap gap-2">
                     {newProduct.sizes.map((size) => (
@@ -406,6 +554,28 @@ const AdminPage: React.FC = () => {
                               className="border-lilac/30"
                             />
                           </div>
+                          
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium flex items-center">
+                              <Palette className="w-4 h-4 mr-2" />
+                              Color de la Tarjeta
+                            </label>
+                            <div className="flex items-center space-x-3">
+                              <input
+                                type="color"
+                                value={editingProduct.cardColor || '#C8B6E2'}
+                                onChange={(e) => setEditingProduct({...editingProduct, cardColor: e.target.value})}
+                                className="w-10 h-10 rounded border p-1"
+                              />
+                              <Input
+                                value={editingProduct.cardColor || '#C8B6E2'}
+                                onChange={(e) => setEditingProduct({...editingProduct, cardColor: e.target.value})}
+                                placeholder="#C8B6E2"
+                                className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                              />
+                            </div>
+                          </div>
+
                           <div>
                             <p className="text-sm font-medium mb-1">Tallas:</p>
                             <div className="flex flex-wrap gap-2">
@@ -453,6 +623,15 @@ const AdminPage: React.FC = () => {
                             alt={product.title} 
                             className="w-full h-full object-cover"
                           />
+                          <div 
+                            className="absolute bottom-0 left-0 px-2 py-1 flex items-center bg-white/80 rounded-tr-md"
+                          >
+                            <div 
+                              className="w-4 h-4 rounded-full mr-1" 
+                              style={{ backgroundColor: product.cardColor || '#C8B6E2' }}
+                            ></div>
+                            <span className="text-xs">{product.cardColor || '#C8B6E2'}</span>
+                          </div>
                         </div>
                         <CardContent className="p-4">
                           <h3 className="font-medium text-lg">{product.title}</h3>
@@ -508,7 +687,9 @@ const AdminPage: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
-      <Footer />
+      <div className="footer-dark">
+        <Footer />
+      </div>
     </div>
   );
 };

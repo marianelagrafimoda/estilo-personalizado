@@ -1,10 +1,17 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface SiteInfo {
   slogan: string;
   whatsappNumber: string;
   carouselImages: string[];
+  uniqueStyleTitle: string;
+  materialsTitle: string;
+  materialsDescription: string;
+  designTitle: string;
+  designDescription: string;
+  serviceTitle: string;
+  serviceDescription: string;
+  faqTitle: string;
 }
 
 interface SiteContextType {
@@ -15,7 +22,15 @@ interface SiteContextType {
 const DEFAULT_SITE_INFO: SiteInfo = {
   slogan: "Estilo único, personalizado para ti",
   whatsappNumber: "+593990893095",
-  carouselImages: ['/carousel1.jpg', '/carousel2.jpg', '/carousel3.jpg']
+  carouselImages: ['/carousel1.jpg', '/carousel2.jpg', '/carousel3.jpg'],
+  uniqueStyleTitle: "¿Quieres un estilo realmente único?",
+  materialsTitle: "Materiales Premium",
+  materialsDescription: "Utilizamos solo los mejores materiales para asegurar la calidad y durabilidad de nuestros productos.",
+  designTitle: "Diseño Personalizado",
+  designDescription: "Creamos diseños únicos adaptados a tus preferencias y estilo personal.",
+  serviceTitle: "Atención Personalizada",
+  serviceDescription: "Te guiamos durante todo el proceso para asegurar que obtengas exactamente lo que deseas.",
+  faqTitle: "Todo lo que necesitas saber",
 };
 
 const SiteContext = createContext<SiteContextType | undefined>(undefined);

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { Product } from '../contexts/ProductContext';
 import { useCart } from '../contexts/CartContext';
+import { useToast } from '../hooks/use-toast';
 
 interface ProductCardProps {
   product: Product;
@@ -10,6 +11,7 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
+  const { toast } = useToast();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   
@@ -18,14 +20,41 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const handleAddToCart = () => {
     if (selectedSize) {
       addToCart(product, selectedSize);
+      toast({
+        title: "¡Producto agregado!",
+        description: `${product.title} en talla ${selectedSize} se agregó al carrito.`,
+        duration: 3000,
+      });
       // Reset selected size after adding to cart
       setSelectedSize(null);
     }
   };
 
+  // Calcular el color de texto basado en el color de fondo para asegurar contraste
+  const getTextColor = (bgColor: string) => {
+    // Convertir el color a RGB
+    const hex = bgColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    
+    // Calcular luminosidad
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    
+    // Si es oscuro, usar texto claro
+    return luminance > 0.5 ? '#333333' : '#FFFFFF';
+  };
+  
+  const textColor = getTextColor(product.cardColor);
+
   return (
     <div 
-      className="group glass-card rounded-lg overflow-hidden transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
+      className="group overflow-hidden transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg rounded-lg"
+      style={{ 
+        backgroundColor: product.cardColor,
+        color: textColor,
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -40,7 +69,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       
       <div className="p-4">
         <h3 className="font-serif text-xl font-medium mb-2">{product.title}</h3>
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</p>
+        <p className="text-sm mb-3 line-clamp-2" style={{ opacity: 0.9 }}>{product.description}</p>
         
         <div className="flex justify-between items-center mb-3">
           <span className="font-medium text-lg">${product.price.toFixed(2)}</span>
@@ -58,7 +87,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     className={`px-2 py-1 text-xs font-medium rounded border transition-colors ${
                       selectedSize === size.id
                         ? 'bg-lilac text-white border-lilac'
-                        : 'bg-white text-gray-800 border-gray-300 hover:border-lilac'
+                        : 'bg-white/80 text-gray-800 border-gray-300 hover:border-lilac'
                     }`}
                   >
                     {size.name}
@@ -72,7 +101,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               disabled={!selectedSize}
               className={`w-full flex items-center justify-center space-x-2 py-2 px-4 rounded-md transition-colors ${
                 selectedSize
-                  ? 'bg-lilac hover:bg-lilac-dark text-white'
+                  ? 'bg-lilac hover:bg-lilac-dark text-black font-medium'
                   : 'bg-gray-200 text-gray-500 cursor-not-allowed'
               }`}
             >

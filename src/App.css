@@ -55,6 +55,21 @@ a, button {
   box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
 }
 
+/* Dark footer */
+.footer-dark {
+  background-color: #222222;
+  color: #FFFFFF;
+}
+
+/* Icon animation */
+.icon-animate {
+  transition: transform 0.5s ease;
+}
+
+.icon-animate:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
 /* Loading indicators */
 .loading-dots span {
   animation-name: loading;
@@ -83,5 +98,37 @@ a, button {
   100% {
     opacity: 0.2;
     transform: scale(0.8);
+  }
+}
+
+.container-custom {
+  width: 100%;
+  padding-right: 1rem;
+  padding-left: 1rem;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+@media (min-width: 640px) {
+  .container-custom {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container-custom {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-custom {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container-custom {
+    max-width: 1280px;
   }
 }

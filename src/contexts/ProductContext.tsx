@@ -14,6 +14,7 @@ export interface Product {
   price: number;
   imageUrl: string;
   sizes: Size[];
+  cardColor: string; // Nueva propiedad para el color
 }
 
 interface ProductContextType {
@@ -50,6 +51,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           description: 'Camiseta de algodón premium lista para personalizar con tu diseño favorito',
           price: 15.99,
           imageUrl: '/placeholder.svg',
+          cardColor: '#C8B6E2', // Color por defecto (lila)
           sizes: [
             { id: 's', name: 'S', available: true },
             { id: 'm', name: 'M', available: true },
@@ -63,6 +65,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           description: 'Sudadera cómoda y cálida, perfecta para estampados y bordados personalizados',
           price: 29.99,
           imageUrl: '/placeholder.svg',
+          cardColor: '#E6DEFF', // Color lila claro
           sizes: [
             { id: 's', name: 'S', available: false },
             { id: 'm', name: 'M', available: true },
@@ -76,6 +79,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           description: 'Gorra de alta calidad para personalizar con tu logo o diseño preferido',
           price: 12.99,
           imageUrl: '/placeholder.svg',
+          cardColor: '#A78BDA', // Color lila oscuro
           sizes: [
             { id: 'uni', name: 'Única', available: true }
           ]
