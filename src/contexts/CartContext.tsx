@@ -1,6 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product } from './ProductContext';
+import { supabase } from '../lib/supabase';
+import { useAuth } from './AuthContext';
 
 interface CartItem {
   product: Product;
@@ -31,19 +33,102 @@ export const useCart = () => {
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const { user } = useAuth();
   
+  // Load cart data when user changes
   useEffect(() => {
-    // Load cart from localStorage
-    const storedCart = localStorage.getItem('cart');
-    if (storedCart) {
-      setItems(JSON.parse(storedCart));
-    }
-  }, []);
+    const loadCart = async () => {
+      try {
+        if (user) {
+          // If user is logged in, try to fetch their cart from Supabase
+          const { data, error } = await supabase
+            .from('user_carts')
+            .select('cart_data')
+            .eq('user_email', user.email)
+            .single();
+          
+          if (error && error.code !== 'PGRST116') {
+            console.error('Error fetching cart:', error);
+            throw error;
+          }
+          
+          if (data?.cart_data) {
+            setItems(JSON.parse(data.cart_data));
+            return;
+          }
+        }
+        
+        // Fallback to localStorage if not logged in or no cart in Supabase
+        const storedCart = localStorage.getItem('cart');
+        if (storedCart) {
+          setItems(JSON.parse(storedCart));
+        }
+      } catch (error) {
+        console.error('Failed to load cart:', error);
+        
+        // Fallback to localStorage
+        const storedCart = localStorage.getItem('cart');
+        if (storedCart) {
+          setItems(JSON.parse(storedCart));
+        }
+      }
+    };
+    
+    loadCart();
+  }, [user]);
 
-  // Save cart to localStorage whenever it changes
+  // Save cart whenever it changes
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(items));
-  }, [items]);
+    const saveCart = async () => {
+      // Always save to localStorage as fallback
+      localStorage.setItem('cart', JSON.stringify(items));
+      
+      // If user is logged in, also save to Supabase
+      if (user) {
+        try {
+          const { data, error: fetchError } = await supabase
+            .from('user_carts')
+            .select('id')
+            .eq('user_email', user.email)
+            .single();
+          
+          if (fetchError && fetchError.code !== 'PGRST116') {
+            console.error('Error checking existing cart:', fetchError);
+          }
+          
+          if (data) {
+            // Update existing cart
+            const { error: updateError } = await supabase
+              .from('user_carts')
+              .update({ cart_data: JSON.stringify(items) })
+              .eq('id', data.id);
+            
+            if (updateError) {
+              console.error('Error updating cart in Supabase:', updateError);
+            }
+          } else {
+            // Insert new cart
+            const { error: insertError } = await supabase
+              .from('user_carts')
+              .insert({ 
+                user_email: user.email,
+                cart_data: JSON.stringify(items)
+              });
+            
+            if (insertError) {
+              console.error('Error inserting cart in Supabase:', insertError);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to save cart to Supabase:', error);
+        }
+      }
+    };
+    
+    if (items.length > 0) {
+      saveCart();
+    }
+  }, [items, user]);
 
   const addToCart = (product: Product, selectedSize: string, selectedColor: string) => {
     // Check if item with same product, size and color already exists
@@ -89,6 +174,23 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const clearCart = () => {
     setItems([]);
+    
+    // When clearing cart, also remove from Supabase if user is logged in
+    if (user) {
+      try {
+        supabase
+          .from('user_carts')
+          .delete()
+          .eq('user_email', user.email)
+          .then(({ error }) => {
+            if (error) {
+              console.error('Error clearing cart from Supabase:', error);
+            }
+          });
+      } catch (error) {
+        console.error('Failed to clear cart from Supabase:', error);
+      }
+    }
   };
 
   const totalItems = items.reduce((total, item) => total + item.quantity, 0);
