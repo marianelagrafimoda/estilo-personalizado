@@ -9,13 +9,108 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      products: {
+        Row: {
+          card_color: string
+          colors: Json
+          created_at: string | null
+          description: string
+          id: string
+          image_url: string
+          price: number
+          sizes: Json
+          stock_quantity: number
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          card_color: string
+          colors: Json
+          created_at?: string | null
+          description: string
+          id?: string
+          image_url: string
+          price: number
+          sizes: Json
+          stock_quantity?: number
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          card_color?: string
+          colors?: Json
+          created_at?: string | null
+          description?: string
+          id?: string
+          image_url?: string
+          price?: number
+          sizes?: Json
+          stock_quantity?: number
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      site_info: {
+        Row: {
+          carousel_images: Json
+          created_at: string | null
+          design_description: string
+          design_title: string
+          faq_title: string
+          id: string
+          materials_description: string
+          materials_title: string
+          service_description: string
+          service_title: string
+          slogan: string
+          unique_style_title: string
+          updated_at: string | null
+          whatsapp_number: string
+        }
+        Insert: {
+          carousel_images: Json
+          created_at?: string | null
+          design_description: string
+          design_title: string
+          faq_title: string
+          id?: string
+          materials_description: string
+          materials_title: string
+          service_description: string
+          service_title: string
+          slogan: string
+          unique_style_title: string
+          updated_at?: string | null
+          whatsapp_number: string
+        }
+        Update: {
+          carousel_images?: Json
+          created_at?: string | null
+          design_description?: string
+          design_title?: string
+          faq_title?: string
+          id?: string
+          materials_description?: string
+          materials_title?: string
+          service_description?: string
+          service_title?: string
+          slogan?: string
+          unique_style_title?: string
+          updated_at?: string | null
+          whatsapp_number?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
