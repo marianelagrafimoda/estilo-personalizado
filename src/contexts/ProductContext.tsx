@@ -40,7 +40,7 @@ const ProductContext = createContext<ProductContextType | undefined>(undefined);
 export const useProducts = () => {
   const context = useContext(ProductContext);
   if (!context) {
-    throw new Error('useProducts debe ser usado dentro de un ProductProvider');
+    throw new Error('useProducts deve ser usado dentro de um ProductProvider');
   }
   return context;
 };
@@ -81,87 +81,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           setProducts(formattedProducts);
         } else {
           // Se não houver produtos no banco, criar produtos padrão
-          const defaultProducts = [
-            {
-              title: 'Camiseta Personalizada',
-              description: 'Camiseta de algodón premium lista para personalizar con tu diseño favorito',
-              price: 15.99,
-              image_url: '/placeholder.svg',
-              card_color: '#C8B6E2', // Color por defecto (lila)
-              stock_quantity: 25,
-              colors: [
-                { id: 'white', name: 'Blanco', hex: '#FFFFFF' },
-                { id: 'black', name: 'Negro', hex: '#000000' },
-                { id: 'blue', name: 'Azul', hex: '#0EA5E9' }
-              ],
-              sizes: [
-                { id: 's', name: 'S', available: true },
-                { id: 'm', name: 'M', available: true },
-                { id: 'l', name: 'L', available: true },
-                { id: 'xl', name: 'XL', available: false }
-              ]
-            },
-            {
-              title: 'Sudadera con Capucha',
-              description: 'Sudadera cómoda y cálida, perfecta para estampados y bordados personalizados',
-              price: 29.99,
-              image_url: '/placeholder.svg',
-              card_color: '#E6DEFF', // Color lila claro
-              stock_quantity: 15,
-              colors: [
-                { id: 'gray', name: 'Gris', hex: '#888888' },
-                { id: 'black', name: 'Negro', hex: '#000000' }
-              ],
-              sizes: [
-                { id: 's', name: 'S', available: false },
-                { id: 'm', name: 'M', available: true },
-                { id: 'l', name: 'L', available: true },
-                { id: 'xl', name: 'XL', available: true }
-              ]
-            },
-            {
-              title: 'Gorra Personalizada',
-              description: 'Gorra de alta calidad para personalizar con tu logo o diseño preferido',
-              price: 12.99,
-              image_url: '/placeholder.svg',
-              card_color: '#A78BDA', // Color lila oscuro
-              stock_quantity: 30,
-              colors: [
-                { id: 'white', name: 'Blanco', hex: '#FFFFFF' },
-                { id: 'red', name: 'Rojo', hex: '#EF4444' }
-              ],
-              sizes: [
-                { id: 'uni', name: 'Única', available: true }
-              ]
-            }
-          ];
-          
-          // Salvamos produtos por padrão no Supabase
-          for (const product of defaultProducts) {
-            await addProductToSupabase(product);
-          }
-          
-          // Buscamos novamente para obter os IDs gerados
-          const { data: newData } = await supabase
-            .from('products')
-            .select('*')
-            .order('created_at', { ascending: false });
-            
-          if (newData && newData.length > 0) {
-            const formattedProducts = newData.map(item => ({
-              id: item.id,
-              title: item.title,
-              description: item.description,
-              price: Number(item.price),
-              imageUrl: item.image_url,
-              cardColor: item.card_color,
-              stockQuantity: item.stock_quantity,
-              sizes: typeof item.sizes === 'string' ? JSON.parse(item.sizes) : item.sizes,
-              colors: typeof item.colors === 'string' ? JSON.parse(item.colors) : item.colors,
-            }));
-            
-            setProducts(formattedProducts);
-          }
+          await createDefaultProducts();
         }
       } catch (error) {
         console.error('Erro ao processar produtos:', error);
@@ -173,6 +93,95 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     fetchProducts();
   }, []);
 
+  // Função para criar produtos padrão
+  const createDefaultProducts = async () => {
+    try {
+      const defaultProducts = [
+        {
+          title: 'Camiseta Personalizada',
+          description: 'Camiseta de algodón premium lista para personalizar con tu diseño favorito',
+          price: 15.99,
+          image_url: '/placeholder.svg',
+          card_color: '#C8B6E2', // Color por defecto (lila)
+          stock_quantity: 25,
+          colors: [
+            { id: 'white', name: 'Blanco', hex: '#FFFFFF' },
+            { id: 'black', name: 'Negro', hex: '#000000' },
+            { id: 'blue', name: 'Azul', hex: '#0EA5E9' }
+          ],
+          sizes: [
+            { id: 's', name: 'S', available: true },
+            { id: 'm', name: 'M', available: true },
+            { id: 'l', name: 'L', available: true },
+            { id: 'xl', name: 'XL', available: false }
+          ]
+        },
+        {
+          title: 'Sudadera con Capucha',
+          description: 'Sudadera cómoda y cálida, perfecta para estampados y bordados personalizados',
+          price: 29.99,
+          image_url: '/placeholder.svg',
+          card_color: '#E6DEFF', // Color lila claro
+          stock_quantity: 15,
+          colors: [
+            { id: 'gray', name: 'Gris', hex: '#888888' },
+            { id: 'black', name: 'Negro', hex: '#000000' }
+          ],
+          sizes: [
+            { id: 's', name: 'S', available: false },
+            { id: 'm', name: 'M', available: true },
+            { id: 'l', name: 'L', available: true },
+            { id: 'xl', name: 'XL', available: true }
+          ]
+        },
+        {
+          title: 'Gorra Personalizada',
+          description: 'Gorra de alta calidad para personalizar con tu logo o diseño preferido',
+          price: 12.99,
+          image_url: '/placeholder.svg',
+          card_color: '#A78BDA', // Color lila oscuro
+          stock_quantity: 30,
+          colors: [
+            { id: 'white', name: 'Blanco', hex: '#FFFFFF' },
+            { id: 'red', name: 'Rojo', hex: '#EF4444' }
+          ],
+          sizes: [
+            { id: 'uni', name: 'Única', available: true }
+          ]
+        }
+      ];
+      
+      // Salvamos produtos por padrão no Supabase
+      for (const product of defaultProducts) {
+        await addProductToSupabase(product);
+      }
+      
+      // Buscamos novamente para obter os IDs gerados
+      const { data: newData } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (newData && newData.length > 0) {
+        const formattedProducts = newData.map(item => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          price: Number(item.price),
+          imageUrl: item.image_url,
+          cardColor: item.card_color,
+          stockQuantity: item.stock_quantity,
+          sizes: typeof item.sizes === 'string' ? JSON.parse(item.sizes) : item.sizes,
+          colors: typeof item.colors === 'string' ? JSON.parse(item.colors) : item.colors,
+        }));
+        
+        setProducts(formattedProducts);
+      }
+    } catch (error) {
+      console.error('Erro ao criar produtos padrão:', error);
+    }
+  };
+
   // Função auxiliar para adicionar produto ao Supabase
   const addProductToSupabase = async (product: any) => {
     try {
@@ -182,9 +191,9 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           title: product.title,
           description: product.description,
           price: product.price,
-          image_url: product.image_url,
-          card_color: product.card_color,
-          stock_quantity: product.stock_quantity,
+          image_url: product.image_url || product.imageUrl,
+          card_color: product.card_color || product.cardColor,
+          stock_quantity: product.stock_quantity || product.stockQuantity,
           sizes: typeof product.sizes === 'string' ? product.sizes : JSON.stringify(product.sizes),
           colors: typeof product.colors === 'string' ? product.colors : JSON.stringify(product.colors)
         });
