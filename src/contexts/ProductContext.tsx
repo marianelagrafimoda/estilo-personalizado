@@ -181,7 +181,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const addProductToSupabase = async (product: Omit<Product, 'id'>) => {
     const { error } = await supabase
       .from('products')
-      .insert([{
+      .insert({
         title: product.title,
         description: product.description,
         price: product.price,
@@ -190,7 +190,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         stock_quantity: product.stockQuantity,
         sizes: product.sizes,
         colors: product.colors
-      }]);
+      });
       
     if (error) {
       console.error('Erro ao adicionar produto ao Supabase:', error);
@@ -204,7 +204,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       const { data, error } = await supabase
         .from('products')
-        .insert([{
+        .insert({
           title: product.title,
           description: product.description,
           price: product.price,
@@ -213,7 +213,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           stock_quantity: product.stockQuantity,
           sizes: product.sizes,
           colors: product.colors
-        }])
+        })
         .select();
       
       if (error) throw error;
