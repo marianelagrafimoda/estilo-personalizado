@@ -14,7 +14,7 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
   className = "bg-lilac hover:bg-lilac-dark text-black font-medium",
   mode = 'default'
 }) => {
-  const { siteInfo, isLoading } = useSiteInfo();
+  const { siteInfo } = useSiteInfo();
   const { items, totalPrice } = useCart();
   
   // Helper function to get color name
@@ -44,12 +44,7 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
   
   const handleClick = () => {
     const message = generateWhatsAppMessage();
-    // Se o whatsapp_number não estiver carregado, use o valor padrão
-    const whatsappNumber = isLoading || !siteInfo?.whatsapp_number
-      ? '+593990893095'
-      : siteInfo.whatsapp_number;
-      
-    const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/\+/g, '')}?text=${message}`;
+    const whatsappUrl = `https://wa.me/${siteInfo.whatsappNumber.replace(/\+/g, '')}?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };
   

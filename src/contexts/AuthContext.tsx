@@ -1,7 +1,5 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../integrations/supabase/client';
-import { useToast } from '../hooks/use-toast';
 
 interface User {
   email: string;
@@ -10,8 +8,8 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => Promise<void>;
+  login: (email: string, password: string) => boolean;
+  logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
 }
@@ -28,87 +26,29 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const { toast } = useToast();
   
   useEffect(() => {
-    // Get the current session on mount
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        const { email } = session.user;
-        const isAdmin = email === 'marianela.grafimoda@gmail.com';
-        setUser({ email, isAdmin });
-      }
-    };
-    
-    getSession();
-    
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session && event === 'SIGNED_IN') {
-          const { email } = session.user;
-          const isAdmin = email === 'marianela.grafimoda@gmail.com';
-          setUser({ email, isAdmin });
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-        }
-      }
-    );
-    
-    // Cleanup subscription
-    return () => {
-      subscription.unsubscribe();
-    };
+    // Check if user is stored in localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
   }, []);
 
-  const login = async (email: string, password: string) => {
-    try {
-      if (email === 'marianela.grafimoda@gmail.com' && password === 'marianelalinda2025') {
-        // For the admin user, we'll use Supabase auth
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        
-        if (error) {
-          console.error('Error logging in:', error.message);
-          toast({
-            title: "Error de autenticación",
-            description: error.message,
-            variant: "destructive",
-          });
-          return false;
-        }
-        
-        setUser({ email, isAdmin: true });
-        return true;
-      }
-      
-      // For non-admin users
-      return false;
-    } catch (error) {
-      console.error('Unexpected login error:', error);
-      return false;
+  const login = (email: string, password: string) => {
+    // Hard-coded admin credentials
+    if (email === 'marianela.grafimoda@gmail.com' && password === 'marianelalinda2025') {
+      const adminUser = { email, isAdmin: true };
+      setUser(adminUser);
+      localStorage.setItem('user', JSON.stringify(adminUser));
+      return true;
     }
+    return false;
   };
 
-  const logout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Error signing out:', error.message);
-        toast({
-          title: "Error",
-          description: "Error al cerrar sesión",
-          variant: "destructive",
-        });
-      }
-      setUser(null);
-    } catch (error) {
-      console.error('Unexpected logout error:', error);
-    }
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
   };
 
   return (

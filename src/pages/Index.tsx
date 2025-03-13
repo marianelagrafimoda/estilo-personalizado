@@ -56,9 +56,9 @@ const Index: React.FC = () => {
               <div className="bg-lilac/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group">
                 <Gem className="w-8 h-8 text-lilac-dark transition-transform duration-500 transform group-hover:scale-110 group-hover:rotate-12" />
               </div>
-              <h3 className="font-serif text-xl font-medium mb-3">{siteInfo.materials_title}</h3>
+              <h3 className="font-serif text-xl font-medium mb-3">{siteInfo.materialsTitle}</h3>
               <p className="text-gray-600">
-                {siteInfo.materials_description}
+                {siteInfo.materialsDescription}
               </p>
             </div>
             
@@ -66,9 +66,9 @@ const Index: React.FC = () => {
               <div className="bg-lilac/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group">
                 <Palette className="w-8 h-8 text-lilac-dark transition-transform duration-500 transform group-hover:scale-110 group-hover:rotate-12" />
               </div>
-              <h3 className="font-serif text-xl font-medium mb-3">{siteInfo.design_title}</h3>
+              <h3 className="font-serif text-xl font-medium mb-3">{siteInfo.designTitle}</h3>
               <p className="text-gray-600">
-                {siteInfo.design_description}
+                {siteInfo.designDescription}
               </p>
             </div>
             
@@ -76,9 +76,9 @@ const Index: React.FC = () => {
               <div className="bg-lilac/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group">
                 <Users className="w-8 h-8 text-lilac-dark transition-transform duration-500 transform group-hover:scale-110 group-hover:rotate-12" />
               </div>
-              <h3 className="font-serif text-xl font-medium mb-3">{siteInfo.service_title}</h3>
+              <h3 className="font-serif text-xl font-medium mb-3">{siteInfo.serviceTitle}</h3>
               <p className="text-gray-600">
-                {siteInfo.service_description}
+                {siteInfo.serviceDescription}
               </p>
             </div>
           </div>
@@ -92,7 +92,7 @@ const Index: React.FC = () => {
             <span className="inline-block px-3 py-1 bg-lilac/10 text-lilac-dark text-sm font-medium rounded-full mb-2">
               Preguntas Frecuentes
             </span>
-            <h2 className="font-serif text-3xl md:text-4xl font-bold">{siteInfo.faq_title}</h2>
+            <h2 className="font-serif text-3xl md:text-4xl font-bold">{siteInfo.faqTitle}</h2>
           </div>
           
           <div className="max-w-3xl mx-auto divide-y divide-lilac/20">

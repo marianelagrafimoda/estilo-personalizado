@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings, 
@@ -23,9 +23,9 @@ import {
   Card, 
   CardContent, 
   CardDescription, 
+  CardFooter, 
   CardHeader, 
-  CardTitle,
-  CardFooter 
+  CardTitle 
 } from '../components/ui/card';
 import { useAuth } from '../contexts/AuthContext';
 import { useSiteInfo } from '../contexts/SiteContext';
@@ -37,25 +37,25 @@ import Footer from '../components/Footer';
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isAdmin } = useAuth();
-  const { siteInfo, updateSiteInfo, isLoading: siteLoading } = useSiteInfo();
-  const { products, updateProduct, addProduct, removeProduct, isLoading: productsLoading } = useProducts();
+  const { siteInfo, updateSiteInfo } = useSiteInfo();
+  const { products, updateProduct, addProduct, removeProduct } = useProducts();
   const { toast } = useToast();
   
   // Site Info States
   const [newSlogan, setNewSlogan] = useState(siteInfo.slogan);
-  const [newWhatsappNumber, setNewWhatsappNumber] = useState(siteInfo.whatsapp_number);
-  const [newCarouselImages, setNewCarouselImages] = useState<string[]>(siteInfo.carousel_images);
+  const [newWhatsappNumber, setNewWhatsappNumber] = useState(siteInfo.whatsappNumber);
+  const [newCarouselImages, setNewCarouselImages] = useState<string[]>(siteInfo.carouselImages);
   const [newCarouselImage, setNewCarouselImage] = useState('');
   
   // Textos editables
-  const [newMaterialsTitle, setNewMaterialsTitle] = useState(siteInfo.materials_title);
-  const [newMaterialsDesc, setNewMaterialsDesc] = useState(siteInfo.materials_description);
-  const [newDesignTitle, setNewDesignTitle] = useState(siteInfo.design_title);
-  const [newDesignDesc, setNewDesignDesc] = useState(siteInfo.design_description);
-  const [newServiceTitle, setNewServiceTitle] = useState(siteInfo.service_title);
-  const [newServiceDesc, setNewServiceDesc] = useState(siteInfo.service_description);
-  const [newFaqTitle, setNewFaqTitle] = useState(siteInfo.faq_title);
-  const [newUniqueStyleTitle, setNewUniqueStyleTitle] = useState(siteInfo.unique_style_title);
+  const [newMaterialsTitle, setNewMaterialsTitle] = useState(siteInfo.materialsTitle);
+  const [newMaterialsDesc, setNewMaterialsDesc] = useState(siteInfo.materialsDescription);
+  const [newDesignTitle, setNewDesignTitle] = useState(siteInfo.designTitle);
+  const [newDesignDesc, setNewDesignDesc] = useState(siteInfo.designDescription);
+  const [newServiceTitle, setNewServiceTitle] = useState(siteInfo.serviceTitle);
+  const [newServiceDesc, setNewServiceDesc] = useState(siteInfo.serviceDescription);
+  const [newFaqTitle, setNewFaqTitle] = useState(siteInfo.faqTitle);
+  const [newUniqueStyleTitle, setNewUniqueStyleTitle] = useState(siteInfo.uniqueStyleTitle);
   
   // Product States
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -83,23 +83,6 @@ const AdminPage: React.FC = () => {
   const [editingNewColorName, setEditingNewColorName] = useState('');
   const [editingNewColorHex, setEditingNewColorHex] = useState('#FFFFFF');
 
-  // Atualizar os estados quando os dados do site forem carregados
-  useEffect(() => {
-    if (!siteLoading) {
-      setNewSlogan(siteInfo.slogan);
-      setNewWhatsappNumber(siteInfo.whatsapp_number);
-      setNewCarouselImages(siteInfo.carousel_images);
-      setNewMaterialsTitle(siteInfo.materials_title);
-      setNewMaterialsDesc(siteInfo.materials_description);
-      setNewDesignTitle(siteInfo.design_title);
-      setNewDesignDesc(siteInfo.design_description);
-      setNewServiceTitle(siteInfo.service_title);
-      setNewServiceDesc(siteInfo.service_description);
-      setNewFaqTitle(siteInfo.faq_title);
-      setNewUniqueStyleTitle(siteInfo.unique_style_title);
-    }
-  }, [siteInfo, siteLoading]);
-
   React.useEffect(() => {
     // Redirect non-admin users
     if (!isAuthenticated || !isAdmin) {
@@ -107,19 +90,24 @@ const AdminPage: React.FC = () => {
     }
   }, [isAuthenticated, isAdmin, navigate]);
 
-  const handleSiteInfoUpdate = async () => {
-    await updateSiteInfo({
+  const handleSiteInfoUpdate = () => {
+    updateSiteInfo({
       slogan: newSlogan,
-      whatsapp_number: newWhatsappNumber,
-      carousel_images: newCarouselImages,
-      materials_title: newMaterialsTitle,
-      materials_description: newMaterialsDesc,
-      design_title: newDesignTitle,
-      design_description: newDesignDesc,
-      service_title: newServiceTitle,
-      service_description: newServiceDesc,
-      faq_title: newFaqTitle,
-      unique_style_title: newUniqueStyleTitle
+      whatsappNumber: newWhatsappNumber,
+      carouselImages: newCarouselImages,
+      materialsTitle: newMaterialsTitle,
+      materialsDescription: newMaterialsDesc,
+      designTitle: newDesignTitle,
+      designDescription: newDesignDesc,
+      serviceTitle: newServiceTitle,
+      serviceDescription: newServiceDesc,
+      faqTitle: newFaqTitle,
+      uniqueStyleTitle: newUniqueStyleTitle
+    });
+    toast({
+      title: "¡Actualizado!",
+      description: "Información del sitio actualizada con éxito",
+      duration: 3000,
     });
   };
 
@@ -172,15 +160,16 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  const handleAddProduct = async () => {
+  const handleAddProduct = () => {
     if (
       newProduct.title &&
       newProduct.description &&
       newProduct.price > 0 &&
       newProduct.imageUrl
     ) {
-      await addProduct({
+      addProduct({
         ...newProduct,
+        id: Date.now().toString(),
       });
       
       // Reset form
@@ -201,6 +190,12 @@ const AdminPage: React.FC = () => {
           { id: 'white', name: 'Blanco', hex: '#FFFFFF' }
         ]
       });
+      
+      toast({
+        title: "¡Producto agregado!",
+        description: "El producto ha sido agregado exitosamente",
+        duration: 3000,
+      });
     } else {
       toast({
         title: "Error",
@@ -219,16 +214,26 @@ const AdminPage: React.FC = () => {
     setEditingProduct(null);
   };
 
-  const saveEditedProduct = async () => {
+  const saveEditedProduct = () => {
     if (editingProduct) {
-      await updateProduct(editingProduct.id, editingProduct);
+      updateProduct(editingProduct.id, editingProduct);
       setEditingProduct(null);
+      toast({
+        title: "¡Actualizado!",
+        description: "Producto actualizado con éxito",
+        duration: 3000,
+      });
     }
   };
 
-  const handleDeleteProduct = async (productId: string) => {
+  const handleDeleteProduct = (productId: string) => {
     if (window.confirm('¿Está seguro que desea eliminar este producto?')) {
-      await removeProduct(productId);
+      removeProduct(productId);
+      toast({
+        title: "Producto eliminado",
+        description: "El producto ha sido eliminado exitosamente",
+        duration: 3000,
+      });
     }
   };
 
@@ -246,18 +251,6 @@ const AdminPage: React.FC = () => {
 
   if (!isAuthenticated || !isAdmin) {
     return null; // Will redirect in useEffect
-  }
-
-  // Exibir indicador de carregamento se estiver carregando dados
-  if (siteLoading || productsLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-        <div className="text-center">
-          <CircleDashed className="h-10 w-10 animate-spin mx-auto text-lilac" />
-          <p className="mt-4 text-lg">Carregando...</p>
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -821,51 +814,57 @@ const AdminPage: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        <div className="h-48 overflow-hidden">
+                        <div className="relative h-48">
                           <img 
                             src={product.imageUrl} 
-                            alt={product.title}
-                            className="w-full h-full object-cover transition-transform hover:scale-105"
+                            alt={product.title} 
+                            className="w-full h-full object-cover"
                           />
-                        </div>
-                        <CardContent className="p-4">
-                          <h4 className="font-medium text-lg mb-1">{product.title}</h4>
-                          <p className="text-sm text-gray-600 mb-2">{product.description}</p>
-                          <div className="flex justify-between items-center">
-                            <p className="font-medium text-lilac-dark">${product.price.toFixed(2)}</p>
-                            <span className="text-sm text-gray-500 flex items-center">
-                              <Package className="w-4 h-4 mr-1" />
-                              {product.stockQuantity}
-                            </span>
+                          <div 
+                            className="absolute bottom-0 left-0 px-2 py-1 flex items-center bg-white/80 rounded-tr-md"
+                          >
+                            <div 
+                              className="w-4 h-4 rounded-full mr-1" 
+                              style={{ backgroundColor: product.cardColor || '#C8B6E2' }}
+                            ></div>
+                            <span className="text-xs">{product.cardColor || '#C8B6E2'}</span>
                           </div>
                           
-                          <div className="mt-3">
-                            <div className="flex flex-wrap gap-1 mb-2">
-                              {product.sizes.map((size: any) => (
-                                <span
-                                  key={size.id}
-                                  className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                    size.available
-                                      ? 'bg-lilac/20 text-lilac-dark'
-                                      : 'bg-gray-100 text-gray-400 line-through'
-                                  }`}
-                                >
-                                  {size.name}
-                                </span>
-                              ))}
+                          {/* Stock indicator */}
+                          <div className="absolute top-2 right-2 px-2 py-1 bg-white/80 rounded-md flex items-center">
+                            <Package className="w-4 h-4 mr-1 text-gray-600" />
+                            <span className="text-xs font-medium">{product.stockQuantity || 0}</span>
+                          </div>
+                        </div>
+                        <CardContent className="p-4">
+                          <h3 className="font-medium text-lg">{product.title}</h3>
+                          <p className="text-sm text-gray-600 mt-1">{product.description}</p>
+                          <div className="mt-2 flex justify-between items-center">
+                            <span className="font-bold">${product.price.toFixed(2)}</span>
+                            <div className="flex gap-1">
+                              {product.sizes
+                                .filter(size => size.available)
+                                .map(size => (
+                                  <span key={size.id} className="px-2 py-0.5 bg-lilac/10 text-lilac-dark text-xs rounded">
+                                    {size.name}
+                                  </span>
+                                ))}
                             </div>
-                            
-                            <div className="flex flex-wrap gap-1">
-                              {product.colors.map((color: Color) => (
+                          </div>
+                          
+                          {/* Display available colors */}
+                          {product.colors && product.colors.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-1">
+                              {product.colors.map(color => (
                                 <div 
                                   key={color.id}
-                                  className="w-5 h-5 rounded-full" 
+                                  className="w-5 h-5 rounded-full border border-gray-200" 
                                   style={{ backgroundColor: color.hex }}
                                   title={color.name}
                                 ></div>
                               ))}
                             </div>
-                          </div>
+                          )}
                         </CardContent>
                         <CardFooter className="p-4 pt-0 flex justify-between">
                           <Button 
@@ -878,9 +877,10 @@ const AdminPage: React.FC = () => {
                             Eliminar
                           </Button>
                           <Button 
+                            variant="outline" 
                             size="sm" 
                             onClick={() => startEditingProduct(product)}
-                            className="bg-lilac hover:bg-lilac-dark"
+                            className="border-lilac/30 text-lilac-dark hover:bg-lilac/10"
                           >
                             <Edit3 className="w-4 h-4 mr-1" />
                             Editar
@@ -891,11 +891,23 @@ const AdminPage: React.FC = () => {
                   </Card>
                 ))}
               </div>
+              
+              {products.length === 0 && (
+                <div className="text-center py-10 bg-muted/20 rounded-lg">
+                  <ShoppingBag className="mx-auto h-12 w-12 text-muted" />
+                  <h3 className="mt-4 text-lg font-medium">No hay productos</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Agregue un producto usando el formulario de arriba
+                  </p>
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>
       </div>
-      <Footer />
+      <div className="footer-dark">
+        <Footer />
+      </div>
     </div>
   );
 };
