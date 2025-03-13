@@ -101,9 +101,10 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } 
             // If it's already an array, use it directly
             else if (Array.isArray(data.carousel_images)) {
-              parsedCarouselImages = data.carousel_images;
+              // Ensure all array elements are strings
+              parsedCarouselImages = data.carousel_images.map(item => String(item));
             } 
-            // Otherwise, try to convert to array if possible
+            // Otherwise, use default
             else {
               console.warn('carousel_images is not in expected format:', data.carousel_images);
               parsedCarouselImages = DEFAULT_SITE_INFO.carousel_images;
