@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -23,7 +24,8 @@ import {
   CardContent, 
   CardDescription, 
   CardHeader, 
-  CardTitle 
+  CardTitle,
+  CardFooter 
 } from '../components/ui/card';
 import { useAuth } from '../contexts/AuthContext';
 import { useSiteInfo } from '../contexts/SiteContext';
@@ -802,4 +804,100 @@ const AdminPage: React.FC = () => {
                             variant="outline" 
                             size="sm" 
                             onClick={cancelEditingProduct}
-                            className="border-red-300 text-red-500
+                            className="border-red-300 text-red-500 hover:bg-red-50"
+                          >
+                            <X className="w-4 h-4 mr-1" />
+                            Cancelar
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={saveEditedProduct}
+                            className="bg-lilac hover:bg-lilac-dark"
+                          >
+                            <Save className="w-4 h-4 mr-1" />
+                            Guardar
+                          </Button>
+                        </CardFooter>
+                      </>
+                    ) : (
+                      <>
+                        <div className="h-48 overflow-hidden">
+                          <img 
+                            src={product.imageUrl} 
+                            alt={product.title}
+                            className="w-full h-full object-cover transition-transform hover:scale-105"
+                          />
+                        </div>
+                        <CardContent className="p-4">
+                          <h4 className="font-medium text-lg mb-1">{product.title}</h4>
+                          <p className="text-sm text-gray-600 mb-2">{product.description}</p>
+                          <div className="flex justify-between items-center">
+                            <p className="font-medium text-lilac-dark">${product.price.toFixed(2)}</p>
+                            <span className="text-sm text-gray-500 flex items-center">
+                              <Package className="w-4 h-4 mr-1" />
+                              {product.stockQuantity}
+                            </span>
+                          </div>
+                          
+                          <div className="mt-3">
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {product.sizes.map((size: any) => (
+                                <span
+                                  key={size.id}
+                                  className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                    size.available
+                                      ? 'bg-lilac/20 text-lilac-dark'
+                                      : 'bg-gray-100 text-gray-400 line-through'
+                                  }`}
+                                >
+                                  {size.name}
+                                </span>
+                              ))}
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-1">
+                              {product.colors.map((color: Color) => (
+                                <div 
+                                  key={color.id}
+                                  className="w-5 h-5 rounded-full" 
+                                  style={{ backgroundColor: color.hex }}
+                                  title={color.name}
+                                ></div>
+                              ))}
+                            </div>
+                          </div>
+                        </CardContent>
+                        <CardFooter className="p-4 pt-0 flex justify-between">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleDeleteProduct(product.id)}
+                            className="border-red-300 text-red-500 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Eliminar
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={() => startEditingProduct(product)}
+                            className="bg-lilac hover:bg-lilac-dark"
+                          >
+                            <Edit3 className="w-4 h-4 mr-1" />
+                            Editar
+                          </Button>
+                        </CardFooter>
+                      </>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+      <Footer />
+    </div>
+  );
+};
+
+export default AdminPage;
