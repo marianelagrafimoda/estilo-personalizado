@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { useToast } from '../hooks/use-toast';
@@ -81,15 +80,14 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           setProducts(formattedProducts);
         } else {
           // Se não houver produtos no banco, criar produtos padrão
-          const defaultProducts: Product[] = [
+          const defaultProducts = [
             {
-              id: '1',
               title: 'Camiseta Personalizada',
               description: 'Camiseta de algodón premium lista para personalizar con tu diseño favorito',
               price: 15.99,
-              imageUrl: '/placeholder.svg',
-              cardColor: '#C8B6E2', // Color por defecto (lila)
-              stockQuantity: 25,
+              image_url: '/placeholder.svg',
+              card_color: '#C8B6E2', // Color por defecto (lila)
+              stock_quantity: 25,
               colors: [
                 { id: 'white', name: 'Blanco', hex: '#FFFFFF' },
                 { id: 'black', name: 'Negro', hex: '#000000' },
@@ -103,13 +101,12 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
               ]
             },
             {
-              id: '2',
               title: 'Sudadera con Capucha',
               description: 'Sudadera cómoda y cálida, perfecta para estampados y bordados personalizados',
               price: 29.99,
-              imageUrl: '/placeholder.svg',
-              cardColor: '#E6DEFF', // Color lila claro
-              stockQuantity: 15,
+              image_url: '/placeholder.svg',
+              card_color: '#E6DEFF', // Color lila claro
+              stock_quantity: 15,
               colors: [
                 { id: 'gray', name: 'Gris', hex: '#888888' },
                 { id: 'black', name: 'Negro', hex: '#000000' }
@@ -122,13 +119,12 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
               ]
             },
             {
-              id: '3',
               title: 'Gorra Personalizada',
               description: 'Gorra de alta calidad para personalizar con tu logo o diseño preferido',
               price: 12.99,
-              imageUrl: '/placeholder.svg',
-              cardColor: '#A78BDA', // Color lila oscuro
-              stockQuantity: 30,
+              image_url: '/placeholder.svg',
+              card_color: '#A78BDA', // Color lila oscuro
+              stock_quantity: 30,
               colors: [
                 { id: 'white', name: 'Blanco', hex: '#FFFFFF' },
                 { id: 'red', name: 'Rojo', hex: '#EF4444' }
@@ -141,8 +137,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           
           // Salvamos produtos por padrão no Supabase
           for (const product of defaultProducts) {
-            const { id, ...productData } = product;
-            await addProductToSupabase(productData);
+            await addProductToSupabase(product);
           }
           
           // Buscamos novamente para obter os IDs gerados
@@ -178,16 +173,16 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   // Função auxiliar para adicionar produto ao Supabase
-  const addProductToSupabase = async (product: Omit<Product, 'id'>) => {
+  const addProductToSupabase = async (product: any) => {
     const { error } = await supabase
       .from('products')
       .insert({
         title: product.title,
         description: product.description,
         price: product.price,
-        image_url: product.imageUrl,
-        card_color: product.cardColor,
-        stock_quantity: product.stockQuantity,
+        image_url: product.image_url,
+        card_color: product.card_color,
+        stock_quantity: product.stock_quantity,
         sizes: product.sizes,
         colors: product.colors
       });
