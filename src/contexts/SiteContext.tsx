@@ -93,22 +93,29 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // If it's a string, try to parse it as JSON
             if (typeof data.carousel_images === 'string') {
               try {
-                parsedCarouselImages = JSON.parse(data.carousel_images);
+                const parsed = JSON.parse(data.carousel_images);
+                // Ensure the parsed result is an array and all elements are strings
+                if (Array.isArray(parsed)) {
+                  parsedCarouselImages = parsed.map(String);
+                } else {
+                  parsedCarouselImages = [String(parsed)];
+                }
               } catch (e) {
                 console.error('Error parsing carousel_images string:', e);
                 parsedCarouselImages = [data.carousel_images]; // Use as single item array if parsing fails
               }
             } 
-            // If it's already an array, use it directly
+            // If it's already an array, ensure all elements are strings
             else if (Array.isArray(data.carousel_images)) {
-              // Ensure all array elements are strings
-              parsedCarouselImages = data.carousel_images.map(item => String(item));
+              parsedCarouselImages = data.carousel_images.map(String);
             } 
             // Otherwise, use default
             else {
               console.warn('carousel_images is not in expected format:', data.carousel_images);
               parsedCarouselImages = DEFAULT_SITE_INFO.carousel_images;
             }
+          } else {
+            parsedCarouselImages = DEFAULT_SITE_INFO.carousel_images;
           }
 
           setSiteInfo({
@@ -148,10 +155,13 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Creating default site info...');
       
+      // Convert carousel_images to a JSON compatible format
+      const carouselImagesArray = DEFAULT_SITE_INFO.carousel_images;
+      
       // Prepare default site info for database
       const dbSiteInfo = {
         ...DEFAULT_SITE_INFO,
-        carousel_images: JSON.stringify(DEFAULT_SITE_INFO.carousel_images)
+        carousel_images: carouselImagesArray
       };
       
       const { error } = await supabase
@@ -183,14 +193,12 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       console.log('Updating site info:', updates);
       
-      // Prepare updates for database, stringify arrays
+      // Prepare updates for database
       const dbUpdates = {
-        ...updates
+        ...updates,
+        // Ensure carousel_images is sent correctly if it's being updated
+        ...(updates.carousel_images ? { carousel_images: updates.carousel_images } : {})
       };
-      
-      if (updates.carousel_images) {
-        dbUpdates.carousel_images = JSON.stringify(updates.carousel_images);
-      }
       
       console.log('Prepared updates for database:', dbUpdates);
       
@@ -221,13 +229,10 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
           throw error;
         }
       } else {
-        // Otherwise, insert a new record
+        // Otherwise, insert a new record with all required fields
         const fullDbSiteInfo = {
           ...siteInfo,
-          ...dbUpdates,
-          carousel_images: typeof dbUpdates.carousel_images !== 'undefined' 
-            ? dbUpdates.carousel_images 
-            : JSON.stringify(siteInfo.carousel_images)
+          ...dbUpdates
         };
         
         const { error } = await supabase
