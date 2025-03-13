@@ -40,7 +40,7 @@ const ProductContext = createContext<ProductContextType | undefined>(undefined);
 export const useProducts = () => {
   const context = useContext(ProductContext);
   if (!context) {
-    throw new Error('useProducts deve ser usado dentro de um ProductProvider');
+    throw new Error('useProducts debe ser usado dentro de un ProductProvider');
   }
   return context;
 };
@@ -50,21 +50,31 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
-  // Carregar produtos do Supabase
+  // Fetch products from Supabase
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        setIsLoading(true);
+        console.log('Fetching products...');
+        
         const { data, error } = await supabase
           .from('products')
           .select('*')
           .order('created_at', { ascending: false });
 
         if (error) {
-          console.error('Erro ao buscar produtos:', error);
-          setIsLoading(false);
+          console.error('Error fetching products:', error);
+          toast({
+            title: "Error",
+            description: `Error al cargar productos: ${error.message}`,
+            variant: "destructive",
+            duration: 5000,
+          });
           return;
         }
 
+        console.log('Products data from Supabase:', data);
+        
         if (data && data.length > 0) {
           const formattedProducts = data.map(item => ({
             id: item.id,
@@ -79,23 +89,31 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           }));
           
           setProducts(formattedProducts);
+          console.log('Formatted products:', formattedProducts);
         } else {
-          // Se não houver produtos no banco, criar produtos padrão
+          // If no products in the database, create default products
           await createDefaultProducts();
         }
-      } catch (error) {
-        console.error('Erro ao processar produtos:', error);
+      } catch (error: any) {
+        console.error('Error processing products:', error);
+        toast({
+          title: "Error",
+          description: `Error inesperado: ${error.message || 'Error desconocido'}`,
+          variant: "destructive",
+          duration: 5000,
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchProducts();
-  }, []);
+  }, [toast]);
 
-  // Função para criar produtos padrão
+  // Function to create default products
   const createDefaultProducts = async () => {
     try {
+      console.log('Creating default products...');
       const defaultProducts = [
         {
           title: 'Camiseta Personalizada',
@@ -104,17 +122,17 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           image_url: '/placeholder.svg',
           card_color: '#C8B6E2', // Color por defecto (lila)
           stock_quantity: 25,
-          colors: [
+          colors: JSON.stringify([
             { id: 'white', name: 'Blanco', hex: '#FFFFFF' },
             { id: 'black', name: 'Negro', hex: '#000000' },
             { id: 'blue', name: 'Azul', hex: '#0EA5E9' }
-          ],
-          sizes: [
+          ]),
+          sizes: JSON.stringify([
             { id: 's', name: 'S', available: true },
             { id: 'm', name: 'M', available: true },
             { id: 'l', name: 'L', available: true },
             { id: 'xl', name: 'XL', available: false }
-          ]
+          ])
         },
         {
           title: 'Sudadera con Capucha',
@@ -123,16 +141,16 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           image_url: '/placeholder.svg',
           card_color: '#E6DEFF', // Color lila claro
           stock_quantity: 15,
-          colors: [
+          colors: JSON.stringify([
             { id: 'gray', name: 'Gris', hex: '#888888' },
             { id: 'black', name: 'Negro', hex: '#000000' }
-          ],
-          sizes: [
+          ]),
+          sizes: JSON.stringify([
             { id: 's', name: 'S', available: false },
             { id: 'm', name: 'M', available: true },
             { id: 'l', name: 'L', available: true },
             { id: 'xl', name: 'XL', available: true }
-          ]
+          ])
         },
         {
           title: 'Gorra Personalizada',
@@ -141,22 +159,22 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           image_url: '/placeholder.svg',
           card_color: '#A78BDA', // Color lila oscuro
           stock_quantity: 30,
-          colors: [
+          colors: JSON.stringify([
             { id: 'white', name: 'Blanco', hex: '#FFFFFF' },
             { id: 'red', name: 'Rojo', hex: '#EF4444' }
-          ],
-          sizes: [
+          ]),
+          sizes: JSON.stringify([
             { id: 'uni', name: 'Única', available: true }
-          ]
+          ])
         }
       ];
       
-      // Salvamos produtos por padrão no Supabase
+      // Save default products to Supabase
       for (const product of defaultProducts) {
         await addProductToSupabase(product);
       }
       
-      // Buscamos novamente para obter os IDs gerados
+      // Fetch products again to get the IDs generated
       const { data: newData } = await supabase
         .from('products')
         .select('*')
@@ -176,32 +194,34 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }));
         
         setProducts(formattedProducts);
+        console.log('Created default products:', formattedProducts);
       }
-    } catch (error) {
-      console.error('Erro ao criar produtos padrão:', error);
+    } catch (error: any) {
+      console.error('Error creating default products:', error);
+      toast({
+        title: "Error",
+        description: `Error al crear productos por defecto: ${error.message || 'Error desconocido'}`,
+        variant: "destructive",
+        duration: 5000,
+      });
     }
   };
 
-  // Função auxiliar para adicionar produto ao Supabase
+  // Helper function to add product to Supabase
   const addProductToSupabase = async (product: any) => {
     try {
+      console.log('Adding product to Supabase:', product);
+      
       const { error } = await supabase
         .from('products')
-        .insert({
-          title: product.title,
-          description: product.description,
-          price: product.price,
-          image_url: product.image_url || product.imageUrl,
-          card_color: product.card_color || product.cardColor,
-          stock_quantity: product.stock_quantity || product.stockQuantity,
-          sizes: typeof product.sizes === 'string' ? product.sizes : JSON.stringify(product.sizes),
-          colors: typeof product.colors === 'string' ? product.colors : JSON.stringify(product.colors)
-        });
+        .insert(product);
         
       if (error) {
-        console.error('Erro ao adicionar produto ao Supabase:', error);
+        console.error('Error adding product to Supabase:', error);
         throw error;
       }
+      
+      console.log('Product added successfully');
     } catch (error) {
       console.error('Error in addProductToSupabase:', error);
       throw error;
@@ -211,6 +231,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const addProduct = async (product: Omit<Product, 'id'> & { id?: string }) => {
     try {
       setIsLoading(true);
+      console.log('Adding new product:', product);
       
       // Map from our client model to the database model and stringify arrays
       const dbProduct = {
@@ -224,12 +245,19 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         colors: JSON.stringify(product.colors)
       };
       
+      console.log('Prepared product for database:', dbProduct);
+      
       const { data, error } = await supabase
         .from('products')
         .insert(dbProduct)
         .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error inserting product:', error);
+        throw error;
+      }
+      
+      console.log('Insert response:', data);
       
       if (data && data.length > 0) {
         const newProduct = {
@@ -247,16 +275,18 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setProducts(prevProducts => [...prevProducts, newProduct]);
         
         toast({
-          title: "Produto adicionado",
-          description: "O produto foi adicionado com sucesso",
+          title: "Producto adicionado",
+          description: "El producto fue adicionado con éxito",
           duration: 3000,
         });
+        
+        console.log('Product added successfully:', newProduct);
       }
     } catch (error: any) {
-      console.error('Erro ao adicionar produto:', error);
+      console.error('Error adding product:', error);
       toast({
-        title: "Erro",
-        description: `Falha ao adicionar produto: ${error.message || 'Erro desconhecido'}`,
+        title: "Error",
+        description: `Error al adicionar producto: ${error.message || 'Error desconocido'}`,
         variant: "destructive",
         duration: 5000,
       });
@@ -268,8 +298,9 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const updateProduct = async (id: string, updates: Partial<Product>) => {
     try {
       setIsLoading(true);
+      console.log('Updating product:', id, updates);
       
-      // Converter para o formato do banco de dados
+      // Convert to database format
       const dbUpdates: any = {};
       if (updates.title !== undefined) dbUpdates.title = updates.title;
       if (updates.description !== undefined) dbUpdates.description = updates.description;
@@ -280,12 +311,17 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (updates.sizes !== undefined) dbUpdates.sizes = JSON.stringify(updates.sizes);
       if (updates.colors !== undefined) dbUpdates.colors = JSON.stringify(updates.colors);
       
+      console.log('Prepared updates for database:', dbUpdates);
+      
       const { error } = await supabase
         .from('products')
         .update(dbUpdates)
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating product:', error);
+        throw error;
+      }
       
       setProducts(prevProducts => 
         prevProducts.map(product => 
@@ -294,15 +330,17 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       );
       
       toast({
-        title: "Produto atualizado",
-        description: "O produto foi atualizado com sucesso",
+        title: "Producto actualizado",
+        description: "El producto fue actualizado con éxito",
         duration: 3000,
       });
+      
+      console.log('Product updated successfully');
     } catch (error: any) {
-      console.error('Erro ao atualizar produto:', error);
+      console.error('Error updating product:', error);
       toast({
-        title: "Erro",
-        description: `Falha ao atualizar produto: ${error.message || 'Erro desconhecido'}`,
+        title: "Error",
+        description: `Error al actualizar producto: ${error.message || 'Error desconocido'}`,
         variant: "destructive",
         duration: 5000,
       });
@@ -314,28 +352,34 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const removeProduct = async (id: string) => {
     try {
       setIsLoading(true);
+      console.log('Removing product:', id);
       
       const { error } = await supabase
         .from('products')
         .delete()
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error removing product:', error);
+        throw error;
+      }
       
       setProducts(prevProducts => 
         prevProducts.filter(product => product.id !== id)
       );
       
       toast({
-        title: "Produto removido",
-        description: "O produto foi removido com sucesso",
+        title: "Producto removido",
+        description: "El producto fue removido con éxito",
         duration: 3000,
       });
+      
+      console.log('Product removed successfully');
     } catch (error: any) {
-      console.error('Erro ao remover produto:', error);
+      console.error('Error removing product:', error);
       toast({
-        title: "Erro",
-        description: `Falha ao remover produto: ${error.message || 'Erro desconhecido'}`,
+        title: "Error",
+        description: `Error al remover producto: ${error.message || 'Error desconocido'}`,
         variant: "destructive",
         duration: 5000,
       });

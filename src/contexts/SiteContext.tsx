@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { useToast } from '../hooks/use-toast';
@@ -52,10 +51,13 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Carregar informações do site do Supabase
+  // Fetch site info from Supabase
   useEffect(() => {
     const fetchSiteInfo = async () => {
       try {
+        setIsLoading(true);
+        console.log('Fetching site info...');
+        
         const { data, error } = await supabase
           .from('site_info')
           .select('*')
@@ -64,13 +66,27 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .single();
 
         if (error) {
-          console.error('Erro ao buscar informações do site:', error);
-          setIsLoading(false);
+          // If no records found, we'll create a default one
+          if (error.code === 'PGRST116') {
+            console.log('No site info found, creating default...');
+            await createDefaultSiteInfo();
+            return;
+          }
+          
+          console.error('Error fetching site info:', error);
+          toast({
+            title: "Error",
+            description: `Error al cargar información del sitio: ${error.message}`,
+            variant: "destructive",
+            duration: 5000,
+          });
           return;
         }
 
+        console.log('Site info from Supabase:', data);
+        
         if (data) {
-          // Transformar o array de imagens de JSON para array se necessário
+          // Transform carousel_images from JSON to array if needed
           const carousel_images = typeof data.carousel_images === 'string' 
             ? JSON.parse(data.carousel_images) 
             : data.carousel_images;
@@ -88,22 +104,77 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
             service_description: data.service_description,
             faq_title: data.faq_title,
           });
+          
+          console.log('Site info loaded successfully');
         }
-      } catch (error) {
-        console.error('Erro ao processar dados do site:', error);
+      } catch (error: any) {
+        console.error('Error processing site info:', error);
+        toast({
+          title: "Error",
+          description: `Error inesperado: ${error.message || 'Error desconocido'}`,
+          variant: "destructive",
+          duration: 5000,
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchSiteInfo();
-  }, []);
+  }, [toast]);
+
+  // Create default site info if none exists
+  const createDefaultSiteInfo = async () => {
+    try {
+      console.log('Creating default site info...');
+      
+      // Prepare default site info for database
+      const dbSiteInfo = {
+        ...DEFAULT_SITE_INFO,
+        carousel_images: JSON.stringify(DEFAULT_SITE_INFO.carousel_images)
+      };
+      
+      const { error } = await supabase
+        .from('site_info')
+        .insert([dbSiteInfo]);
+      
+      if (error) {
+        console.error('Error creating default site info:', error);
+        throw error;
+      }
+      
+      setSiteInfo(DEFAULT_SITE_INFO);
+      console.log('Default site info created successfully');
+    } catch (error: any) {
+      console.error('Error creating default site info:', error);
+      toast({
+        title: "Error",
+        description: `Error al crear información por defecto: ${error.message || 'Error desconocido'}`,
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const updateSiteInfo = async (updates: Partial<SiteInfo>) => {
     try {
       setIsLoading(true);
+      console.log('Updating site info:', updates);
       
-      // Buscar o ID do registro existente
+      // Prepare updates for database, stringify arrays
+      const dbUpdates = {
+        ...updates
+      };
+      
+      if (updates.carousel_images) {
+        dbUpdates.carousel_images = JSON.stringify(updates.carousel_images);
+      }
+      
+      console.log('Prepared updates for database:', dbUpdates);
+      
+      // Fetch the ID of the existing record
       const { data: existingRecord, error: fetchError } = await supabase
         .from('site_info')
         .select('id')
@@ -112,39 +183,57 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Error fetching existing site info:', fetchError);
         throw fetchError;
       }
 
       const updatedInfo = { ...siteInfo, ...updates };
       
-      // Se encontramos um registro existente, atualizamos
+      // If we found an existing record, update it
       if (existingRecord) {
         const { error } = await supabase
           .from('site_info')
-          .update(updatedInfo)
+          .update(dbUpdates)
           .eq('id', existingRecord.id);
         
-        if (error) throw error;
+        if (error) {
+          console.error('Error updating site info:', error);
+          throw error;
+        }
       } else {
-        // Caso contrário, inserimos um novo registro
+        // Otherwise, insert a new record
+        const fullDbSiteInfo = {
+          ...siteInfo,
+          ...dbUpdates,
+          carousel_images: typeof dbUpdates.carousel_images !== 'undefined' 
+            ? dbUpdates.carousel_images 
+            : JSON.stringify(siteInfo.carousel_images)
+        };
+        
         const { error } = await supabase
           .from('site_info')
-          .insert([updatedInfo]);
+          .insert([fullDbSiteInfo]);
         
-        if (error) throw error;
+        if (error) {
+          console.error('Error inserting site info:', error);
+          throw error;
+        }
       }
 
       setSiteInfo(updatedInfo);
+      
       toast({
-        title: "Sucesso",
-        description: "Informações do site atualizadas com sucesso",
+        title: "Éxito",
+        description: "Información del sitio actualizada con éxito",
         duration: 3000,
       });
+      
+      console.log('Site info updated successfully');
     } catch (error: any) {
-      console.error('Erro ao atualizar informações do site:', error);
+      console.error('Error updating site info:', error);
       toast({
-        title: "Erro",
-        description: `Falha ao atualizar: ${error.message || 'Erro desconhecido'}`,
+        title: "Error",
+        description: `Error al actualizar: ${error.message || 'Error desconocido'}`,
         variant: "destructive",
         duration: 5000,
       });
