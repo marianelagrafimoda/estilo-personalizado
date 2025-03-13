@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { useToast } from '../hooks/use-toast';
@@ -197,18 +198,21 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       setIsLoading(true);
       
+      // Map from our client model to the database model
+      const dbProduct = {
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        image_url: product.imageUrl,
+        card_color: product.cardColor,
+        stock_quantity: product.stockQuantity,
+        sizes: product.sizes,
+        colors: product.colors
+      };
+      
       const { data, error } = await supabase
         .from('products')
-        .insert({
-          title: product.title,
-          description: product.description,
-          price: product.price,
-          image_url: product.imageUrl,
-          card_color: product.cardColor,
-          stock_quantity: product.stockQuantity,
-          sizes: product.sizes,
-          colors: product.colors
-        })
+        .insert(dbProduct)
         .select();
       
       if (error) throw error;
