@@ -175,21 +175,26 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Função auxiliar para adicionar produto ao Supabase
   const addProductToSupabase = async (product: any) => {
-    const { error } = await supabase
-      .from('products')
-      .insert({
-        title: product.title,
-        description: product.description,
-        price: product.price,
-        image_url: product.image_url,
-        card_color: product.card_color,
-        stock_quantity: product.stock_quantity,
-        sizes: product.sizes,
-        colors: product.colors
-      });
-      
-    if (error) {
-      console.error('Erro ao adicionar produto ao Supabase:', error);
+    try {
+      const { error } = await supabase
+        .from('products')
+        .insert({
+          title: product.title,
+          description: product.description,
+          price: product.price,
+          image_url: product.image_url,
+          card_color: product.card_color,
+          stock_quantity: product.stock_quantity,
+          sizes: typeof product.sizes === 'string' ? product.sizes : JSON.stringify(product.sizes),
+          colors: typeof product.colors === 'string' ? product.colors : JSON.stringify(product.colors)
+        });
+        
+      if (error) {
+        console.error('Erro ao adicionar produto ao Supabase:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error in addProductToSupabase:', error);
       throw error;
     }
   };
@@ -198,7 +203,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       setIsLoading(true);
       
-      // Map from our client model to the database model
+      // Map from our client model to the database model and stringify arrays
       const dbProduct = {
         title: product.title,
         description: product.description,
@@ -206,8 +211,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         image_url: product.imageUrl,
         card_color: product.cardColor,
         stock_quantity: product.stockQuantity,
-        sizes: product.sizes,
-        colors: product.colors
+        sizes: JSON.stringify(product.sizes),
+        colors: JSON.stringify(product.colors)
       };
       
       const { data, error } = await supabase
@@ -263,8 +268,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
       if (updates.cardColor !== undefined) dbUpdates.card_color = updates.cardColor;
       if (updates.stockQuantity !== undefined) dbUpdates.stock_quantity = updates.stockQuantity;
-      if (updates.sizes !== undefined) dbUpdates.sizes = updates.sizes;
-      if (updates.colors !== undefined) dbUpdates.colors = updates.colors;
+      if (updates.sizes !== undefined) dbUpdates.sizes = JSON.stringify(updates.sizes);
+      if (updates.colors !== undefined) dbUpdates.colors = JSON.stringify(updates.colors);
       
       const { error } = await supabase
         .from('products')
