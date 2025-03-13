@@ -86,23 +86,42 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Site info from Supabase:', data);
         
         if (data) {
-          // Transform carousel_images from JSON to array if needed
-          const carousel_images = typeof data.carousel_images === 'string' 
-            ? JSON.parse(data.carousel_images) 
-            : data.carousel_images;
+          // Parse carousel_images based on its type
+          let parsedCarouselImages: string[] = [];
+          
+          if (data.carousel_images) {
+            // If it's a string, try to parse it as JSON
+            if (typeof data.carousel_images === 'string') {
+              try {
+                parsedCarouselImages = JSON.parse(data.carousel_images);
+              } catch (e) {
+                console.error('Error parsing carousel_images string:', e);
+                parsedCarouselImages = [data.carousel_images]; // Use as single item array if parsing fails
+              }
+            } 
+            // If it's already an array, use it directly
+            else if (Array.isArray(data.carousel_images)) {
+              parsedCarouselImages = data.carousel_images;
+            } 
+            // Otherwise, try to convert to array if possible
+            else {
+              console.warn('carousel_images is not in expected format:', data.carousel_images);
+              parsedCarouselImages = DEFAULT_SITE_INFO.carousel_images;
+            }
+          }
 
           setSiteInfo({
-            slogan: data.slogan,
-            whatsapp_number: data.whatsapp_number,
-            carousel_images,
-            unique_style_title: data.unique_style_title,
-            materials_title: data.materials_title,
-            materials_description: data.materials_description,
-            design_title: data.design_title,
-            design_description: data.design_description,
-            service_title: data.service_title,
-            service_description: data.service_description,
-            faq_title: data.faq_title,
+            slogan: data.slogan || DEFAULT_SITE_INFO.slogan,
+            whatsapp_number: data.whatsapp_number || DEFAULT_SITE_INFO.whatsapp_number,
+            carousel_images: parsedCarouselImages,
+            unique_style_title: data.unique_style_title || DEFAULT_SITE_INFO.unique_style_title,
+            materials_title: data.materials_title || DEFAULT_SITE_INFO.materials_title,
+            materials_description: data.materials_description || DEFAULT_SITE_INFO.materials_description,
+            design_title: data.design_title || DEFAULT_SITE_INFO.design_title,
+            design_description: data.design_description || DEFAULT_SITE_INFO.design_description,
+            service_title: data.service_title || DEFAULT_SITE_INFO.service_title,
+            service_description: data.service_description || DEFAULT_SITE_INFO.service_description,
+            faq_title: data.faq_title || DEFAULT_SITE_INFO.faq_title,
           });
           
           console.log('Site info loaded successfully');
