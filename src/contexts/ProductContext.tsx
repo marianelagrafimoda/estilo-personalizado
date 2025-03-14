@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../hooks/use-toast';
@@ -117,6 +116,23 @@ const productToSupabase = (product: Omit<Product, 'id'> & { id?: string }) => {
     stock_quantity: product.stockQuantity,
     card_color: product.cardColor
   };
+};
+
+// Convert partial product (for updates) to Supabase format
+const partialProductToSupabase = (product: Partial<Product> & { id?: string }) => {
+  const result: Record<string, any> = {};
+  
+  if (product.id !== undefined) result.id = product.id;
+  if (product.title !== undefined) result.title = product.title;
+  if (product.description !== undefined) result.description = product.description;
+  if (product.price !== undefined) result.price = product.price;
+  if (product.imageUrl !== undefined) result.image_url = product.imageUrl;
+  if (product.sizes !== undefined) result.sizes = JSON.stringify(product.sizes);
+  if (product.colors !== undefined) result.colors = JSON.stringify(product.colors);
+  if (product.stockQuantity !== undefined) result.stock_quantity = product.stockQuantity;
+  if (product.cardColor !== undefined) result.card_color = product.cardColor;
+  
+  return result;
 };
 
 // Convert from Supabase format to our product model
@@ -268,8 +284,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setProducts(updatedProducts);
     
     try {
-      // Update in Supabase
-      const supabaseData = productToSupabase({ id, ...updates });
+      // Update in Supabase - Use the new partialProductToSupabase function
+      const supabaseData = partialProductToSupabase({ id, ...updates });
       
       // Remove id from the data to update (we use it in the condition)
       delete supabaseData.id;
