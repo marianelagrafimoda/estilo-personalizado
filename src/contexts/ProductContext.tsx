@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../hooks/use-toast';
@@ -8,6 +7,7 @@ export interface Size {
   id: string;
   name: string;
   available: boolean;
+  isChildSize?: boolean; // Added isChildSize property
 }
 
 export interface Color {
@@ -61,10 +61,12 @@ const DEFAULT_PRODUCTS: Product[] = [
       { id: 'blue', name: 'Azul', hex: '#0EA5E9' }
     ],
     sizes: [
-      { id: 's', name: 'S', available: true },
-      { id: 'm', name: 'M', available: true },
-      { id: 'l', name: 'L', available: true },
-      { id: 'xl', name: 'XL', available: false }
+      { id: 's', name: 'S', available: true, isChildSize: false },
+      { id: 'm', name: 'M', available: true, isChildSize: false },
+      { id: 'l', name: 'L', available: true, isChildSize: false },
+      { id: 'xl', name: 'XL', available: false, isChildSize: false },
+      { id: 'child-s', name: 'S (Niño)', available: true, isChildSize: true },
+      { id: 'child-m', name: 'M (Niño)', available: true, isChildSize: true },
     ]
   },
   {
@@ -80,10 +82,12 @@ const DEFAULT_PRODUCTS: Product[] = [
       { id: 'black', name: 'Negro', hex: '#000000' }
     ],
     sizes: [
-      { id: 's', name: 'S', available: false },
-      { id: 'm', name: 'M', available: true },
-      { id: 'l', name: 'L', available: true },
-      { id: 'xl', name: 'XL', available: true }
+      { id: 's', name: 'S', available: false, isChildSize: false },
+      { id: 'm', name: 'M', available: true, isChildSize: false },
+      { id: 'l', name: 'L', available: true, isChildSize: false },
+      { id: 'xl', name: 'XL', available: true, isChildSize: false },
+      { id: 'child-s', name: 'S (Niño)', available: true, isChildSize: true },
+      { id: 'child-m', name: 'M (Niño)', available: true, isChildSize: true },
     ]
   },
   {
@@ -99,7 +103,8 @@ const DEFAULT_PRODUCTS: Product[] = [
       { id: 'red', name: 'Rojo', hex: '#EF4444' }
     ],
     sizes: [
-      { id: 'uni', name: 'Única', available: true }
+      { id: 'uni', name: 'Única', available: true, isChildSize: false },
+      { id: 'child-uni', name: 'Única (Niño)', available: true, isChildSize: true },
     ]
   }
 ];

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { Product } from '../contexts/ProductContext';
@@ -20,7 +19,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   
   // Separando tamanhos para adultos e crianças
   const adultSizes = availableSizes.filter(size => !size.isChildSize);
-  const childSizes = availableSizes.filter(size => size.isChildSize);
+  const childSizes = availableSizes.filter(size => size.isChildSize === true);
   
   const handleAddToCart = () => {
     if (selectedSize && selectedColor) {
