@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -13,7 +14,8 @@ import {
   Package,
   Plus,
   Trash2,
-  CircleDashed
+  Upload,
+  Loader2
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -30,14 +32,15 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSiteInfo } from '../contexts/SiteContext';
 import { useProducts, Color } from '../contexts/ProductContext';
 import { useToast } from '../hooks/use-toast';
+import ImageUploader from '../components/ImageUploader';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isAdmin } = useAuth();
-  const { siteInfo, updateSiteInfo } = useSiteInfo();
-  const { products, updateProduct, addProduct, removeProduct } = useProducts();
+  const { siteInfo, updateSiteInfo, uploadSiteImage, isLoading: isSiteLoading } = useSiteInfo();
+  const { products, updateProduct, addProduct, removeProduct, uploadProductImage, isLoading: isProductsLoading } = useProducts();
   const { toast } = useToast();
   
   // Site Info States
@@ -45,6 +48,10 @@ const AdminPage: React.FC = () => {
   const [newWhatsappNumber, setNewWhatsappNumber] = useState(siteInfo.whatsappNumber);
   const [newCarouselImages, setNewCarouselImages] = useState<string[]>(siteInfo.carouselImages);
   const [newCarouselImage, setNewCarouselImage] = useState('');
+  
+  // Estados para upload de imagem
+  const [isUploadingProduct, setIsUploadingProduct] = useState(false);
+  const [isUploadingCarousel, setIsUploadingCarousel] = useState(false);
   
   // Textos editables
   const [newMaterialsTitle, setNewMaterialsTitle] = useState(siteInfo.materialsTitle);
@@ -66,13 +73,13 @@ const AdminPage: React.FC = () => {
     cardColor: '#C8B6E2', // Color lila por defecto
     stockQuantity: 0,
     sizes: [
-      { id: 's', name: 'S', available: true },
-      { id: 'm', name: 'M', available: true },
-      { id: 'l', name: 'L', available: true },
-      { id: 'xl', name: 'XL', available: true },
-      { id: 'kids-s', name: 'Niños S', available: true },
-      { id: 'kids-m', name: 'Niños M', available: true },
-      { id: 'kids-l', name: 'Niños L', available: true }
+      { id: 's', name: 'S', available: true, isChildSize: false },
+      { id: 'm', name: 'M', available: true, isChildSize: false },
+      { id: 'l', name: 'L', available: true, isChildSize: false },
+      { id: 'xl', name: 'XL', available: true, isChildSize: false },
+      { id: 'kids-s', name: 'Niños S', available: true, isChildSize: true },
+      { id: 'kids-m', name: 'Niños M', available: true, isChildSize: true },
+      { id: 'kids-l', name: 'Niños L', available: true, isChildSize: true }
     ],
     colors: [
       { id: 'white', name: 'Blanco', hex: '#FFFFFF' }
@@ -91,6 +98,23 @@ const AdminPage: React.FC = () => {
       navigate('/login');
     }
   }, [isAuthenticated, isAdmin, navigate]);
+
+  React.useEffect(() => {
+    // Atualizar estados quando siteInfo mudar
+    if (!isSiteLoading) {
+      setNewSlogan(siteInfo.slogan);
+      setNewWhatsappNumber(siteInfo.whatsappNumber);
+      setNewCarouselImages(siteInfo.carouselImages);
+      setNewMaterialsTitle(siteInfo.materialsTitle);
+      setNewMaterialsDesc(siteInfo.materialsDescription);
+      setNewDesignTitle(siteInfo.designTitle);
+      setNewDesignDesc(siteInfo.designDescription);
+      setNewServiceTitle(siteInfo.serviceTitle);
+      setNewServiceDesc(siteInfo.serviceDescription);
+      setNewFaqTitle(siteInfo.faqTitle);
+      setNewUniqueStyleTitle(siteInfo.uniqueStyleTitle);
+    }
+  }, [siteInfo, isSiteLoading]);
 
   const handleSiteInfoUpdate = () => {
     updateSiteInfo({
@@ -122,6 +146,41 @@ const AdminPage: React.FC = () => {
 
   const removeCarouselImage = (image: string) => {
     setNewCarouselImages(newCarouselImages.filter(img => img !== image));
+  };
+  
+  const handleUploadCarouselImage = async (file: File) => {
+    setIsUploadingCarousel(true);
+    try {
+      const imageUrl = await uploadSiteImage(file);
+      setNewCarouselImages(prev => [...prev, imageUrl]);
+      return imageUrl;
+    } finally {
+      setIsUploadingCarousel(false);
+    }
+  };
+  
+  const handleUploadProductImage = async (file: File) => {
+    setIsUploadingProduct(true);
+    try {
+      const imageUrl = await uploadProductImage(file);
+      setNewProduct(prev => ({ ...prev, imageUrl }));
+      return imageUrl;
+    } finally {
+      setIsUploadingProduct(false);
+    }
+  };
+  
+  const handleUploadEditingProductImage = async (file: File) => {
+    if (!editingProduct) return '';
+    
+    try {
+      const imageUrl = await uploadProductImage(file);
+      setEditingProduct(prev => ({ ...prev, imageUrl }));
+      return imageUrl;
+    } catch (error) {
+      console.error("Error uploading product image:", error);
+      throw error;
+    }
   };
 
   const handleAddProductColor = () => {
@@ -193,13 +252,13 @@ const AdminPage: React.FC = () => {
         cardColor: '#C8B6E2',
         stockQuantity: 0,
         sizes: [
-          { id: 's', name: 'S', available: true },
-          { id: 'm', name: 'M', available: true },
-          { id: 'l', name: 'L', available: true },
-          { id: 'xl', name: 'XL', available: true },
-          { id: 'kids-s', name: 'Niños S', available: true },
-          { id: 'kids-m', name: 'Niños M', available: true },
-          { id: 'kids-l', name: 'Niños L', available: true }
+          { id: 's', name: 'S', available: true, isChildSize: false },
+          { id: 'm', name: 'M', available: true, isChildSize: false },
+          { id: 'l', name: 'L', available: true, isChildSize: false },
+          { id: 'xl', name: 'XL', available: true, isChildSize: false },
+          { id: 'kids-s', name: 'Niños S', available: true, isChildSize: true },
+          { id: 'kids-m', name: 'Niños M', available: true, isChildSize: true },
+          { id: 'kids-l', name: 'Niños L', available: true, isChildSize: true }
         ],
         colors: [
           { id: 'white', name: 'Blanco', hex: '#FFFFFF' }
@@ -223,15 +282,15 @@ const AdminPage: React.FC = () => {
 
   const startEditingProduct = (product: any) => {
     const hasKidsSizes = product.sizes.some((size: any) => 
-      size.id === 'kids-s' || size.id === 'kids-m' || size.id === 'kids-l'
+      size.id === 'kids-s' || size.id === 'kids-m' || size.id === 'kids-l' || size.isChildSize
     );
     
     if (!hasKidsSizes) {
       const updatedSizes = [
         ...product.sizes,
-        { id: 'kids-s', name: 'Niños S', available: false },
-        { id: 'kids-m', name: 'Niños M', available: false },
-        { id: 'kids-l', name: 'Niños L', available: false }
+        { id: 'kids-s', name: 'Niños S', available: false, isChildSize: true },
+        { id: 'kids-m', name: 'Niños M', available: false, isChildSize: true },
+        { id: 'kids-l', name: 'Niños L', available: false, isChildSize: true }
       ];
       setEditingProduct({...product, sizes: updatedSizes});
     } else {
@@ -304,6 +363,15 @@ const AdminPage: React.FC = () => {
 
   if (!isAuthenticated || !isAdmin) {
     return null; // Will redirect in useEffect
+  }
+
+  if (isSiteLoading || isProductsLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-lilac" />
+        <p className="mt-4 text-lg">Cargando datos...</p>
+      </div>
+    );
   }
 
   return (
@@ -479,19 +547,30 @@ const AdminPage: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Input
-                    value={newCarouselImage}
-                    onChange={(e) => setNewCarouselImage(e.target.value)}
-                    placeholder="URL de la imagen (ej: /carousel4.jpg)"
-                    className="border-lilac/30 focus:border-lilac focus:ring-lilac"
-                  />
-                  <Button 
-                    onClick={addCarouselImage}
-                    className="whitespace-nowrap bg-lilac hover:bg-lilac-dark"
-                  >
-                    Agregar Imagen
-                  </Button>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      value={newCarouselImage}
+                      onChange={(e) => setNewCarouselImage(e.target.value)}
+                      placeholder="URL de la imagen (ej: /carousel4.jpg)"
+                      className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                    />
+                    <Button 
+                      onClick={addCarouselImage}
+                      className="whitespace-nowrap bg-lilac hover:bg-lilac-dark"
+                    >
+                      Agregar URL
+                    </Button>
+                  </div>
+                  
+                  <div className="border-t border-gray-200 pt-4">
+                    <h3 className="text-sm font-medium mb-2">O suba una imagen desde su dispositivo:</h3>
+                    <ImageUploader 
+                      onImageUpload={handleUploadCarouselImage} 
+                      label="Subir imagen para el carrusel"
+                      maxSize={2}
+                    />
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
@@ -570,12 +649,30 @@ const AdminPage: React.FC = () => {
                 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">URL de la Imagen</label>
-                  <Input
-                    value={newProduct.imageUrl}
-                    onChange={(e) => setNewProduct({...newProduct, imageUrl: e.target.value})}
-                    placeholder="URL de la imagen (ej: /product1.jpg)"
-                    className="border-lilac/30 focus:border-lilac focus:ring-lilac"
-                  />
+                  <div className="flex flex-col space-y-2">
+                    <Input
+                      value={newProduct.imageUrl}
+                      onChange={(e) => setNewProduct({...newProduct, imageUrl: e.target.value})}
+                      placeholder="URL de la imagen (ej: /product1.jpg)"
+                      className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                    />
+                    <div className="text-center text-sm text-gray-500">o</div>
+                    <ImageUploader 
+                      onImageUpload={handleUploadProductImage} 
+                      label="Subir imagen del producto"
+                      maxSize={2}
+                    />
+                  </div>
+                  
+                  {newProduct.imageUrl && (
+                    <div className="mt-2 border rounded-md overflow-hidden">
+                      <img
+                        src={newProduct.imageUrl}
+                        alt="Vista previa del producto"
+                        className="w-full h-40 object-contain bg-gray-100"
+                      />
+                    </div>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
@@ -613,25 +710,50 @@ const AdminPage: React.FC = () => {
                 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Tallas Disponibles</label>
-                  <div className="flex flex-wrap gap-2">
-                    {newProduct.sizes.map((size) => (
-                      <button
-                        key={size.id}
-                        onClick={() => {
-                          const updatedSizes = newProduct.sizes.map(s => 
-                            s.id === size.id ? {...s, available: !s.available} : s
-                          );
-                          setNewProduct({...newProduct, sizes: updatedSizes});
-                        }}
-                        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                          size.available
-                            ? 'bg-lilac text-white'
-                            : 'bg-gray-200 text-gray-500'
-                        }`}
-                      >
-                        {size.name}
-                      </button>
-                    ))}
+                  <div className="space-y-2">
+                    <p className="text-xs text-gray-600">Tallas para adultos:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {newProduct.sizes.filter(size => !size.isChildSize).map((size) => (
+                        <button
+                          key={size.id}
+                          onClick={() => {
+                            const updatedSizes = newProduct.sizes.map(s => 
+                              s.id === size.id ? {...s, available: !s.available} : s
+                            );
+                            setNewProduct({...newProduct, sizes: updatedSizes});
+                          }}
+                          className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                            size.available
+                              ? 'bg-lilac text-white'
+                              : 'bg-gray-200 text-gray-500'
+                          }`}
+                        >
+                          {size.name}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    <p className="text-xs text-gray-600 mt-2">Tallas para niños:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {newProduct.sizes.filter(size => size.isChildSize).map((size) => (
+                        <button
+                          key={size.id}
+                          onClick={() => {
+                            const updatedSizes = newProduct.sizes.map(s => 
+                              s.id === size.id ? {...s, available: !s.available} : s
+                            );
+                            setNewProduct({...newProduct, sizes: updatedSizes});
+                          }}
+                          className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                            size.available
+                              ? 'bg-lilac text-white'
+                              : 'bg-gray-200 text-gray-500'
+                          }`}
+                        >
+                          {size.name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
                 
@@ -707,12 +829,23 @@ const AdminPage: React.FC = () => {
                     {editingProduct && editingProduct.id === product.id ? (
                       <>
                         <div className="relative h-48">
-                          <Input
-                            value={editingProduct.imageUrl}
-                            onChange={(e) => setEditingProduct({...editingProduct, imageUrl: e.target.value})}
-                            placeholder="URL de la imagen"
-                            className="absolute inset-0 h-full rounded-none border-0"
-                          />
+                          {editingProduct.imageUrl ? (
+                            <img 
+                              src={editingProduct.imageUrl} 
+                              alt={editingProduct.title} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                              <ImageIcon className="h-12 w-12 text-gray-400" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <ImageUploader 
+                              onImageUpload={handleUploadEditingProductImage}
+                              label="Cambiar imagen"
+                            />
+                          </div>
                         </div>
                         <CardContent className="p-4 space-y-3">
                           <Input
@@ -774,10 +907,31 @@ const AdminPage: React.FC = () => {
                             </div>
                           </div>
 
-                          <div>
-                            <p className="text-sm font-medium mb-1">Tallas:</p>
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium mb-1">Tallas para adultos:</p>
                             <div className="flex flex-wrap gap-2">
-                              {editingProduct.sizes.map((size: any) => (
+                              {editingProduct.sizes
+                                .filter((size: any) => !size.isChildSize)
+                                .map((size: any) => (
+                                <button
+                                  key={size.id}
+                                  onClick={() => toggleSizeAvailability(editingProduct, size.id)}
+                                  className={`px-2 py-1 rounded text-xs font-medium ${
+                                    size.available
+                                      ? 'bg-lilac text-white'
+                                      : 'bg-gray-200 text-gray-500'
+                                  }`}
+                                >
+                                  {size.name}
+                                </button>
+                              ))}
+                            </div>
+                            
+                            <p className="text-sm font-medium mb-1 mt-2">Tallas para niños:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {editingProduct.sizes
+                                .filter((size: any) => size.isChildSize)
+                                .map((size: any) => (
                                 <button
                                   key={size.id}
                                   onClick={() => toggleSizeAvailability(editingProduct, size.id)}
@@ -894,11 +1048,23 @@ const AdminPage: React.FC = () => {
                           <p className="text-sm text-gray-600 mt-1">{product.description}</p>
                           <div className="mt-2 flex justify-between items-center">
                             <span className="font-bold">${product.price.toFixed(2)}</span>
-                            <div className="flex gap-1">
+                            <div className="flex flex-wrap gap-1">
                               {product.sizes
-                                .filter(size => size.available)
+                                .filter(size => size.available && !size.isChildSize)
                                 .map(size => (
                                   <span key={size.id} className="px-2 py-0.5 bg-lilac/10 text-lilac-dark text-xs rounded">
+                                    {size.name}
+                                  </span>
+                                ))}
+                            </div>
+                          </div>
+                          
+                          <div className="mt-1 flex justify-end">
+                            <div className="flex flex-wrap gap-1">
+                              {product.sizes
+                                .filter(size => size.available && size.isChildSize)
+                                .map(size => (
+                                  <span key={size.id} className="px-2 py-0.5 bg-pink-100 text-pink-700 text-xs rounded">
                                     {size.name}
                                   </span>
                                 ))}

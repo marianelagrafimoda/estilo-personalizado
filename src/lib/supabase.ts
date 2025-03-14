@@ -45,6 +45,33 @@ export const uploadImage = async (file: File, bucket: string = 'images', path: s
   }
 };
 
+// Função para buscar todas as imagens do carrossel
+export const getCarouselImages = async () => {
+  try {
+    const { data, error } = await supabase
+      .storage
+      .from('site_images')
+      .list('site/', {
+        sortBy: { column: 'name', order: 'asc' }
+      });
+    
+    if (error) throw error;
+    
+    // Converter os nomes de arquivos em URLs públicas
+    return data.map(file => {
+      const { data } = supabase
+        .storage
+        .from('site_images')
+        .getPublicUrl(`site/${file.name}`);
+      
+      return data.publicUrl;
+    });
+  } catch (error) {
+    console.error('Error fetching carousel images:', error);
+    return [];
+  }
+};
+
 // Função para guardar informações do site
 export const saveSiteInfo = async (siteInfo: any) => {
   try {
@@ -59,3 +86,40 @@ export const saveSiteInfo = async (siteInfo: any) => {
     throw error;
   }
 };
+
+// Criar a tabela de usuários_carts caso não exista
+export const setupDatabase = async () => {
+  try {
+    // Verificar e criar tabela user_carts
+    const { error: cartError } = await supabase.rpc('create_user_carts_if_not_exists');
+    if (cartError) console.error('Error creating user_carts table:', cartError);
+    
+    // Verificar e criar storage buckets
+    const { error: bucketError } = await supabase.storage.createBucket('site_images', {
+      public: true,
+      fileSizeLimit: 10485760 // 10MB
+    });
+    
+    if (bucketError && !bucketError.message.includes('already exists')) {
+      console.error('Error creating site_images bucket:', bucketError);
+    }
+    
+    const { error: productBucketError } = await supabase.storage.createBucket('product_images', {
+      public: true,
+      fileSizeLimit: 10485760 // 10MB
+    });
+    
+    if (productBucketError && !productBucketError.message.includes('already exists')) {
+      console.error('Error creating product_images bucket:', productBucketError);
+    }
+    
+    console.log('Database setup completed');
+    return true;
+  } catch (error) {
+    console.error('Error setting up database:', error);
+    return false;
+  }
+};
+
+// Inicializar banco de dados ao importar este módulo
+setupDatabase().catch(console.error);

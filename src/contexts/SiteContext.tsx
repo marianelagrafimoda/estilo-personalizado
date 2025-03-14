@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase, saveSiteInfo, uploadImage } from '../lib/supabase';
+import { supabase, saveSiteInfo, uploadImage, getCarouselImages } from '../lib/supabase';
 import { useToast } from '../hooks/use-toast';
 
 interface SiteInfo {
@@ -21,6 +21,7 @@ interface SiteContextType {
   siteInfo: SiteInfo;
   updateSiteInfo: (updates: Partial<SiteInfo>) => Promise<void>;
   uploadSiteImage: (file: File) => Promise<string>;
+  isLoading: boolean;
 }
 
 const DEFAULT_SITE_INFO: SiteInfo = {
@@ -113,11 +114,16 @@ const prepareFromSupabase = (data: Record<string, any>): Partial<SiteInfo> => {
 
 export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [siteInfo, setSiteInfo] = useState<SiteInfo>(DEFAULT_SITE_INFO);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
   useEffect(() => {
     const fetchSiteInfo = async () => {
+      setIsLoading(true);
       try {
+        // Buscar imagens do carrossel armazenadas no storage
+        const carouselImages = await getCarouselImages();
+        
         // Try to fetch from Supabase
         const { data, error } = await supabase
           .from('site_info')
@@ -134,7 +140,16 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (data) {
           // Convert from snake_case to camelCase and handle special fields
           const formattedData = prepareFromSupabase(data);
+          
+          // Se encontrou imagens do carrossel no storage, use-as
+          if (carouselImages && carouselImages.length > 0) {
+            formattedData.carouselImages = carouselImages;
+          }
+          
           setSiteInfo(prev => ({ ...prev, ...formattedData }));
+        } else if (carouselImages && carouselImages.length > 0) {
+          // Se não encontrou dados, mas encontrou imagens
+          setSiteInfo(prev => ({ ...prev, carouselImages }));
         }
       } catch (error) {
         console.error('Failed to fetch site info from Supabase:', error);
@@ -147,6 +162,8 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Use defaults and save to localStorage
           localStorage.setItem('siteInfo', JSON.stringify(DEFAULT_SITE_INFO));
         }
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -156,6 +173,11 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const uploadSiteImage = async (file: File): Promise<string> => {
     try {
       const imageUrl = await uploadImage(file, 'site_images', 'site/');
+      
+      // Update site info with the new image
+      const updatedImages = [...siteInfo.carouselImages, imageUrl];
+      await updateSiteInfo({ carouselImages: updatedImages });
+      
       return imageUrl;
     } catch (error) {
       console.error('Error uploading site image:', error);
@@ -224,7 +246,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <SiteContext.Provider value={{ siteInfo, updateSiteInfo, uploadSiteImage }}>
+    <SiteContext.Provider value={{ siteInfo, updateSiteInfo, uploadSiteImage, isLoading }}>
       {children}
     </SiteContext.Provider>
   );

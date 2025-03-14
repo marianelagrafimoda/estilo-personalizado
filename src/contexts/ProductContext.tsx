@@ -1,5 +1,6 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, uploadImage } from '../lib/supabase';
 import { useToast } from '../hooks/use-toast';
 import { useAuth } from './AuthContext';
 
@@ -7,7 +8,7 @@ export interface Size {
   id: string;
   name: string;
   available: boolean;
-  isChildSize?: boolean; // Added isChildSize property
+  isChildSize?: boolean;
 }
 
 export interface Color {
@@ -33,6 +34,8 @@ interface ProductContextType {
   addProduct: (product: Omit<Product, 'id'> & { id?: string }) => Promise<void>;
   updateProduct: (id: string, updates: Partial<Product>) => Promise<void>;
   removeProduct: (id: string) => Promise<void>;
+  uploadProductImage: (file: File) => Promise<string>;
+  isLoading: boolean;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -178,12 +181,14 @@ const supabaseToProduct = (data: any): Product => {
 
 export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { isAdmin } = useAuth();
   
   useEffect(() => {
     // Fetch products from Supabase
     const fetchProducts = async () => {
+      setIsLoading(true);
       try {
         const { data, error } = await supabase
           .from('products')
@@ -235,11 +240,27 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           setProducts(DEFAULT_PRODUCTS);
           localStorage.setItem('products', JSON.stringify(DEFAULT_PRODUCTS));
         }
+      } finally {
+        setIsLoading(false);
       }
     };
     
     fetchProducts();
   }, [isAdmin]);
+
+  const uploadProductImage = async (file: File): Promise<string> => {
+    try {
+      return await uploadImage(file, 'product_images', 'products/');
+    } catch (error) {
+      console.error('Error uploading product image:', error);
+      toast({
+        title: "Error al subir imagen",
+        description: "No se pudo cargar la imagen. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
 
   const addProduct = async (product: Omit<Product, 'id'> & { id?: string }) => {
     const newProduct = {
@@ -247,8 +268,11 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       id: product.id || Date.now().toString()
     };
     
+    // Add type assertion to resolve the TypeScript error
+    const newProductAsProduct = newProduct as Product;
+    
     // Update local state immediately
-    const updatedProducts = [...products, newProduct as Product];
+    const updatedProducts = [...products, newProductAsProduct];
     setProducts(updatedProducts);
     
     try {
@@ -364,7 +388,14 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   return (
-    <ProductContext.Provider value={{ products, addProduct, updateProduct, removeProduct }}>
+    <ProductContext.Provider value={{ 
+      products, 
+      addProduct, 
+      updateProduct, 
+      removeProduct,
+      uploadProductImage,
+      isLoading
+    }}>
       {children}
     </ProductContext.Provider>
   );
