@@ -102,6 +102,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_carts: {
+        Row: {
+          cart_data: Json
+          created_at: string
+          id: string
+          updated_at: string
+          user_email: string
+        }
+        Insert: {
+          cart_data?: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_email: string
+        }
+        Update: {
+          cart_data?: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_email?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product } from './ProductContext';
 import { supabase } from '../integrations/supabase/client';
@@ -53,7 +52,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           
           if (data?.cart_data) {
-            setItems(JSON.parse(data.cart_data));
+            setItems(JSON.parse(JSON.stringify(data.cart_data)));
             return;
           }
         }
@@ -100,7 +99,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Update existing cart
             const { error: updateError } = await supabase
               .from('user_carts')
-              .update({ cart_data: JSON.stringify(items) })
+              .update({ cart_data: items })
               .eq('id', data.id);
             
             if (updateError) {
@@ -112,7 +111,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .from('user_carts')
               .insert({ 
                 user_email: user.email,
-                cart_data: JSON.stringify(items)
+                cart_data: items
               });
             
             if (insertError) {
