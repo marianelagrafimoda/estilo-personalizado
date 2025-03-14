@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useSiteInfo } from '../contexts/SiteContext';
+import { Facebook, Instagram } from 'lucide-react';
 
 const Footer: React.FC = () => {
   const { siteInfo } = useSiteInfo();
@@ -18,6 +19,28 @@ const Footer: React.FC = () => {
               <span className="font-serif text-xl font-medium">GrafiModa</span>
             </Link>
             <p className="text-gray-600">{siteInfo.slogan}</p>
+            
+            {/* Social Media Buttons */}
+            <div className="flex items-center space-x-3 mt-4">
+              <a 
+                href="https://facebook.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-lilac hover:bg-lilac-dark text-white rounded-full p-2 transition-colors"
+                aria-label="Facebook"
+              >
+                <Facebook className="w-5 h-5" />
+              </a>
+              <a 
+                href="https://instagram.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-lilac hover:bg-lilac-dark text-white rounded-full p-2 transition-colors"
+                aria-label="Instagram"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+            </div>
           </div>
           
           {/* Quick Links */}
@@ -35,9 +58,14 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/#personalizacion" className="text-gray-600 hover:text-lilac-dark transition-colors">
+                <a 
+                  href={`https://wa.me/593990893095?text=Quiero%20personalizar%20mi%20propio%20estilo`}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-lilac-dark transition-colors"
+                >
                   Personalización
-                </Link>
+                </a>
               </li>
               <li>
                 <Link to="/login" className="text-gray-600 hover:text-lilac-dark transition-colors">

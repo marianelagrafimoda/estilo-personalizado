@@ -37,6 +37,14 @@ const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-foreground hover:text-lilac-dark transition-colors">Inicio</Link>
             <Link to="/#productos" className="text-foreground hover:text-lilac-dark transition-colors">Productos</Link>
+            <a 
+              href={`https://wa.me/593990893095?text=Quiero%20personalizar%20mi%20propio%20estilo`}
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-foreground hover:text-lilac-dark transition-colors"
+            >
+              Personalización
+            </a>
             {isAuthenticated && isAdmin ? (
               <Link to="/admin" className="text-foreground hover:text-lilac-dark transition-colors">
                 Panel de Administración
@@ -87,6 +95,15 @@ const Navbar: React.FC = () => {
               <Link to="/#productos" onClick={toggleMobileMenu} className="text-foreground hover:text-lilac-dark py-2 transition-colors">
                 Productos
               </Link>
+              <a 
+                href={`https://wa.me/593990893095?text=Quiero%20personalizar%20mi%20propio%20estilo`}
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={toggleMobileMenu}
+                className="text-foreground hover:text-lilac-dark py-2 transition-colors"
+              >
+                Personalización
+              </a>
               {isAuthenticated && isAdmin ? (
                 <Link to="/admin" onClick={toggleMobileMenu} className="text-foreground hover:text-lilac-dark py-2 transition-colors">
                   Panel de Administración

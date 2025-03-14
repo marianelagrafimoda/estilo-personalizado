@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -70,7 +69,10 @@ const AdminPage: React.FC = () => {
       { id: 's', name: 'S', available: true },
       { id: 'm', name: 'M', available: true },
       { id: 'l', name: 'L', available: true },
-      { id: 'xl', name: 'XL', available: true }
+      { id: 'xl', name: 'XL', available: true },
+      { id: 'kids-s', name: 'Niños S', available: true },
+      { id: 'kids-m', name: 'Niños M', available: true },
+      { id: 'kids-l', name: 'Niños L', available: true }
     ],
     colors: [
       { id: 'white', name: 'Blanco', hex: '#FFFFFF' }
@@ -167,10 +169,20 @@ const AdminPage: React.FC = () => {
       newProduct.price > 0 &&
       newProduct.imageUrl
     ) {
-      addProduct({
+      const productToAdd = {
         ...newProduct,
         id: Date.now().toString(),
-      });
+        title: newProduct.title,
+        description: newProduct.description,
+        price: newProduct.price,
+        imageUrl: newProduct.imageUrl,
+        stockQuantity: newProduct.stockQuantity,
+        cardColor: newProduct.cardColor,
+        sizes: newProduct.sizes,
+        colors: newProduct.colors
+      };
+      
+      addProduct(productToAdd);
       
       // Reset form
       setNewProduct({
@@ -184,7 +196,10 @@ const AdminPage: React.FC = () => {
           { id: 's', name: 'S', available: true },
           { id: 'm', name: 'M', available: true },
           { id: 'l', name: 'L', available: true },
-          { id: 'xl', name: 'XL', available: true }
+          { id: 'xl', name: 'XL', available: true },
+          { id: 'kids-s', name: 'Niños S', available: true },
+          { id: 'kids-m', name: 'Niños M', available: true },
+          { id: 'kids-l', name: 'Niños L', available: true }
         ],
         colors: [
           { id: 'white', name: 'Blanco', hex: '#FFFFFF' }
@@ -207,7 +222,21 @@ const AdminPage: React.FC = () => {
   };
 
   const startEditingProduct = (product: any) => {
-    setEditingProduct({...product});
+    const hasKidsSizes = product.sizes.some((size: any) => 
+      size.id === 'kids-s' || size.id === 'kids-m' || size.id === 'kids-l'
+    );
+    
+    if (!hasKidsSizes) {
+      const updatedSizes = [
+        ...product.sizes,
+        { id: 'kids-s', name: 'Niños S', available: false },
+        { id: 'kids-m', name: 'Niños M', available: false },
+        { id: 'kids-l', name: 'Niños L', available: false }
+      ];
+      setEditingProduct({...product, sizes: updatedSizes});
+    } else {
+      setEditingProduct({...product});
+    }
   };
 
   const cancelEditingProduct = () => {
@@ -216,7 +245,19 @@ const AdminPage: React.FC = () => {
 
   const saveEditedProduct = () => {
     if (editingProduct) {
-      updateProduct(editingProduct.id, editingProduct);
+      const productToUpdate = {
+        ...editingProduct,
+        title: editingProduct.title,
+        description: editingProduct.description,
+        price: editingProduct.price,
+        imageUrl: editingProduct.imageUrl,
+        stockQuantity: editingProduct.stockQuantity,
+        cardColor: editingProduct.cardColor,
+        sizes: editingProduct.sizes,
+        colors: editingProduct.colors
+      };
+      
+      updateProduct(editingProduct.id, productToUpdate);
       setEditingProduct(null);
       toast({
         title: "¡Actualizado!",
@@ -245,7 +286,19 @@ const AdminPage: React.FC = () => {
     if (editingProduct) {
       setEditingProduct({...editingProduct, sizes: updatedSizes});
     } else {
-      updateProduct(product.id, {...product, sizes: updatedSizes});
+      const productToUpdate = {
+        ...product,
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        imageUrl: product.imageUrl,
+        stockQuantity: product.stockQuantity,
+        cardColor: product.cardColor,
+        sizes: updatedSizes,
+        colors: product.colors
+      };
+      
+      updateProduct(product.id, productToUpdate);
     }
   };
 
