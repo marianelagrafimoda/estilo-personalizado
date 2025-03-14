@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../hooks/use-toast';
@@ -242,7 +243,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
     
     // Update local state immediately
-    const updatedProducts = [...products, newProduct];
+    const updatedProducts = [...products, newProduct as Product];
     setProducts(updatedProducts);
     
     try {
