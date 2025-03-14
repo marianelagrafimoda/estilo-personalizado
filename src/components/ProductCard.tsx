@@ -18,6 +18,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   
   const availableSizes = product.sizes.filter(size => size.available);
   
+  // Separando tamanhos para adultos e crianças
+  const adultSizes = availableSizes.filter(size => !size.isChildSize);
+  const childSizes = availableSizes.filter(size => size.isChildSize);
+  
   const handleAddToCart = () => {
     if (selectedSize && selectedColor) {
       // Check if we have stock
@@ -110,24 +114,47 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         
         {availableSizes.length > 0 && product.stockQuantity > 0 ? (
           <>
-            <div className="mb-3">
-              <p className="text-sm font-medium mb-1">Tallas disponibles:</p>
-              <div className="flex flex-wrap gap-2">
-                {availableSizes.map((size) => (
-                  <button
-                    key={size.id}
-                    onClick={() => setSelectedSize(size.id)}
-                    className={`px-2 py-1 text-xs font-medium rounded border transition-colors ${
-                      selectedSize === size.id
-                        ? 'bg-lilac text-white border-lilac'
-                        : 'bg-white/80 text-gray-800 border-gray-300 hover:border-lilac'
-                    }`}
-                  >
-                    {size.name}
-                  </button>
-                ))}
+            {adultSizes.length > 0 && (
+              <div className="mb-3">
+                <p className="text-sm font-medium mb-1">Tallas para adultos:</p>
+                <div className="flex flex-wrap gap-2">
+                  {adultSizes.map((size) => (
+                    <button
+                      key={size.id}
+                      onClick={() => setSelectedSize(size.id)}
+                      className={`px-2 py-1 text-xs font-medium rounded border transition-colors ${
+                        selectedSize === size.id
+                          ? 'bg-lilac text-white border-lilac'
+                          : 'bg-white/80 text-gray-800 border-gray-300 hover:border-lilac'
+                      }`}
+                    >
+                      {size.name}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+            
+            {childSizes.length > 0 && (
+              <div className="mb-3">
+                <p className="text-sm font-medium mb-1">Tallas para niños:</p>
+                <div className="flex flex-wrap gap-2">
+                  {childSizes.map((size) => (
+                    <button
+                      key={size.id}
+                      onClick={() => setSelectedSize(size.id)}
+                      className={`px-2 py-1 text-xs font-medium rounded border transition-colors ${
+                        selectedSize === size.id
+                          ? 'bg-lilac text-white border-lilac'
+                          : 'bg-white/80 text-gray-800 border-gray-300 hover:border-lilac'
+                      }`}
+                    >
+                      {size.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             
             <div className="mb-3">
               <p className="text-sm font-medium mb-1">Colores disponibles:</p>

@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, saveSiteInfo, uploadImage } from '../lib/supabase';
 import { useToast } from '../hooks/use-toast';
 
 interface SiteInfo {
@@ -20,6 +20,7 @@ interface SiteInfo {
 interface SiteContextType {
   siteInfo: SiteInfo;
   updateSiteInfo: (updates: Partial<SiteInfo>) => Promise<void>;
+  uploadSiteImage: (file: File) => Promise<string>;
 }
 
 const DEFAULT_SITE_INFO: SiteInfo = {
@@ -152,6 +153,21 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchSiteInfo();
   }, []);
 
+  const uploadSiteImage = async (file: File): Promise<string> => {
+    try {
+      const imageUrl = await uploadImage(file, 'site_images', 'site/');
+      return imageUrl;
+    } catch (error) {
+      console.error('Error uploading site image:', error);
+      toast({
+        title: "Error al subir imagen",
+        description: "No se pudo cargar la imagen. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   const updateSiteInfo = async (updates: Partial<SiteInfo>) => {
     // Update local state immediately for UI responsiveness
     const updatedInfo = { ...siteInfo, ...updates };
@@ -208,7 +224,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <SiteContext.Provider value={{ siteInfo, updateSiteInfo }}>
+    <SiteContext.Provider value={{ siteInfo, updateSiteInfo, uploadSiteImage }}>
       {children}
     </SiteContext.Provider>
   );

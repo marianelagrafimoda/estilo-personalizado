@@ -30,7 +30,7 @@ const Navbar: React.FC = () => {
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur shadow-sm py-2' : 'bg-transparent py-4'}`}>
         <div className="container-custom mx-auto flex justify-between items-center">
           <Link to="/" className="flex items-center space-x-2">
-            <img src="/logo.svg" alt="GrafiModa" className="h-10" />
+            <img src="/lovable-uploads/9ecb5286-6e91-4b1e-9ea2-f2bb91f4df50.png" alt="GrafiModa" className="h-10" />
             <span className="font-serif text-xl font-medium">GrafiModa</span>
           </Link>
           
