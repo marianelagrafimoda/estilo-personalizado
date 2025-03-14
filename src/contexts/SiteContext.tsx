@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase, saveSiteInfo, uploadImage, getCarouselImages } from '../lib/supabase';
+import { supabase } from '../integrations/supabase/client';
+import { saveSiteInfo, uploadImage, getCarouselImages } from '../lib/supabase';
 import { useToast } from '../hooks/use-toast';
 
 interface SiteInfo {
