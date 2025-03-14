@@ -1,11 +1,5 @@
 
-import { createClient } from '@supabase/supabase-js';
-
-// Configuração do Supabase
-const supabaseUrl = 'https://rdpbuaxwyoyvxmdlpayj.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkcGJ1YXh3eW95dnhtZGxwYXlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE4MzU1MzksImV4cCI6MjA1NzQxMTUzOX0.PnFISwrPPGbv3-HGJklgPQMqOytcOoN14nuShGOKFas';
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from '../integrations/supabase/client';
 
 // Helper function to check if Supabase connection is alive
 export const checkSupabaseConnection = async () => {
@@ -87,30 +81,26 @@ export const saveSiteInfo = async (siteInfo: any) => {
   }
 };
 
-// Criar a tabela de usuários_carts caso não exista
+// Criar os buckets de storage caso não existam
 export const setupDatabase = async () => {
   try {
-    // Verificar e criar tabela user_carts
-    const { error: cartError } = await supabase.rpc('create_user_carts_if_not_exists');
-    if (cartError) console.error('Error creating user_carts table:', cartError);
-    
     // Verificar e criar storage buckets
-    const { error: bucketError } = await supabase.storage.createBucket('site_images', {
+    const { error: siteImagesError } = await supabase.storage.createBucket('site_images', {
       public: true,
       fileSizeLimit: 10485760 // 10MB
     });
     
-    if (bucketError && !bucketError.message.includes('already exists')) {
-      console.error('Error creating site_images bucket:', bucketError);
+    if (siteImagesError && !siteImagesError.message.includes('already exists')) {
+      console.error('Error creating site_images bucket:', siteImagesError);
     }
     
-    const { error: productBucketError } = await supabase.storage.createBucket('product_images', {
+    const { error: productImagesError } = await supabase.storage.createBucket('product_images', {
       public: true,
       fileSizeLimit: 10485760 // 10MB
     });
     
-    if (productBucketError && !productBucketError.message.includes('already exists')) {
-      console.error('Error creating product_images bucket:', productBucketError);
+    if (productImagesError && !productImagesError.message.includes('already exists')) {
+      console.error('Error creating product_images bucket:', productImagesError);
     }
     
     console.log('Database setup completed');
