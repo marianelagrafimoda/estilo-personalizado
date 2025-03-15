@@ -23,7 +23,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  // Intentar configurar la base de datos al cargar el componente
+  // Ensure database setup when the component mounts
   React.useEffect(() => {
     setupDatabase().catch(error => {
       console.error("Error setting up database from ImageUploader:", error);
@@ -34,7 +34,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Validar tamaño del archivo (en bytes)
+    // Validate file size (in bytes)
     const maxSizeBytes = maxSize * 1024 * 1024;
     if (file.size > maxSizeBytes) {
       toast({
@@ -45,20 +45,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
     
-    // Crear una URL temporal para pre-visualización
+    // Create temporary URL for preview
     const previewUrl = URL.createObjectURL(file);
     setPreview(previewUrl);
 
     try {
       setIsUploading(true);
       
-      // Intentar configurar la base de datos antes de cargar la imagen
-      await setupDatabase();
-      
-      // Llamar a la función para hacer upload de la imagen
+      // Upload the image
       const imageUrl = await onImageUpload(file);
       
-      // Limpiar el input de archivo
+      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -72,16 +69,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     } catch (error) {
       console.error("Error al subir imagen:", error);
       
-      // Mensaje más específico dependiendo del tipo de error
-      let errorMessage = "Ocurrió un error desconocido";
+      // More specific message depending on error type
+      let errorMessage = "Ocurrió un error al subir la imagen. Inténtalo de nuevo.";
       
       if (error instanceof Error) {
+        console.log("Error details:", error.message);
         errorMessage = error.message;
-        
-        // Mensaje específico para el error de bucket no existe
-        if (errorMessage.includes("bucket") && errorMessage.includes("no existe")) {
-          errorMessage = "Error de almacenamiento: No se pudo acceder al bucket de imágenes. Por favor, contacte al administrador del sistema.";
-        }
       }
       
       toast({
@@ -93,7 +86,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       throw error;
     } finally {
       setIsUploading(false);
-      // Liberar la URL temporal
+      // Release temporary URL
       URL.revokeObjectURL(previewUrl);
       setPreview(null);
     }

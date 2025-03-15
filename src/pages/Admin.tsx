@@ -1,10 +1,8 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings, 
   ImageIcon, 
-  PanelLeft, 
   Tag, 
   ShoppingBag, 
   Edit3, 
@@ -14,8 +12,9 @@ import {
   Package,
   Plus,
   Trash2,
-  Upload,
-  Loader2
+  Loader2,
+  Instagram,
+  Facebook
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -47,6 +46,8 @@ const AdminPage: React.FC = () => {
   // Site Info States
   const [newSlogan, setNewSlogan] = useState(siteInfo.slogan);
   const [newWhatsappNumber, setNewWhatsappNumber] = useState(siteInfo.whatsappNumber);
+  const [newInstagramLink, setNewInstagramLink] = useState(siteInfo.instagramLink || 'https://www.instagram.com/');
+  const [newFacebookLink, setNewFacebookLink] = useState(siteInfo.facebookLink || 'https://www.facebook.com/');
   const [newCarouselImages, setNewCarouselImages] = useState<string[]>(siteInfo.carouselImages);
   
   // Estados para upload de imagem
@@ -109,6 +110,8 @@ const AdminPage: React.FC = () => {
     if (!isSiteLoading) {
       setNewSlogan(siteInfo.slogan);
       setNewWhatsappNumber(siteInfo.whatsappNumber);
+      setNewInstagramLink(siteInfo.instagramLink || 'https://www.instagram.com/');
+      setNewFacebookLink(siteInfo.facebookLink || 'https://www.facebook.com/');
       setNewCarouselImages(siteInfo.carouselImages);
       setNewMaterialsTitle(siteInfo.materialsTitle);
       setNewMaterialsDesc(siteInfo.materialsDescription);
@@ -125,6 +128,8 @@ const AdminPage: React.FC = () => {
     updateSiteInfo({
       slogan: newSlogan,
       whatsappNumber: newWhatsappNumber,
+      instagramLink: newInstagramLink,
+      facebookLink: newFacebookLink,
       carouselImages: newCarouselImages,
       materialsTitle: newMaterialsTitle,
       materialsDescription: newMaterialsDesc,
@@ -427,6 +432,7 @@ const AdminPage: React.FC = () => {
                     className="border-lilac/30 focus:border-lilac focus:ring-lilac"
                   />
                 </div>
+                
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Número de WhatsApp</label>
                   <Input
@@ -438,6 +444,32 @@ const AdminPage: React.FC = () => {
                   <p className="text-xs text-gray-500">
                     Incluya el código de país con el signo +
                   </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Instagram className="w-4 h-4 text-pink-500" />
+                    Enlace de Instagram
+                  </label>
+                  <Input
+                    value={newInstagramLink}
+                    onChange={(e) => setNewInstagramLink(e.target.value)}
+                    placeholder="https://www.instagram.com/su_cuenta/"
+                    className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Facebook className="w-4 h-4 text-blue-600" />
+                    Enlace de Facebook
+                  </label>
+                  <Input
+                    value={newFacebookLink}
+                    onChange={(e) => setNewFacebookLink(e.target.value)}
+                    placeholder="https://www.facebook.com/su_pagina/"
+                    className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                  />
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-gray-200">

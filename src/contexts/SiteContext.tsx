@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { saveSiteInfo, uploadImage, getCarouselImages } from '../lib/supabase';
@@ -7,6 +8,8 @@ import { Json } from '../integrations/supabase/types';
 interface SiteInfo {
   slogan: string;
   whatsappNumber: string;
+  instagramLink: string;
+  facebookLink: string;
   carouselImages: string[];
   uniqueStyleTitle: string;
   materialsTitle: string;
@@ -28,6 +31,8 @@ interface SiteContextType {
 const DEFAULT_SITE_INFO: SiteInfo = {
   slogan: "Estilo único, personalizado para ti",
   whatsappNumber: "+593990893095",
+  instagramLink: "https://www.instagram.com/",
+  facebookLink: "https://www.facebook.com/",
   carouselImages: ['/carousel1.jpg', '/carousel2.jpg', '/carousel3.jpg'],
   uniqueStyleTitle: "¿Quieres un estilo realmente único?",
   materialsTitle: "Materiales Premium",
@@ -70,6 +75,8 @@ const prepareForSupabase = (data: Partial<SiteInfo>) => {
     design_description: completeData.designDescription,
     design_title: completeData.designTitle,
     faq_title: completeData.faqTitle,
+    instagram_link: completeData.instagramLink,
+    facebook_link: completeData.facebookLink,
     materials_description: completeData.materialsDescription,
     materials_title: completeData.materialsTitle,
     service_description: completeData.serviceDescription,
@@ -125,7 +132,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const fetchSiteInfo = async () => {
       setIsLoading(true);
       try {
-        // Buscar imagens do carrossel armazenadas no storage
+        // Get carousel images from storage
         const carouselImages = await getCarouselImages();
         
         // Try to fetch from Supabase
@@ -145,14 +152,14 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Convert from snake_case to camelCase and handle special fields
           const formattedData = prepareFromSupabase(data);
           
-          // Se encontrou imagens do carrossel no storage, use-as
+          // If carousel images found in storage, use them
           if (carouselImages && carouselImages.length > 0) {
             formattedData.carouselImages = carouselImages;
           }
           
           setSiteInfo(prev => ({ ...prev, ...formattedData }));
         } else if (carouselImages && carouselImages.length > 0) {
-          // Se não encontrou dados, mas encontrou imagens
+          // If no data found but images found
           setSiteInfo(prev => ({ ...prev, carouselImages }));
         }
       } catch (error) {

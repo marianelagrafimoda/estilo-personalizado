@@ -12,12 +12,12 @@ export const checkSupabaseConnection = async () => {
   }
 };
 
-// Verificar y crear buckets de storage si no existen
+// Ensure storage buckets exist
 export const setupDatabase = async () => {
   try {
     console.log('Setting up database and checking storage buckets...');
     
-    // Verificar si los buckets existen
+    // Check if buckets exist
     const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
     
     if (bucketsError) {
@@ -25,41 +25,18 @@ export const setupDatabase = async () => {
       return false;
     }
     
-    const existingBuckets = new Set(buckets?.map(b => b.name));
+    const existingBuckets = new Set(buckets?.map(b => b.name) || []);
     console.log('Existing buckets:', existingBuckets);
     
-    // Crear site_images bucket si no existe
+    // Just log whether the buckets exist - we'll create them through SQL migrations
     if (!existingBuckets.has('site_images')) {
-      console.log('Creating site_images bucket...');
-      const { error: siteImagesError } = await supabase.storage.createBucket('site_images', {
-        public: true,
-        fileSizeLimit: 4194304 // 4MB
-      });
-      
-      if (siteImagesError) {
-        console.error('Error creating site_images bucket:', siteImagesError);
-        // No lanzar error, solo registrar
-      } else {
-        console.log('site_images bucket created successfully');
-      }
+      console.log('site_images bucket needs to be created via SQL migration');
     } else {
       console.log('site_images bucket already exists');
     }
     
-    // Crear product_images bucket si no existe
     if (!existingBuckets.has('product_images')) {
-      console.log('Creating product_images bucket...');
-      const { error: productImagesError } = await supabase.storage.createBucket('product_images', {
-        public: true,
-        fileSizeLimit: 4194304 // 4MB
-      });
-      
-      if (productImagesError) {
-        console.error('Error creating product_images bucket:', productImagesError);
-        // No lanzar error, solo registrar
-      } else {
-        console.log('product_images bucket created successfully');
-      }
+      console.log('product_images bucket needs to be created via SQL migration');
     } else {
       console.log('product_images bucket already exists');
     }
@@ -72,22 +49,19 @@ export const setupDatabase = async () => {
   }
 };
 
-// Función para subir imágenes al bucket de storage
-export const uploadImage = async (file: File, bucket: string = 'images', path: string = 'products/') => {
+// Function to upload images to storage bucket
+export const uploadImage = async (file: File, bucket: string = 'site_images', path: string = 'products/') => {
   try {
-    // Primero ejecutar setupDatabase para asegurar que los buckets existen
-    await setupDatabase();
-    
-    // Verificar si el bucket existe después del setup
+    // Check if the bucket exists
     const { data: buckets } = await supabase.storage.listBuckets();
     const bucketExists = buckets?.some(b => b.name === bucket);
     
     if (!bucketExists) {
       console.error(`Bucket ${bucket} does not exist`);
-      throw new Error(`Error: El bucket ${bucket} no existe`);
+      throw new Error(`Para subir imágenes, contacte con el administrador del sistema para crear el bucket ${bucket}.`);
     }
     
-    // Generar nombre de archivo único usando timestamp + random string
+    // Generate unique filename using timestamp + random string
     const timestamp = new Date().getTime();
     const randomString = Math.random().toString(36).substring(2, 10);
     const fileExt = file.name.split('.').pop();
@@ -95,12 +69,12 @@ export const uploadImage = async (file: File, bucket: string = 'images', path: s
     
     console.log(`Uploading ${fileName} to ${bucket}`);
     
-    // Subir el archivo
+    // Upload the file
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(fileName, file, {
         cacheControl: '3600',
-        upsert: true // Permitir sobreescribir archivos
+        upsert: true // Allow overwriting files
       });
     
     if (error) {
@@ -110,7 +84,7 @@ export const uploadImage = async (file: File, bucket: string = 'images', path: s
     
     console.log('Upload successful:', data);
     
-    // Retorna la URL pública de la imagen
+    // Return the public URL of the image
     const { data: urlData } = supabase.storage
       .from(bucket)
       .getPublicUrl(fileName);
@@ -119,18 +93,15 @@ export const uploadImage = async (file: File, bucket: string = 'images', path: s
     
     return urlData.publicUrl;
   } catch (error) {
-    console.error('Error en uploadImage:', error);
+    console.error('Error in uploadImage:', error);
     throw error;
   }
 };
 
-// Función para buscar todas las imágenes del carrusel
+// Function to fetch all carousel images
 export const getCarouselImages = async () => {
   try {
-    // Primero ejecutar setupDatabase para asegurar que los buckets existen
-    await setupDatabase();
-    
-    // Verificar si el bucket existe después del setup
+    // Check if the bucket exists
     const { data: buckets } = await supabase.storage.listBuckets();
     const bucketExists = buckets?.some(b => b.name === 'site_images');
     
@@ -155,7 +126,7 @@ export const getCarouselImages = async () => {
       return [];
     }
     
-    // Convertir los nombres de archivos en URLs públicas
+    // Convert filenames to public URLs
     return data.map(file => {
       const { data } = supabase
         .storage
@@ -170,7 +141,7 @@ export const getCarouselImages = async () => {
   }
 };
 
-// Función para guardar información del sitio
+// Function to save site info
 export const saveSiteInfo = async (siteInfo: any) => {
   try {
     const { data, error } = await supabase
@@ -185,5 +156,5 @@ export const saveSiteInfo = async (siteInfo: any) => {
   }
 };
 
-// Asegurarse de que setupDatabase se ejecute al cargar este módulo
+// Ensure setupDatabase runs when this module loads
 setupDatabase().catch(console.error);
