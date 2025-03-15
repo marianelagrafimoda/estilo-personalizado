@@ -1,7 +1,9 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product } from './ProductContext';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from './AuthContext';
+import { Json } from '../integrations/supabase/types';
 
 interface CartItem {
   product: Product;
@@ -52,7 +54,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           
           if (data?.cart_data) {
-            setItems(JSON.parse(JSON.stringify(data.cart_data)));
+            // Parse the cart data - it's already a JSON object from Supabase
+            setItems(data.cart_data as unknown as CartItem[]);
             return;
           }
         }
@@ -95,11 +98,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('Error checking existing cart:', fetchError);
           }
           
+          // Convert CartItem[] to a format acceptable for Json type
+          const cartDataJson = JSON.parse(JSON.stringify(items)) as Json;
+          
           if (data) {
             // Update existing cart
             const { error: updateError } = await supabase
               .from('user_carts')
-              .update({ cart_data: items })
+              .update({ cart_data: cartDataJson })
               .eq('id', data.id);
             
             if (updateError) {
@@ -111,7 +117,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .from('user_carts')
               .insert({ 
                 user_email: user.email,
-                cart_data: items
+                cart_data: cartDataJson
               });
             
             if (insertError) {

@@ -1,8 +1,8 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { saveSiteInfo, uploadImage, getCarouselImages } from '../lib/supabase';
 import { useToast } from '../hooks/use-toast';
+import { Json } from '../integrations/supabase/types';
 
 interface SiteInfo {
   slogan: string;
@@ -59,7 +59,7 @@ const snakeToCamel = (str: string) => {
   return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 };
 
-// Prepare data for Supabase (convert to snake_case)
+// Prepare data for Supabase (convert to snake_case and ensure types match)
 const prepareForSupabase = (data: Partial<SiteInfo>) => {
   const result: Record<string, any> = {};
   
@@ -68,7 +68,7 @@ const prepareForSupabase = (data: Partial<SiteInfo>) => {
     
     // Special handling for arrays (like carouselImages)
     if (Array.isArray(value)) {
-      result[snakeKey] = value;
+      result[snakeKey] = value as Json;
     } else {
       result[snakeKey] = value;
     }
@@ -213,16 +213,21 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       let result;
       if (existingData && existingData.length > 0) {
-        // Update existing record
+        // Update existing record - make sure we're passing correctly typed data
+        // We need to ensure we have all required fields for the site_info table
+        const fullSiteData = prepareForSupabase(updatedInfo);
+        
         result = await supabase
           .from('site_info')
-          .update(supabaseData)
+          .update(fullSiteData)
           .eq('id', existingData[0].id);
       } else {
-        // Insert new record
+        // Insert new record - make sure we have all required fields
+        const fullSiteData = prepareForSupabase(updatedInfo);
+        
         result = await supabase
           .from('site_info')
-          .insert(supabaseData);
+          .insert(fullSiteData);
       }
       
       if (result.error) {
