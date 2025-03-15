@@ -12,10 +12,73 @@ export const checkSupabaseConnection = async () => {
   }
 };
 
+// Verificar y crear buckets de storage si no existen
+export const setupDatabase = async () => {
+  try {
+    console.log('Setting up database and checking storage buckets...');
+    
+    // Verificar si los buckets existen
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    
+    if (bucketsError) {
+      console.error('Error checking storage buckets:', bucketsError);
+      return false;
+    }
+    
+    const existingBuckets = new Set(buckets?.map(b => b.name));
+    console.log('Existing buckets:', existingBuckets);
+    
+    // Crear site_images bucket si no existe
+    if (!existingBuckets.has('site_images')) {
+      console.log('Creating site_images bucket...');
+      const { error: siteImagesError } = await supabase.storage.createBucket('site_images', {
+        public: true,
+        fileSizeLimit: 4194304 // 4MB
+      });
+      
+      if (siteImagesError) {
+        console.error('Error creating site_images bucket:', siteImagesError);
+        // No lanzar error, solo registrar
+      } else {
+        console.log('site_images bucket created successfully');
+      }
+    } else {
+      console.log('site_images bucket already exists');
+    }
+    
+    // Crear product_images bucket si no existe
+    if (!existingBuckets.has('product_images')) {
+      console.log('Creating product_images bucket...');
+      const { error: productImagesError } = await supabase.storage.createBucket('product_images', {
+        public: true,
+        fileSizeLimit: 4194304 // 4MB
+      });
+      
+      if (productImagesError) {
+        console.error('Error creating product_images bucket:', productImagesError);
+        // No lanzar error, solo registrar
+      } else {
+        console.log('product_images bucket created successfully');
+      }
+    } else {
+      console.log('product_images bucket already exists');
+    }
+    
+    console.log('Database setup completed');
+    return true;
+  } catch (error) {
+    console.error('Error setting up database:', error);
+    return false;
+  }
+};
+
 // Función para subir imágenes al bucket de storage
 export const uploadImage = async (file: File, bucket: string = 'images', path: string = 'products/') => {
   try {
-    // Verificar si el bucket existe
+    // Primero ejecutar setupDatabase para asegurar que los buckets existen
+    await setupDatabase();
+    
+    // Verificar si el bucket existe después del setup
     const { data: buckets } = await supabase.storage.listBuckets();
     const bucketExists = buckets?.some(b => b.name === bucket);
     
@@ -64,7 +127,10 @@ export const uploadImage = async (file: File, bucket: string = 'images', path: s
 // Función para buscar todas las imágenes del carrusel
 export const getCarouselImages = async () => {
   try {
-    // Verificar si el bucket existe
+    // Primero ejecutar setupDatabase para asegurar que los buckets existen
+    await setupDatabase();
+    
+    // Verificar si el bucket existe después del setup
     const { data: buckets } = await supabase.storage.listBuckets();
     const bucketExists = buckets?.some(b => b.name === 'site_images');
     
@@ -119,52 +185,5 @@ export const saveSiteInfo = async (siteInfo: any) => {
   }
 };
 
-// Verificar y crear buckets de storage si no existen
-export const setupDatabase = async () => {
-  try {
-    // Verificar si los buckets existen
-    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-    
-    if (bucketsError) {
-      console.error('Error checking storage buckets:', bucketsError);
-      return false;
-    }
-    
-    const existingBuckets = new Set(buckets?.map(b => b.name));
-    
-    // Crear site_images bucket si no existe
-    if (!existingBuckets.has('site_images')) {
-      console.log('Creating site_images bucket...');
-      const { error: siteImagesError } = await supabase.storage.createBucket('site_images', {
-        public: true,
-        fileSizeLimit: 4194304 // 4MB
-      });
-      
-      if (siteImagesError && !siteImagesError.message.includes('already exists')) {
-        console.error('Error creating site_images bucket:', siteImagesError);
-      }
-    }
-    
-    // Crear product_images bucket si no existe
-    if (!existingBuckets.has('product_images')) {
-      console.log('Creating product_images bucket...');
-      const { error: productImagesError } = await supabase.storage.createBucket('product_images', {
-        public: true,
-        fileSizeLimit: 4194304 // 4MB
-      });
-      
-      if (productImagesError && !productImagesError.message.includes('already exists')) {
-        console.error('Error creating product_images bucket:', productImagesError);
-      }
-    }
-    
-    console.log('Database setup completed');
-    return true;
-  } catch (error) {
-    console.error('Error setting up database:', error);
-    return false;
-  }
-};
-
-// Inicializar banco de datos al importar este módulo
+// Asegurarse de que setupDatabase se ejecute al cargar este módulo
 setupDatabase().catch(console.error);

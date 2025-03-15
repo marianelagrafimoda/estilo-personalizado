@@ -34,6 +34,7 @@ import { useToast } from '../hooks/use-toast';
 import ImageUploader from '../components/ImageUploader';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { setupDatabase } from '../lib/supabase';
 
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
@@ -46,7 +47,6 @@ const AdminPage: React.FC = () => {
   const [newSlogan, setNewSlogan] = useState(siteInfo.slogan);
   const [newWhatsappNumber, setNewWhatsappNumber] = useState(siteInfo.whatsappNumber);
   const [newCarouselImages, setNewCarouselImages] = useState<string[]>(siteInfo.carouselImages);
-  const [newCarouselImage, setNewCarouselImage] = useState('');
   
   // Estados para upload de imagem
   const [isUploadingProduct, setIsUploadingProduct] = useState(false);
@@ -69,7 +69,7 @@ const AdminPage: React.FC = () => {
     description: '',
     price: 0,
     imageUrl: '',
-    cardColor: '#C8B6E2', // Color lila por defecto
+    cardColor: '#C8B6E2',
     stockQuantity: 0,
     sizes: [
       { id: 's', name: 'S', available: true, isChildSize: false },
@@ -96,10 +96,15 @@ const AdminPage: React.FC = () => {
     if (!isAuthenticated || !isAdmin) {
       navigate('/login');
     }
+    
+    // Intentar configurar la base de datos al cargar el componente
+    setupDatabase().catch(error => {
+      console.error("Error setting up database from AdminPage:", error);
+    });
   }, [isAuthenticated, isAdmin, navigate]);
 
   React.useEffect(() => {
-    // Atualizar estados quando siteInfo mudar
+    // Atualizar estados cuando siteInfo mudar
     if (!isSiteLoading) {
       setNewSlogan(siteInfo.slogan);
       setNewWhatsappNumber(siteInfo.whatsappNumber);
@@ -150,6 +155,9 @@ const AdminPage: React.FC = () => {
   const handleUploadCarouselImage = async (file: File) => {
     setIsUploadingCarousel(true);
     try {
+      // Asegurarse de que la base de datos esté configurada antes de subir
+      await setupDatabase();
+      
       const imageUrl = await uploadSiteImage(file);
       setNewCarouselImages(prev => [...prev, imageUrl]);
       return imageUrl;
@@ -1124,3 +1132,4 @@ const AdminPage: React.FC = () => {
 };
 
 export default AdminPage;
+

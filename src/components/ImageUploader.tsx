@@ -1,14 +1,15 @@
 
 import React, { useState, useRef } from 'react';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useToast } from '../hooks/use-toast';
+import { setupDatabase } from '../lib/supabase';
 
 interface ImageUploaderProps {
   onImageUpload: (file: File) => Promise<string>;
   label?: string;
   accept?: string;
-  maxSize?: number; // em MB
+  maxSize?: number; // en MB
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({
@@ -21,6 +22,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Intentar configurar la base de datos al cargar el componente
+  React.useEffect(() => {
+    setupDatabase().catch(error => {
+      console.error("Error setting up database from ImageUploader:", error);
+    });
+  }, []);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -44,8 +52,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     try {
       setIsUploading(true);
       
+      // Intentar configurar la base de datos antes de cargar la imagen
+      await setupDatabase();
+      
       // Llamar a la función para hacer upload de la imagen
-      await onImageUpload(file);
+      const imageUrl = await onImageUpload(file);
       
       // Limpiar el input de archivo
       if (fileInputRef.current) {
@@ -56,13 +67,30 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         title: "Imagen subida con éxito",
         description: "La imagen se ha subido correctamente."
       });
+      
+      return imageUrl;
     } catch (error) {
       console.error("Error al subir imagen:", error);
+      
+      // Mensaje más específico dependiendo del tipo de error
+      let errorMessage = "Ocurrió un error desconocido";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // Mensaje específico para el error de bucket no existe
+        if (errorMessage.includes("bucket") && errorMessage.includes("no existe")) {
+          errorMessage = "Error de almacenamiento: No se pudo acceder al bucket de imágenes. Por favor, contacte al administrador del sistema.";
+        }
+      }
+      
       toast({
         title: "Error al subir imagen",
-        description: error instanceof Error ? error.message : "Ocurrió un error desconocido",
+        description: errorMessage,
         variant: "destructive"
       });
+      
+      throw error;
     } finally {
       setIsUploading(false);
       // Liberar la URL temporal
@@ -103,7 +131,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           variant="outline"
           className="w-full h-32 flex flex-col items-center justify-center border-dashed border-2 border-lilac/50 bg-transparent hover:bg-lilac/5"
         >
-          <Upload className="h-6 w-6 mb-2 text-lilac" />
+          {isUploading ? (
+            <Loader2 className="h-6 w-6 mb-2 text-lilac animate-spin" />
+          ) : (
+            <Upload className="h-6 w-6 mb-2 text-lilac" />
+          )}
           <span className="text-sm text-center">
             {isUploading ? "Subiendo..." : label}
             <br />
@@ -128,6 +160,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           </button>
           {isUploading && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white">
+              <Loader2 className="h-8 w-8 animate-spin mr-2" />
               Subiendo...
             </div>
           )}
