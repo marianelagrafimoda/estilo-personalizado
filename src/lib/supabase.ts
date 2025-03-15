@@ -28,17 +28,17 @@ export const setupDatabase = async () => {
     const existingBuckets = new Set(buckets?.map(b => b.name) || []);
     console.log('Existing buckets:', existingBuckets);
     
-    // Just log whether the buckets exist - we'll create them through SQL migrations
+    // Agora que os buckets foram criados via SQL, vamos apenas verificar se eles existem
     if (!existingBuckets.has('site_images')) {
-      console.log('site_images bucket needs to be created via SQL migration');
+      console.log('site_images bucket não encontrado - verifique se a migração SQL foi executada corretamente');
     } else {
-      console.log('site_images bucket already exists');
+      console.log('site_images bucket encontrado e pronto para uso');
     }
     
     if (!existingBuckets.has('product_images')) {
-      console.log('product_images bucket needs to be created via SQL migration');
+      console.log('product_images bucket não encontrado - verifique se a migração SQL foi executada corretamente');
     } else {
-      console.log('product_images bucket already exists');
+      console.log('product_images bucket encontrado e pronto para uso');
     }
     
     console.log('Database setup completed');
@@ -58,7 +58,7 @@ export const uploadImage = async (file: File, bucket: string = 'site_images', pa
     
     if (!bucketExists) {
       console.error(`Bucket ${bucket} does not exist`);
-      throw new Error(`Para subir imágenes, contacte con el administrador del sistema para crear el bucket ${bucket}.`);
+      throw new Error(`Para subir imagens, contacte com o administrador do sistema para criar o bucket ${bucket}.`);
     }
     
     // Generate unique filename using timestamp + random string
@@ -156,5 +156,5 @@ export const saveSiteInfo = async (siteInfo: any) => {
   }
 };
 
-// Ensure setupDatabase runs when this module loads
-setupDatabase().catch(console.error);
+// Não precisamos mais executar setupDatabase aqui pois os buckets agora são criados via SQL
+// Mantemos apenas para verificação

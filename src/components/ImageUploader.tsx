@@ -23,7 +23,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  // Ensure database setup when the component mounts
+  // Verificar a configuração do banco de dados ao montar o componente
   React.useEffect(() => {
     setupDatabase().catch(error => {
       console.error("Error setting up database from ImageUploader:", error);
@@ -38,8 +38,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     const maxSizeBytes = maxSize * 1024 * 1024;
     if (file.size > maxSizeBytes) {
       toast({
-        title: "Archivo demasiado grande",
-        description: `El tamaño máximo permitido es ${maxSize}MB.`,
+        title: "Arquivo muito grande",
+        description: `O tamanho máximo permitido é ${maxSize}MB.`,
         variant: "destructive"
       });
       return;
@@ -61,24 +61,30 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       }
       
       toast({
-        title: "Imagen subida con éxito",
-        description: "La imagen se ha subido correctamente."
+        title: "Imagem enviada com sucesso",
+        description: "A imagem foi enviada corretamente."
       });
       
       return imageUrl;
     } catch (error) {
-      console.error("Error al subir imagen:", error);
+      console.error("Erro ao enviar imagem:", error);
       
       // More specific message depending on error type
-      let errorMessage = "Ocurrió un error al subir la imagen. Inténtalo de nuevo.";
+      let errorMessage = "Ocorreu um erro ao enviar a imagem. Tente novamente.";
       
       if (error instanceof Error) {
-        console.log("Error details:", error.message);
-        errorMessage = error.message;
+        console.log("Detalhes do erro:", error.message);
+        
+        // Mensagem específica para problemas com buckets
+        if (error.message.includes('bucket')) {
+          errorMessage = error.message;
+        } else {
+          errorMessage = "Erro ao acessar o armazenamento. Verifique sua conexão e tente novamente.";
+        }
       }
       
       toast({
-        title: "Error al subir imagen",
+        title: "Erro ao enviar imagem",
         description: errorMessage,
         variant: "destructive"
       });
@@ -130,10 +136,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             <Upload className="h-6 w-6 mb-2 text-lilac" />
           )}
           <span className="text-sm text-center">
-            {isUploading ? "Subiendo..." : label}
+            {isUploading ? "Enviando..." : label}
             <br />
             <span className="text-xs text-gray-500">
-              Tamaño máximo: {maxSize}MB
+              Tamanho máximo: {maxSize}MB
             </span>
           </span>
         </Button>
@@ -154,7 +160,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           {isUploading && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white">
               <Loader2 className="h-8 w-8 animate-spin mr-2" />
-              Subiendo...
+              Enviando...
             </div>
           )}
         </div>
