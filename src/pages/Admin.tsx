@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -564,11 +563,11 @@ const AdminPage: React.FC = () => {
                   </div>
                   
                   <div className="border-t border-gray-200 pt-4">
-                    <h3 className="text-sm font-medium mb-2">O suba una imagen desde su dispositivo:</h3>
+                    <h3 className="text-sm font-medium mb-2">Subir imagen para el carrusel:</h3>
                     <ImageUploader 
                       onImageUpload={handleUploadCarouselImage} 
                       label="Subir imagen para el carrusel"
-                      maxSize={2}
+                      maxSize={4}
                     />
                   </div>
                 </div>
@@ -648,19 +647,12 @@ const AdminPage: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">URL de la Imagen</label>
-                  <div className="flex flex-col space-y-2">
-                    <Input
-                      value={newProduct.imageUrl}
-                      onChange={(e) => setNewProduct({...newProduct, imageUrl: e.target.value})}
-                      placeholder="URL de la imagen (ej: /product1.jpg)"
-                      className="border-lilac/30 focus:border-lilac focus:ring-lilac"
-                    />
-                    <div className="text-center text-sm text-gray-500">o</div>
+                  <label className="text-sm font-medium">Imagen del Producto</label>
+                  <div className="mt-2">
                     <ImageUploader 
                       onImageUpload={handleUploadProductImage} 
                       label="Subir imagen del producto"
-                      maxSize={2}
+                      maxSize={4}
                     />
                   </div>
                   

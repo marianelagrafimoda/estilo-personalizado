@@ -15,7 +15,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   onImageUpload,
   label = "Subir imagen",
   accept = "image/*",
-  maxSize = 5
+  maxSize = 4
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
@@ -26,7 +26,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Validar tamanho do arquivo (em bytes)
+    // Validar tamaño del archivo (en bytes)
     const maxSizeBytes = maxSize * 1024 * 1024;
     if (file.size > maxSizeBytes) {
       toast({
@@ -37,17 +37,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
     
-    // Criar uma URL temporária para pré-visualização
+    // Crear una URL temporal para pre-visualización
     const previewUrl = URL.createObjectURL(file);
     setPreview(previewUrl);
 
     try {
       setIsUploading(true);
       
-      // Chamar a função para fazer upload da imagem
+      // Llamar a la función para hacer upload de la imagen
       await onImageUpload(file);
       
-      // Limpar o input de arquivo
+      // Limpiar el input de archivo
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -57,6 +57,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         description: "La imagen se ha subido correctamente."
       });
     } catch (error) {
+      console.error("Error al subir imagen:", error);
       toast({
         title: "Error al subir imagen",
         description: error instanceof Error ? error.message : "Ocurrió un error desconocido",
@@ -64,7 +65,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       });
     } finally {
       setIsUploading(false);
-      // Liberamos a URL temporária
+      // Liberar la URL temporal
       URL.revokeObjectURL(previewUrl);
       setPreview(null);
     }
