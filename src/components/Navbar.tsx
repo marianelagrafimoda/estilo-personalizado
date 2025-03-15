@@ -1,20 +1,28 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, ShoppingCart, X, User } from 'lucide-react';
+import { Menu, ShoppingCart, X } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useSiteInfo } from '../contexts/SiteContext';
 import Cart from './Cart';
 
 const Navbar: React.FC = () => {
   const { totalItems } = useCart();
   const { isAuthenticated, isAdmin, logout } = useAuth();
+  const { siteInfo } = useSiteInfo();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const toggleCart = () => setIsCartOpen(!isCartOpen);
+  
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const whatsappUrl = `https://wa.me/${siteInfo.whatsappNumber.replace(/\+/g, '')}`;
+    window.open(whatsappUrl, '_blank');
+  };
   
   useEffect(() => {
     const handleScroll = () => {
@@ -29,16 +37,19 @@ const Navbar: React.FC = () => {
     <>
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur shadow-sm py-2' : 'bg-transparent py-4'}`}>
         <div className="container-custom mx-auto flex justify-between items-center">
-          <Link to="/" className="flex items-center space-x-2">
+          <a 
+            href="#" 
+            onClick={handleLogoClick}
+            className="flex items-center space-x-2"
+          >
             <img src="/lovable-uploads/9ecb5286-6e91-4b1e-9ea2-f2bb91f4df50.png" alt="GrafiModa" className="h-10" />
-            <span className="font-serif text-xl font-medium">GrafiModa</span>
-          </Link>
+          </a>
           
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-foreground hover:text-lilac-dark transition-colors">Inicio</Link>
             <Link to="/#productos" className="text-foreground hover:text-lilac-dark transition-colors">Productos</Link>
             <a 
-              href={`https://wa.me/593990893095?text=Quiero%20personalizar%20mi%20propio%20estilo`}
+              href={`https://wa.me/${siteInfo.whatsappNumber.replace(/\+/g, '')}?text=Quiero%20personalizar%20mi%20propio%20estilo`}
               target="_blank" 
               rel="noopener noreferrer"
               className="text-foreground hover:text-lilac-dark transition-colors"
@@ -96,7 +107,7 @@ const Navbar: React.FC = () => {
                 Productos
               </Link>
               <a 
-                href={`https://wa.me/593990893095?text=Quiero%20personalizar%20mi%20propio%20estilo`}
+                href={`https://wa.me/${siteInfo.whatsappNumber.replace(/\+/g, '')}?text=Quiero%20personalizar%20mi%20propio%20estilo`}
                 target="_blank" 
                 rel="noopener noreferrer"
                 onClick={toggleMobileMenu}

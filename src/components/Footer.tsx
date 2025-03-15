@@ -7,6 +7,12 @@ import { Facebook, Instagram } from 'lucide-react';
 const Footer: React.FC = () => {
   const { siteInfo } = useSiteInfo();
   const currentYear = new Date().getFullYear();
+  
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const whatsappUrl = `https://wa.me/${siteInfo.whatsappNumber.replace(/\+/g, '')}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
   return (
     <footer className="bg-lilac/10 py-10 mt-10">
@@ -14,10 +20,13 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Logo and About */}
           <div className="space-y-4">
-            <Link to="/" className="flex items-center space-x-2">
+            <a 
+              href="#" 
+              onClick={handleLogoClick}
+              className="flex items-center space-x-2"
+            >
               <img src="/lovable-uploads/9ecb5286-6e91-4b1e-9ea2-f2bb91f4df50.png" alt="GrafiModa" className="h-10" />
-              <span className="font-serif text-xl font-medium">GrafiModa</span>
-            </Link>
+            </a>
             <p className="text-gray-600">{siteInfo.slogan}</p>
             
             {/* Social Media Buttons */}
@@ -59,7 +68,7 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <a 
-                  href={`https://wa.me/593990893095?text=Quiero%20personalizar%20mi%20propio%20estilo`}
+                  href={`https://wa.me/${siteInfo.whatsappNumber.replace(/\+/g, '')}?text=Quiero%20personalizar%20mi%20propio%20estilo`}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-gray-600 hover:text-lilac-dark transition-colors"
