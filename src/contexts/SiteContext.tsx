@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { saveSiteInfo, uploadImage, getCarouselImages } from '../lib/supabase';
@@ -62,52 +61,23 @@ const snakeToCamel = (str: string) => {
 
 // Prepare data for Supabase (convert to snake_case and ensure types match)
 const prepareForSupabase = (data: Partial<SiteInfo>) => {
-  // Create an object that matches the exact structure expected by the site_info table
-  const result: {
-    carousel_images: Json;
-    design_description?: string;
-    design_title?: string;
-    faq_title?: string;
-    materials_description?: string;
-    materials_title?: string;
-    service_description?: string;
-    service_title?: string;
-    slogan?: string;
-    unique_style_title?: string;
-    whatsapp_number?: string;
-    created_at?: string | null;
-    updated_at?: string | null;
-  } = {
-    carousel_images: [] as Json // Default empty array
+  // Ensure all required fields are present by merging with DEFAULT_SITE_INFO
+  const completeData = { ...DEFAULT_SITE_INFO, ...data };
+  
+  // Create an object with all required fields for the site_info table
+  return {
+    carousel_images: completeData.carouselImages as Json,
+    design_description: completeData.designDescription,
+    design_title: completeData.designTitle,
+    faq_title: completeData.faqTitle,
+    materials_description: completeData.materialsDescription,
+    materials_title: completeData.materialsTitle,
+    service_description: completeData.serviceDescription,
+    service_title: completeData.serviceTitle,
+    slogan: completeData.slogan,
+    unique_style_title: completeData.uniqueStyleTitle,
+    whatsapp_number: completeData.whatsappNumber,
   };
-  
-  // Convert each property from camelCase to snake_case
-  Object.entries(data).forEach(([key, value]) => {
-    const snakeKey = camelToSnake(key);
-    
-    // Handle carousel_images specially
-    if (key === 'carouselImages') {
-      result.carousel_images = value as Json;
-    } 
-    // Handle all other fields
-    else if (
-      key === 'slogan' || 
-      key === 'whatsappNumber' || 
-      key === 'uniqueStyleTitle' || 
-      key === 'materialsTitle' || 
-      key === 'materialsDescription' || 
-      key === 'designTitle' || 
-      key === 'designDescription' || 
-      key === 'serviceTitle' || 
-      key === 'serviceDescription' || 
-      key === 'faqTitle'
-    ) {
-      // @ts-ignore - We know this assignment is valid for our schema
-      result[snakeKey] = value;
-    }
-  });
-  
-  return result;
 };
 
 // Prepare data from Supabase (convert to camelCase)
@@ -247,20 +217,15 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let result;
       if (existingData && existingData.length > 0) {
         // Update existing record - make sure we're passing correctly typed data
-        // We need to ensure we have all required fields for the site_info table
-        const fullSiteData = prepareForSupabase(updatedInfo);
-        
         result = await supabase
           .from('site_info')
-          .update(fullSiteData)
+          .update(prepareForSupabase(updatedInfo))
           .eq('id', existingData[0].id);
       } else {
-        // Insert new record - make sure we have all required fields
-        const fullSiteData = prepareForSupabase(updatedInfo);
-        
+        // Insert new record with all required fields
         result = await supabase
           .from('site_info')
-          .insert(fullSiteData);
+          .insert(prepareForSupabase(updatedInfo));
       }
       
       if (result.error) {
