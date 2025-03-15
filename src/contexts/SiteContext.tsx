@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { saveSiteInfo, uploadImage, getCarouselImages } from '../lib/supabase';
@@ -61,15 +62,47 @@ const snakeToCamel = (str: string) => {
 
 // Prepare data for Supabase (convert to snake_case and ensure types match)
 const prepareForSupabase = (data: Partial<SiteInfo>) => {
-  const result: Record<string, any> = {};
+  // Create an object that matches the exact structure expected by the site_info table
+  const result: {
+    carousel_images: Json;
+    design_description?: string;
+    design_title?: string;
+    faq_title?: string;
+    materials_description?: string;
+    materials_title?: string;
+    service_description?: string;
+    service_title?: string;
+    slogan?: string;
+    unique_style_title?: string;
+    whatsapp_number?: string;
+    created_at?: string | null;
+    updated_at?: string | null;
+  } = {
+    carousel_images: [] as Json // Default empty array
+  };
   
+  // Convert each property from camelCase to snake_case
   Object.entries(data).forEach(([key, value]) => {
     const snakeKey = camelToSnake(key);
     
-    // Special handling for arrays (like carouselImages)
-    if (Array.isArray(value)) {
-      result[snakeKey] = value as Json;
-    } else {
+    // Handle carousel_images specially
+    if (key === 'carouselImages') {
+      result.carousel_images = value as Json;
+    } 
+    // Handle all other fields
+    else if (
+      key === 'slogan' || 
+      key === 'whatsappNumber' || 
+      key === 'uniqueStyleTitle' || 
+      key === 'materialsTitle' || 
+      key === 'materialsDescription' || 
+      key === 'designTitle' || 
+      key === 'designDescription' || 
+      key === 'serviceTitle' || 
+      key === 'serviceDescription' || 
+      key === 'faqTitle'
+    ) {
+      // @ts-ignore - We know this assignment is valid for our schema
       result[snakeKey] = value;
     }
   });
