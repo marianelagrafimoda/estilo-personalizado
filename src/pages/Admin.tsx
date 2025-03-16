@@ -45,19 +45,16 @@ const AdminPage: React.FC = () => {
   const { products, updateProduct, addProduct, removeProduct, uploadProductImage, isLoading: isProductsLoading } = useProducts();
   const { toast } = useToast();
   
-  // Site Info States
   const [newSlogan, setNewSlogan] = useState(siteInfo.slogan);
   const [newWhatsappNumber, setNewWhatsappNumber] = useState(siteInfo.whatsappNumber);
   const [newInstagramLink, setNewInstagramLink] = useState(siteInfo.instagramLink || 'https://www.instagram.com/');
   const [newFacebookLink, setNewFacebookLink] = useState(siteInfo.facebookLink || 'https://www.facebook.com/');
   const [newCarouselImages, setNewCarouselImages] = useState<string[]>(siteInfo.carouselImages);
   
-  // Estados para upload de imagem
   const [isUploadingProduct, setIsUploadingProduct] = useState(false);
   const [isUploadingCarousel, setIsUploadingCarousel] = useState(false);
   const [isClearingImages, setIsClearingImages] = useState(false);
   
-  // Textos editables
   const [newMaterialsTitle, setNewMaterialsTitle] = useState(siteInfo.materialsTitle);
   const [newMaterialsDesc, setNewMaterialsDesc] = useState(siteInfo.materialsDescription);
   const [newDesignTitle, setNewDesignTitle] = useState(siteInfo.designTitle);
@@ -67,8 +64,6 @@ const AdminPage: React.FC = () => {
   const [newFaqTitle, setNewFaqTitle] = useState(siteInfo.faqTitle);
   const [newUniqueStyleTitle, setNewUniqueStyleTitle] = useState(siteInfo.uniqueStyleTitle);
   
-  // Product States
-  const [editingProduct, setEditingProduct] = useState<any>(null);
   const [newProduct, setNewProduct] = useState({
     title: '',
     description: '',
@@ -90,26 +85,22 @@ const AdminPage: React.FC = () => {
     ]
   });
   
-  // New color states
   const [newColorName, setNewColorName] = useState('');
   const [newColorHex, setNewColorHex] = useState('#FFFFFF');
   const [editingNewColorName, setEditingNewColorName] = useState('');
   const [editingNewColorHex, setEditingNewColorHex] = useState('#FFFFFF');
 
   React.useEffect(() => {
-    // Redirect non-admin users
     if (!isAuthenticated || !isAdmin) {
       navigate('/login');
     }
     
-    // Intentar configurar la base de datos al cargar el componente
     setupDatabase().catch(error => {
       console.error("Error setting up database from AdminPage:", error);
     });
   }, [isAuthenticated, isAdmin, navigate]);
 
   React.useEffect(() => {
-    // Atualizar estados cuando siteInfo mudar
     if (!isSiteLoading) {
       setNewSlogan(siteInfo.slogan);
       setNewWhatsappNumber(siteInfo.whatsappNumber);
@@ -161,7 +152,6 @@ const AdminPage: React.FC = () => {
         await clearAllImages();
         setNewCarouselImages([]);
         
-        // Registra a atividade
         if (user && user.isAdmin) {
           await logAdminActivity({
             adminEmail: user.email,
@@ -181,13 +171,11 @@ const AdminPage: React.FC = () => {
   const handleUploadCarouselImage = async (file: File) => {
     setIsUploadingCarousel(true);
     try {
-      // Asegurarse de que la base de datos esté configurada antes de subir
       await setupDatabase();
       
       const imageUrl = await uploadSiteImage(file);
       setNewCarouselImages(prev => [...prev, imageUrl]);
       
-      // Registra a atividade
       if (user && user.isAdmin) {
         await logAdminActivity({
           adminEmail: user.email,
@@ -213,7 +201,6 @@ const AdminPage: React.FC = () => {
       const imageUrl = await uploadProductImage(file);
       setNewProduct(prev => ({ ...prev, imageUrl }));
       
-      // Registra a atividade
       if (user && user.isAdmin) {
         await logAdminActivity({
           adminEmail: user.email,
@@ -307,7 +294,6 @@ const AdminPage: React.FC = () => {
       
       addProduct(productToAdd);
       
-      // Reset form
       setNewProduct({
         title: '',
         description: '',
@@ -426,7 +412,7 @@ const AdminPage: React.FC = () => {
   };
 
   if (!isAuthenticated || !isAdmin) {
-    return null; // Will redirect in useEffect
+    return null;
   }
 
   if (isSiteLoading || isProductsLoading) {

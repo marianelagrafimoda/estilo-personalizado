@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { uploadImage } from '../lib/supabase';
@@ -21,13 +22,13 @@ export interface Color {
 export interface Product {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   price: number;
-  imageUrl: string;
+  imageUrl?: string;
   sizes: Size[];
   colors: Color[];
   stockQuantity: number;
-  cardColor: string;
+  cardColor?: string;
 }
 
 interface ProductContextType {
@@ -51,7 +52,7 @@ export const useProducts = () => {
 
 const DEFAULT_PRODUCTS: Product[] = [
   {
-    id: '1',
+    id: uuidv4(),
     title: 'Camiseta Personalizada',
     description: 'Camiseta de algodón premium lista para personalizar con tu diseño favorito',
     price: 15.99,
@@ -73,7 +74,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     ]
   },
   {
-    id: '2',
+    id: uuidv4(),
     title: 'Sudadera con Capucha',
     description: 'Sudadera cómoda y cálida, perfecta para estampados y bordados personalizados',
     price: 29.99,
@@ -94,7 +95,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     ]
   },
   {
-    id: '3',
+    id: uuidv4(),
     title: 'Gorra Personalizada',
     description: 'Gorra de alta calidad para personalizar con tu logo o diseño preferido',
     price: 12.99,
@@ -118,13 +119,13 @@ const productToSupabase = (product: Omit<Product, 'id'> & { id?: string }) => {
   return {
     id: productId,
     title: product.title,
-    description: product.description,
+    description: product.description || '',
     price: product.price,
-    image_url: product.imageUrl,
+    image_url: product.imageUrl || '/placeholder.svg',
     sizes: JSON.stringify(product.sizes),
     colors: JSON.stringify(product.colors),
     stock_quantity: product.stockQuantity,
-    card_color: product.cardColor
+    card_color: product.cardColor || '#C8B6E2'
   };
 };
 
@@ -167,13 +168,13 @@ const supabaseToProduct = (data: any): Product => {
   return {
     id: data.id,
     title: data.title,
-    description: data.description,
+    description: data.description || '',
     price: data.price,
-    imageUrl: data.image_url,
-    sizes: sizes,
-    colors: colors,
-    stockQuantity: data.stock_quantity,
-    cardColor: data.card_color
+    imageUrl: data.image_url || '/placeholder.svg',
+    sizes: sizes || [],
+    colors: colors || [],
+    stockQuantity: data.stock_quantity || 0,
+    cardColor: data.card_color || '#C8B6E2'
   };
 };
 
@@ -273,7 +274,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addProduct = async (product: Omit<Product, 'id'> & { id?: string }) => {
-    const newProductId = uuidv4();
+    const newProductId = product.id || uuidv4();
     
     const newProduct = {
       ...product,

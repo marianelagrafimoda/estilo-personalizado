@@ -41,12 +41,12 @@ export type Database = {
       }
       products: {
         Row: {
-          card_color: string
+          card_color: string | null
           colors: Json
           created_at: string | null
-          description: string
+          description: string | null
           id: string
-          image_url: string
+          image_url: string | null
           price: number
           sizes: Json
           stock_quantity: number
@@ -54,12 +54,12 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          card_color: string
+          card_color?: string | null
           colors: Json
           created_at?: string | null
-          description: string
+          description?: string | null
           id?: string
-          image_url: string
+          image_url?: string | null
           price: number
           sizes: Json
           stock_quantity?: number
@@ -67,12 +67,12 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          card_color?: string
+          card_color?: string | null
           colors?: Json
           created_at?: string | null
-          description?: string
+          description?: string | null
           id?: string
-          image_url?: string
+          image_url?: string | null
           price?: number
           sizes?: Json
           stock_quantity?: number

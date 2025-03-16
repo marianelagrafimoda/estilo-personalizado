@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { Product } from '../contexts/ProductContext';
@@ -68,13 +69,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     return luminance > 0.5 ? '#333333' : '#FFFFFF';
   };
   
-  const textColor = getTextColor(product.cardColor);
+  const cardColor = product.cardColor || '#C8B6E2';
+  const textColor = getTextColor(cardColor);
 
   return (
     <div 
       className="group overflow-hidden transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg rounded-lg"
       style={{ 
-        backgroundColor: product.cardColor,
+        backgroundColor: cardColor,
         color: textColor,
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
       }}
@@ -83,7 +85,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     >
       <div className="relative overflow-hidden h-64">
         <img 
-          src={product.imageUrl} 
+          src={product.imageUrl || '/placeholder.svg'} 
           alt={product.title} 
           className="w-full h-full object-cover transition-transform duration-700 transform group-hover:scale-105"
         />
@@ -109,7 +111,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       
       <div className="p-4">
         <h3 className="font-serif text-xl font-medium mb-2">{product.title}</h3>
-        <p className="text-sm mb-3 line-clamp-2" style={{ opacity: 0.9 }}>{product.description}</p>
+        <p className="text-sm mb-3 line-clamp-2" style={{ opacity: 0.9 }}>{product.description || ''}</p>
         
         {availableSizes.length > 0 && product.stockQuantity > 0 ? (
           <>
