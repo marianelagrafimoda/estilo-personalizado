@@ -39,7 +39,7 @@ export const uploadImage = async (file: File, bucketName: string = 'site_images'
     // Gera um nome único para o arquivo
     const fileExt = file.name.split('.').pop();
     const fileName = `${prefix}${Date.now()}.${fileExt}`;
-    const filePath = prefix ? fileName : fileName;
+    const filePath = prefix ? `${prefix}${fileName}` : fileName;
     
     // Upload da imagem
     const { error: uploadError, data } = await supabase.storage
@@ -163,5 +163,43 @@ export const getCarouselImages = async (): Promise<string[]> => {
   } catch (error) {
     console.error('Erro ao obter imagens do carrossel:', error);
     return [];
+  }
+};
+
+/**
+ * Limpar imagens do carrossel (remove todas as imagens anteriores)
+ */
+export const clearCarouselImages = async (): Promise<boolean> => {
+  try {
+    // Obter o registro atual
+    const { data: existingData, error: fetchError } = await supabase
+      .from('site_info')
+      .select('id')
+      .limit(1);
+      
+    if (fetchError) {
+      console.error('Erro ao verificar site_info para limpar imagens:', fetchError);
+      return false;
+    }
+    
+    if (existingData && existingData.length > 0) {
+      // Atualiza o registro para ter um array vazio de imagens
+      const result = await supabase
+        .from('site_info')
+        .update({ carousel_images: [] })
+        .eq('id', existingData[0].id);
+        
+      if (result.error) {
+        console.error('Erro ao limpar imagens do carrossel:', result.error);
+        return false;
+      }
+      
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Falha ao limpar imagens do carrossel:', error);
+    return false;
   }
 };

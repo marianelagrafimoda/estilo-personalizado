@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
-import { saveSiteInfo, uploadImage, getCarouselImages } from '../lib/supabase';
+import { saveSiteInfo, uploadImage, getCarouselImages, clearCarouselImages } from '../lib/supabase';
 import { useToast } from '../hooks/use-toast';
 import { Json } from '../integrations/supabase/types';
 
@@ -25,6 +25,7 @@ interface SiteContextType {
   siteInfo: SiteInfo;
   updateSiteInfo: (updates: Partial<SiteInfo>) => Promise<void>;
   uploadSiteImage: (file: File) => Promise<string>;
+  clearAllImages: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -33,7 +34,7 @@ const DEFAULT_SITE_INFO: SiteInfo = {
   whatsappNumber: "+593990893095",
   instagramLink: "https://www.instagram.com/",
   facebookLink: "https://www.facebook.com/",
-  carouselImages: ['/carousel1.jpg', '/carousel2.jpg', '/carousel3.jpg'],
+  carouselImages: [],
   uniqueStyleTitle: "¿Quieres un estilo realmente único?",
   materialsTitle: "Materiales Premium",
   materialsDescription: "Utilizamos solo los mejores materiales para asegurar la calidad y durabilidad de nuestros productos.",
@@ -111,7 +112,7 @@ const prepareFromSupabase = (data: Record<string, any>): Partial<SiteInfo> => {
           result.carouselImages = value.map(String);
         } else {
           // Fallback to default
-          result.carouselImages = DEFAULT_SITE_INFO.carouselImages;
+          result.carouselImages = [];
         }
       } else {
         // @ts-ignore - We know this is safe because we're filtering the keys
@@ -152,15 +153,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Convert from snake_case to camelCase and handle special fields
           const formattedData = prepareFromSupabase(data);
           
-          // If carousel images found in storage, use them
-          if (carouselImages && carouselImages.length > 0) {
-            formattedData.carouselImages = carouselImages;
-          }
-          
           setSiteInfo(prev => ({ ...prev, ...formattedData }));
-        } else if (carouselImages && carouselImages.length > 0) {
-          // If no data found but images found
-          setSiteInfo(prev => ({ ...prev, carouselImages }));
         }
       } catch (error) {
         console.error('Failed to fetch site info from Supabase:', error);
@@ -180,6 +173,28 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     fetchSiteInfo();
   }, []);
+
+  const clearAllImages = async () => {
+    try {
+      const success = await clearCarouselImages();
+      if (success) {
+        setSiteInfo(prev => ({ ...prev, carouselImages: [] }));
+        toast({
+          title: "Imágenes eliminadas",
+          description: "Todas las imágenes del carrusel han sido eliminadas correctamente.",
+        });
+      } else {
+        throw new Error("No se pudieron eliminar las imágenes");
+      }
+    } catch (error) {
+      console.error('Error al eliminar las imágenes:', error);
+      toast({
+        title: "Error al eliminar imágenes",
+        description: "No se pudieron eliminar las imágenes del carrusel.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const uploadSiteImage = async (file: File): Promise<string> => {
     try {
@@ -257,7 +272,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <SiteContext.Provider value={{ siteInfo, updateSiteInfo, uploadSiteImage, isLoading }}>
+    <SiteContext.Provider value={{ siteInfo, updateSiteInfo, uploadSiteImage, clearAllImages, isLoading }}>
       {children}
     </SiteContext.Provider>
   );

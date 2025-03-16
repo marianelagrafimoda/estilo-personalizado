@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -14,7 +15,8 @@ import {
   Trash2,
   Loader2,
   Instagram,
-  Facebook
+  Facebook,
+  RefreshCcw
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -40,7 +42,7 @@ import { logAdminActivity } from '../lib/admin-activity-logger';
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, isAdmin } = useAuth();
-  const { siteInfo, updateSiteInfo, uploadSiteImage, isLoading: isSiteLoading } = useSiteInfo();
+  const { siteInfo, updateSiteInfo, uploadSiteImage, clearAllImages, isLoading: isSiteLoading } = useSiteInfo();
   const { products, updateProduct, addProduct, removeProduct, uploadProductImage, isLoading: isProductsLoading } = useProducts();
   const { toast } = useToast();
   
@@ -54,6 +56,7 @@ const AdminPage: React.FC = () => {
   // Estados para upload de imagem
   const [isUploadingProduct, setIsUploadingProduct] = useState(false);
   const [isUploadingCarousel, setIsUploadingCarousel] = useState(false);
+  const [isClearingImages, setIsClearingImages] = useState(false);
   
   // Textos editables
   const [newMaterialsTitle, setNewMaterialsTitle] = useState(siteInfo.materialsTitle);
@@ -148,13 +151,32 @@ const AdminPage: React.FC = () => {
     });
   };
 
-  const addCarouselImage = () => {
-    // Eliminamos la funcionalidad de agregar URL manual de imágenes
-    // Esta función se mantiene solo para uso con la subida de imágenes
-  };
-
   const removeCarouselImage = (image: string) => {
     setNewCarouselImages(newCarouselImages.filter(img => img !== image));
+  };
+  
+  const handleClearAllImages = async () => {
+    if (window.confirm('¿Está seguro que desea eliminar todas las imágenes del carrusel?')) {
+      setIsClearingImages(true);
+      try {
+        await clearAllImages();
+        setNewCarouselImages([]);
+        
+        // Registra a atividade
+        if (user && user.isAdmin) {
+          await logAdminActivity({
+            adminEmail: user.email,
+            actionType: 'delete',
+            entityType: 'carousel_images',
+            details: {
+              action: 'clear_all_images'
+            }
+          });
+        }
+      } finally {
+        setIsClearingImages(false);
+      }
+    }
   };
   
   const handleUploadCarouselImage = async (file: File) => {
@@ -618,7 +640,22 @@ const AdminPage: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-4">
-                  {/* Eliminamos el campo para agregar URL manualmente */}
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-sm font-medium">Imágenes actuales:</h3>
+                    <Button 
+                      onClick={handleClearAllImages} 
+                      variant="destructive" 
+                      size="sm"
+                      disabled={isClearingImages || newCarouselImages.length === 0}
+                    >
+                      {isClearingImages ? (
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <RefreshCcw className="h-4 w-4 mr-1" />
+                      )}
+                      Eliminar todas
+                    </Button>
+                  </div>
                   
                   <div className="border-t border-gray-200 pt-4">
                     <h3 className="text-sm font-medium mb-2">Subir imagen para el carrusel:</h3>

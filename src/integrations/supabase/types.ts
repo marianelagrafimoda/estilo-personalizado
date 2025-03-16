@@ -87,8 +87,10 @@ export type Database = {
           created_at: string | null
           design_description: string
           design_title: string
+          facebook_link: string | null
           faq_title: string
           id: string
+          instagram_link: string | null
           materials_description: string
           materials_title: string
           service_description: string
@@ -103,8 +105,10 @@ export type Database = {
           created_at?: string | null
           design_description: string
           design_title: string
+          facebook_link?: string | null
           faq_title: string
           id?: string
+          instagram_link?: string | null
           materials_description: string
           materials_title: string
           service_description: string
@@ -119,8 +123,10 @@ export type Database = {
           created_at?: string | null
           design_description?: string
           design_title?: string
+          facebook_link?: string | null
           faq_title?: string
           id?: string
+          instagram_link?: string | null
           materials_description?: string
           materials_title?: string
           service_description?: string
