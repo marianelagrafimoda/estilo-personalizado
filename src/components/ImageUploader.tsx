@@ -9,7 +9,7 @@ interface ImageUploaderProps {
   onImageUpload: (file: File) => Promise<string>;
   label?: string;
   accept?: string;
-  maxSize?: number; // en MB
+  maxSize?: number; // em MB
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({
@@ -20,17 +20,20 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   // Verificar a configuração do banco de dados ao montar o componente
   React.useEffect(() => {
     setupDatabase().catch(error => {
-      console.error("Error setting up database from ImageUploader:", error);
+      console.error("Erro ao configurar o banco de dados a partir do ImageUploader:", error);
+      setUploadError("Erro de configuração do armazenamento. Tente novamente mais tarde.");
     });
   }, []);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUploadError(null);
     const file = e.target.files?.[0];
     if (!file) return;
     
@@ -75,11 +78,19 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       if (error instanceof Error) {
         console.log("Detalhes do erro:", error.message);
         
-        // Mensagem específica para problemas com buckets
+        // Mensagens específicas para diferentes tipos de erros
         if (error.message.includes('bucket')) {
           errorMessage = error.message;
+          setUploadError(errorMessage);
+        } else if (error.message.includes('storage')) {
+          errorMessage = "Erro de armazenamento: não foi possível acessar o bucket de imagens.";
+          setUploadError(errorMessage);
+        } else if (error.message.includes('conexão')) {
+          errorMessage = "Falha na conexão com o servidor de armazenamento. Verifique sua conexão à internet.";
+          setUploadError(errorMessage);
         } else {
           errorMessage = "Erro ao acessar o armazenamento. Verifique sua conexão e tente novamente.";
+          setUploadError(errorMessage);
         }
       }
       
@@ -112,6 +123,29 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     }
   };
 
+  const retrySetup = async () => {
+    setUploadError(null);
+    try {
+      const success = await setupDatabase();
+      if (success) {
+        toast({
+          title: "Configuração concluída",
+          description: "O sistema de armazenamento foi configurado com sucesso."
+        });
+      } else {
+        throw new Error("Não foi possível configurar o armazenamento");
+      }
+    } catch (error) {
+      console.error("Erro ao reconfigurar o banco de dados:", error);
+      setUploadError("Falha na reconfiguração. Tente novamente mais tarde.");
+      toast({
+        title: "Erro de configuração",
+        description: "Não foi possível configurar o sistema de armazenamento.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="space-y-2">
       <input
@@ -121,6 +155,21 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         onChange={handleFileSelect}
         className="hidden"
       />
+      
+      {uploadError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-2">
+          <strong className="font-bold">Erro: </strong>
+          <span className="block sm:inline">{uploadError}</span>
+          <Button
+            onClick={retrySetup}
+            variant="destructive"
+            size="sm"
+            className="mt-2"
+          >
+            Tentar novamente
+          </Button>
+        </div>
+      )}
       
       {!preview ? (
         <Button
