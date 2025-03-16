@@ -1,6 +1,7 @@
 
 import { supabase } from '../integrations/supabase/client';
 import { verifyAndCreateBuckets } from './admin-activity-logger';
+import { Json } from '../integrations/supabase/types';
 
 // Configuração global - verifica e configura o banco de dados
 export const setupDatabase = async (): Promise<boolean> => {
@@ -130,7 +131,9 @@ export const getCarouselImages = async (): Promise<string[]> => {
           images = [images];
         }
       }
-      return Array.isArray(images) ? images : [];
+      
+      // Garantir que todos os valores são strings
+      return Array.isArray(images) ? images.map(item => String(item)) : [];
     }
     
     // Se não encontrou no banco ou teve erro, tenta listar imagens do bucket
