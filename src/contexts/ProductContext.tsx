@@ -1,9 +1,9 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { uploadImage } from '../lib/supabase';
 import { useToast } from '../hooks/use-toast';
 import { useAuth } from './AuthContext';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface Size {
   id: string;
@@ -49,7 +49,6 @@ export const useProducts = () => {
   return context;
 };
 
-// Default products for fallback
 const DEFAULT_PRODUCTS: Product[] = [
   {
     id: '1',
@@ -57,7 +56,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     description: 'Camiseta de algodón premium lista para personalizar con tu diseño favorito',
     price: 15.99,
     imageUrl: '/placeholder.svg',
-    cardColor: '#C8B6E2', // Color por defecto (lila)
+    cardColor: '#C8B6E2',
     stockQuantity: 25,
     colors: [
       { id: 'white', name: 'Blanco', hex: '#FFFFFF' },
@@ -79,7 +78,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     description: 'Sudadera cómoda y cálida, perfecta para estampados y bordados personalizados',
     price: 29.99,
     imageUrl: '/placeholder.svg',
-    cardColor: '#E6DEFF', // Color lila claro
+    cardColor: '#E6DEFF',
     stockQuantity: 15,
     colors: [
       { id: 'gray', name: 'Gris', hex: '#888888' },
@@ -100,7 +99,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     description: 'Gorra de alta calidad para personalizar con tu logo o diseño preferido',
     price: 12.99,
     imageUrl: '/placeholder.svg',
-    cardColor: '#A78BDA', // Color lila oscuro
+    cardColor: '#A78BDA',
     stockQuantity: 30,
     colors: [
       { id: 'white', name: 'Blanco', hex: '#FFFFFF' },
@@ -113,10 +112,11 @@ const DEFAULT_PRODUCTS: Product[] = [
   }
 ];
 
-// Convert our product model to Supabase format
 const productToSupabase = (product: Omit<Product, 'id'> & { id?: string }) => {
+  const productId = product.id || uuidv4();
+  
   return {
-    id: product.id,
+    id: productId,
     title: product.title,
     description: product.description,
     price: product.price,
@@ -128,7 +128,6 @@ const productToSupabase = (product: Omit<Product, 'id'> & { id?: string }) => {
   };
 };
 
-// Convert partial product (for updates) to Supabase format
 const partialProductToSupabase = (product: Partial<Product> & { id?: string }) => {
   const result: Record<string, any> = {};
   
@@ -145,12 +144,10 @@ const partialProductToSupabase = (product: Partial<Product> & { id?: string }) =
   return result;
 };
 
-// Convert from Supabase format to our product model
 const supabaseToProduct = (data: any): Product => {
   let sizes = data.sizes;
   let colors = data.colors;
   
-  // Handle different data types from Supabase
   if (typeof sizes === 'string') {
     try {
       sizes = JSON.parse(sizes);
@@ -186,68 +183,80 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const { toast } = useToast();
   const { isAdmin } = useAuth();
   
-  useEffect(() => {
-    // Fetch products from Supabase
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          console.error('Error fetching products:', error);
-          throw error;
-        }
-        
-        if (data && data.length > 0) {
-          const formattedProducts = data.map(supabaseToProduct);
-          setProducts(formattedProducts);
-        } else {
-          // If no products in Supabase, check localStorage
-          const storedProducts = localStorage.getItem('products');
-          if (storedProducts) {
-            setProducts(JSON.parse(storedProducts));
-          } else {
-            // Use default products as fallback
-            setProducts(DEFAULT_PRODUCTS);
-            localStorage.setItem('products', JSON.stringify(DEFAULT_PRODUCTS));
-            
-            // If there are no products, try to seed the default ones to Supabase
-            if (isAdmin) {
-              try {
-                await Promise.all(
-                  DEFAULT_PRODUCTS.map(product => 
-                    supabase.from('products').insert(productToSupabase(product))
-                  )
-                );
-                console.log('Seeded default products to Supabase');
-              } catch (seedError) {
-                console.error('Failed to seed default products:', seedError);
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch products from Supabase:', error);
-        
-        // Fallback to localStorage
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching products:', error);
+        throw error;
+      }
+      
+      if (data && data.length > 0) {
+        const formattedProducts = data.map(supabaseToProduct);
+        setProducts(formattedProducts);
+      } else {
         const storedProducts = localStorage.getItem('products');
         if (storedProducts) {
           setProducts(JSON.parse(storedProducts));
         } else {
-          // Use default products
           setProducts(DEFAULT_PRODUCTS);
           localStorage.setItem('products', JSON.stringify(DEFAULT_PRODUCTS));
+          
+          if (isAdmin) {
+            try {
+              await Promise.all(
+                DEFAULT_PRODUCTS.map(product => 
+                  supabase.from('products').insert(productToSupabase(product))
+                )
+              );
+              console.log('Seeded default products to Supabase');
+            } catch (seedError) {
+              console.error('Failed to seed default products:', seedError);
+            }
+          }
         }
-      } finally {
-        setIsLoading(false);
       }
-    };
-    
+    } catch (error) {
+      console.error('Failed to fetch products from Supabase:', error);
+      
+      const storedProducts = localStorage.getItem('products');
+      if (storedProducts) {
+        setProducts(JSON.parse(storedProducts));
+      } else {
+        setProducts(DEFAULT_PRODUCTS);
+        localStorage.setItem('products', JSON.stringify(DEFAULT_PRODUCTS));
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchProducts();
   }, [isAdmin]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('public:products')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'products' 
+      }, (payload) => {
+        console.log('Realtime update:', payload);
+        fetchProducts();
+      })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const uploadProductImage = async (file: File): Promise<string> => {
     try {
@@ -264,20 +273,18 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addProduct = async (product: Omit<Product, 'id'> & { id?: string }) => {
+    const newProductId = uuidv4();
+    
     const newProduct = {
       ...product,
-      id: product.id || Date.now().toString()
+      id: newProductId
     };
     
-    // Add type assertion to resolve the TypeScript error
     const newProductAsProduct = newProduct as Product;
-    
-    // Update local state immediately
     const updatedProducts = [...products, newProductAsProduct];
     setProducts(updatedProducts);
     
     try {
-      // Add to Supabase
       const supabaseData = productToSupabase(newProduct);
       const { error } = await supabase.from('products').insert(supabaseData);
       
@@ -289,7 +296,6 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           variant: "destructive",
         });
         
-        // Fallback to localStorage
         localStorage.setItem('products', JSON.stringify(updatedProducts));
         return;
       }
@@ -301,13 +307,11 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch (error) {
       console.error('Failed to add product to Supabase:', error);
       
-      // Fallback to localStorage
       localStorage.setItem('products', JSON.stringify(updatedProducts));
     }
   };
 
   const updateProduct = async (id: string, updates: Partial<Product>) => {
-    // Update local state immediately
     const updatedProducts = products.map(product => 
       product.id === id ? { ...product, ...updates } : product
     );
@@ -315,10 +319,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setProducts(updatedProducts);
     
     try {
-      // Update in Supabase - Use the new partialProductToSupabase function
       const supabaseData = partialProductToSupabase({ id, ...updates });
       
-      // Remove id from the data to update (we use it in the condition)
       delete supabaseData.id;
       
       const { error } = await supabase
@@ -334,7 +336,6 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           variant: "destructive",
         });
         
-        // Fallback to localStorage
         localStorage.setItem('products', JSON.stringify(updatedProducts));
         return;
       }
@@ -346,18 +347,15 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch (error) {
       console.error('Failed to update product in Supabase:', error);
       
-      // Fallback to localStorage
       localStorage.setItem('products', JSON.stringify(updatedProducts));
     }
   };
 
   const removeProduct = async (id: string) => {
-    // Update local state immediately
     const updatedProducts = products.filter(product => product.id !== id);
     setProducts(updatedProducts);
     
     try {
-      // Remove from Supabase
       const { error } = await supabase
         .from('products')
         .delete()
@@ -371,7 +369,6 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           variant: "destructive",
         });
         
-        // Fallback to localStorage
         localStorage.setItem('products', JSON.stringify(updatedProducts));
         return;
       }
@@ -383,7 +380,6 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch (error) {
       console.error('Failed to remove product from Supabase:', error);
       
-      // Fallback to localStorage
       localStorage.setItem('products', JSON.stringify(updatedProducts));
     }
   };

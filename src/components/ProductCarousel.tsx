@@ -11,8 +11,15 @@ const ProductCarousel: React.FC = () => {
   
   const totalSlides = siteInfo.carouselImages.length;
 
+  // Resetar o slide atual quando o número de slides mudar
+  useEffect(() => {
+    if (currentSlide >= totalSlides && totalSlides > 0) {
+      setCurrentSlide(0);
+    }
+  }, [totalSlides, currentSlide]);
+
   const nextSlide = () => {
-    if (isAnimating) return;
+    if (isAnimating || totalSlides === 0) return;
     
     setIsAnimating(true);
     setCurrentSlide((prev) => (prev === totalSlides - 1 ? 0 : prev + 1));
@@ -23,7 +30,7 @@ const ProductCarousel: React.FC = () => {
   };
 
   const prevSlide = () => {
-    if (isAnimating) return;
+    if (isAnimating || totalSlides === 0) return;
     
     setIsAnimating(true);
     setCurrentSlide((prev) => (prev === 0 ? totalSlides - 1 : prev - 1));
@@ -34,10 +41,12 @@ const ProductCarousel: React.FC = () => {
   };
 
   useEffect(() => {
-    // Auto slide
-    intervalRef.current = setInterval(() => {
-      nextSlide();
-    }, 6000);
+    // Auto slide apenas se houver slides
+    if (totalSlides > 0) {
+      intervalRef.current = setInterval(() => {
+        nextSlide();
+      }, 6000);
+    }
     
     return () => {
       if (intervalRef.current) {
@@ -49,14 +58,16 @@ const ProductCarousel: React.FC = () => {
   const resetInterval = () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
-      intervalRef.current = setInterval(() => {
-        nextSlide();
-      }, 6000);
+      if (totalSlides > 0) {
+        intervalRef.current = setInterval(() => {
+          nextSlide();
+        }, 6000);
+      }
     }
   };
 
   const handleSlideNav = (index: number) => {
-    if (isAnimating || index === currentSlide) return;
+    if (isAnimating || index === currentSlide || totalSlides === 0) return;
     
     setIsAnimating(true);
     setCurrentSlide(index);
@@ -66,6 +77,28 @@ const ProductCarousel: React.FC = () => {
       setIsAnimating(false);
     }, 500);
   };
+
+  // Se não houver imagens, mostrar um placeholder simples
+  if (totalSlides === 0) {
+    return (
+      <div className="relative h-[70vh] md:h-[80vh] bg-gradient-to-b from-lilac/30 to-lilac/10 flex flex-col items-center justify-center">
+        <div className="max-w-3xl mx-auto text-center px-4">
+          <h1 className="text-gray-800 font-serif text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in">
+            GrafiModa
+          </h1>
+          <p className="text-gray-700 text-xl md:text-2xl mb-8 animate-slide-up">
+            {siteInfo.slogan}
+          </p>
+          <a
+            href="#personalizacion"
+            className="inline-block px-6 py-3 bg-lilac hover:bg-lilac-dark text-white rounded-md font-medium transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg animate-slide-up"
+          >
+            Quiero personalizar mi estilo
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-[70vh] md:h-[80vh] overflow-hidden">
@@ -106,42 +139,48 @@ const ProductCarousel: React.FC = () => {
         </div>
       </div>
 
-      {/* Navigation Arrows */}
-      <button
-        onClick={() => {
-          prevSlide();
-          resetInterval();
-        }}
-        className="absolute top-1/2 left-4 z-30 -translate-y-1/2 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors focus:outline-none"
-        aria-label="Previous slide"
-      >
-        <ChevronLeft className="h-6 w-6" />
-      </button>
-      
-      <button
-        onClick={() => {
-          nextSlide();
-          resetInterval();
-        }}
-        className="absolute top-1/2 right-4 z-30 -translate-y-1/2 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors focus:outline-none"
-        aria-label="Next slide"
-      >
-        <ChevronRight className="h-6 w-6" />
-      </button>
-
-      {/* Dot Indicators */}
-      <div className="absolute bottom-6 left-0 right-0 z-30 flex justify-center space-x-2">
-        {siteInfo.carouselImages.map((_, index) => (
+      {/* Navigation Arrows - mostrar apenas se houver mais de um slide */}
+      {totalSlides > 1 && (
+        <>
           <button
-            key={index}
-            onClick={() => handleSlideNav(index)}
-            className={`h-2 rounded-full transition-all ${
-              index === currentSlide ? 'w-8 bg-white' : 'w-2 bg-white/50'
-            }`}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
-      </div>
+            onClick={() => {
+              prevSlide();
+              resetInterval();
+            }}
+            className="absolute top-1/2 left-4 z-30 -translate-y-1/2 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors focus:outline-none"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          
+          <button
+            onClick={() => {
+              nextSlide();
+              resetInterval();
+            }}
+            className="absolute top-1/2 right-4 z-30 -translate-y-1/2 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors focus:outline-none"
+            aria-label="Next slide"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+        </>
+      )}
+
+      {/* Dot Indicators - mostrar apenas se houver mais de um slide */}
+      {totalSlides > 1 && (
+        <div className="absolute bottom-6 left-0 right-0 z-30 flex justify-center space-x-2">
+          {siteInfo.carouselImages.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => handleSlideNav(index)}
+              className={`h-2 rounded-full transition-all ${
+                index === currentSlide ? 'w-8 bg-white' : 'w-2 bg-white/50'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

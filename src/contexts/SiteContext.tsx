@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { saveSiteInfo, uploadImage, getCarouselImages, clearCarouselImages } from '../lib/supabase';
@@ -55,22 +54,16 @@ export const useSiteInfo = () => {
   return context;
 };
 
-// Helper to convert camelCase to snake_case for Supabase
 const camelToSnake = (str: string) => {
   return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 };
 
-// Helper to convert snake_case to camelCase for our app
 const snakeToCamel = (str: string) => {
   return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 };
 
-// Prepare data for Supabase (convert to snake_case and ensure types match)
 const prepareForSupabase = (data: Partial<SiteInfo>) => {
-  // Ensure all required fields are present by merging with DEFAULT_SITE_INFO
   const completeData = { ...DEFAULT_SITE_INFO, ...data };
-  
-  // Create an object with all required fields for the site_info table
   return {
     carousel_images: completeData.carouselImages as Json,
     design_description: completeData.designDescription,
@@ -88,7 +81,6 @@ const prepareForSupabase = (data: Partial<SiteInfo>) => {
   };
 };
 
-// Prepare data from Supabase (convert to camelCase)
 const prepareFromSupabase = (data: Record<string, any>): Partial<SiteInfo> => {
   const result: Partial<SiteInfo> = {};
   
@@ -96,26 +88,20 @@ const prepareFromSupabase = (data: Record<string, any>): Partial<SiteInfo> => {
     if (key !== 'id' && key !== 'created_at' && key !== 'updated_at') {
       const camelKey = snakeToCamel(key) as keyof SiteInfo;
       
-      // Special handling for carousel_images which could be string[] or string
       if (key === 'carousel_images') {
         if (typeof value === 'string') {
           try {
-            // Try to parse if it's a JSON string
             const parsed = JSON.parse(value);
             result.carouselImages = Array.isArray(parsed) ? parsed.map(String) : [String(value)];
           } catch (e) {
-            // If not valid JSON, treat as single string
             result.carouselImages = [String(value)];
           }
         } else if (Array.isArray(value)) {
-          // If already an array, map elements to strings
           result.carouselImages = value.map(String);
         } else {
-          // Fallback to default
           result.carouselImages = [];
         }
       } else {
-        // @ts-ignore - We know this is safe because we're filtering the keys
         result[camelKey] = value;
       }
     }
@@ -129,49 +115,75 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
-  useEffect(() => {
-    const fetchSiteInfo = async () => {
-      setIsLoading(true);
-      try {
-        // Get carousel images from storage
-        const carouselImages = await getCarouselImages();
-        
-        // Try to fetch from Supabase
-        const { data, error } = await supabase
-          .from('site_info')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-        
-        if (error) {
-          console.error('Error fetching site info:', error);
-          throw error;
-        }
-        
-        if (data) {
-          // Convert from snake_case to camelCase and handle special fields
-          const formattedData = prepareFromSupabase(data);
-          
-          setSiteInfo(prev => ({ ...prev, ...formattedData }));
-        }
-      } catch (error) {
-        console.error('Failed to fetch site info from Supabase:', error);
-        
-        // Fallback to localStorage
-        const storedSiteInfo = localStorage.getItem('siteInfo');
-        if (storedSiteInfo) {
-          setSiteInfo(JSON.parse(storedSiteInfo));
-        } else {
-          // Use defaults and save to localStorage
-          localStorage.setItem('siteInfo', JSON.stringify(DEFAULT_SITE_INFO));
-        }
-      } finally {
-        setIsLoading(false);
+  const fetchSiteInfo = async () => {
+    setIsLoading(true);
+    try {
+      const carouselImages = await getCarouselImages();
+      
+      const { data, error } = await supabase
+        .from('site_info')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching site info:', error);
+        throw error;
       }
-    };
-    
+      
+      if (data) {
+        const formattedData = prepareFromSupabase(data);
+        
+        if (!formattedData.carouselImages || !Array.isArray(formattedData.carouselImages)) {
+          formattedData.carouselImages = [];
+        }
+        
+        setSiteInfo(prev => ({ ...prev, ...formattedData }));
+      } else {
+        setSiteInfo(DEFAULT_SITE_INFO);
+        localStorage.setItem('siteInfo', JSON.stringify(DEFAULT_SITE_INFO));
+        
+        try {
+          await saveSiteInfo(prepareForSupabase(DEFAULT_SITE_INFO));
+        } catch (initError) {
+          console.error('Failed to initialize site_info:', initError);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch site info from Supabase:', error);
+      
+      const storedSiteInfo = localStorage.getItem('siteInfo');
+      if (storedSiteInfo) {
+        setSiteInfo(JSON.parse(storedSiteInfo));
+      } else {
+        localStorage.setItem('siteInfo', JSON.stringify(DEFAULT_SITE_INFO));
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchSiteInfo();
+  }, []);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('public:site_info')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'site_info' 
+      }, (payload) => {
+        console.log('Realtime site_info update:', payload);
+        fetchSiteInfo();
+      })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const clearAllImages = async () => {
@@ -183,6 +195,8 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
           title: "Imágenes eliminadas",
           description: "Todas las imágenes del carrusel han sido eliminadas correctamente.",
         });
+        
+        await updateSiteInfo({ carouselImages: [] });
       } else {
         throw new Error("No se pudieron eliminar las imágenes");
       }
@@ -200,7 +214,6 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const imageUrl = await uploadImage(file, 'site_images', 'site/');
       
-      // Update site info with the new image
       const updatedImages = [...siteInfo.carouselImages, imageUrl];
       await updateSiteInfo({ carouselImages: updatedImages });
       
@@ -217,15 +230,12 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateSiteInfo = async (updates: Partial<SiteInfo>) => {
-    // Update local state immediately for UI responsiveness
     const updatedInfo = { ...siteInfo, ...updates };
     setSiteInfo(updatedInfo);
     
     try {
-      // Prepare data for Supabase (convert camelCase to snake_case)
       const supabaseData = prepareForSupabase(updates);
       
-      // Check if we already have data in Supabase
       const { data: existingData, error: fetchError } = await supabase
         .from('site_info')
         .select('id')
@@ -238,13 +248,11 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       let result;
       if (existingData && existingData.length > 0) {
-        // Update existing record - make sure we're passing correctly typed data
         result = await supabase
           .from('site_info')
           .update(prepareForSupabase(updatedInfo))
           .eq('id', existingData[0].id);
       } else {
-        // Insert new record with all required fields
         result = await supabase
           .from('site_info')
           .insert(prepareForSupabase(updatedInfo));
@@ -266,7 +274,6 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     } catch (error) {
       console.error('Failed to save to Supabase, falling back to localStorage:', error);
-      // Fallback to localStorage
       localStorage.setItem('siteInfo', JSON.stringify(updatedInfo));
     }
   };

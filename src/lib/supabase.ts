@@ -2,6 +2,7 @@
 import { supabase } from '../integrations/supabase/client';
 import { verifyAndCreateBuckets } from './admin-activity-logger';
 import { Json } from '../integrations/supabase/types';
+import { v4 as uuidv4 } from 'uuid';
 
 // Configuração global - verifica e configura o banco de dados
 export const setupDatabase = async (): Promise<boolean> => {
@@ -36,13 +37,14 @@ export const uploadImage = async (file: File, bucketName: string = 'site_images'
     // Verifica se o banco de dados está configurado
     await setupDatabase();
     
-    // Gera um nome único para o arquivo
+    // Gera um nome único para o arquivo usando UUID
     const fileExt = file.name.split('.').pop();
-    const fileName = `${prefix}${Date.now()}.${fileExt}`;
+    const uniqueId = uuidv4();
+    const fileName = `${uniqueId}.${fileExt}`;
     const filePath = prefix ? `${prefix}${fileName}` : fileName;
     
     // Upload da imagem
-    const { error: uploadError, data } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from(bucketName)
       .upload(filePath, file, {
         cacheControl: '3600',
@@ -71,6 +73,17 @@ export const uploadImage = async (file: File, bucketName: string = 'site_images'
  */
 export const saveSiteInfo = async (siteInfo: any): Promise<boolean> => {
   try {
+    // Garantir que temos um array de imagens válido
+    if (typeof siteInfo.carousel_images === 'string') {
+      try {
+        siteInfo.carousel_images = JSON.parse(siteInfo.carousel_images);
+      } catch {
+        siteInfo.carousel_images = [];
+      }
+    } else if (!Array.isArray(siteInfo.carousel_images)) {
+      siteInfo.carousel_images = [];
+    }
+    
     // Verificar se já existe um registro
     const { data: existingData, error: fetchError } = await supabase
       .from('site_info')
@@ -113,13 +126,11 @@ export const saveSiteInfo = async (siteInfo: any): Promise<boolean> => {
  */
 export const getCarouselImages = async (): Promise<string[]> => {
   try {
-    // Tenta obter imagens do banco de dados primeiro
+    // Tenta obter imagens do banco de dados
     const { data: siteInfo, error: dbError } = await supabase
       .from('site_info')
       .select('carousel_images')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+      .maybeSingle();
     
     if (!dbError && siteInfo && siteInfo.carousel_images) {
       // Se encontrou no banco, retorna as imagens
@@ -128,38 +139,16 @@ export const getCarouselImages = async (): Promise<string[]> => {
         try {
           images = JSON.parse(images);
         } catch (e) {
-          images = [images];
+          images = [];
         }
       }
       
-      // Garantir que todos os valores são strings
+      // Garantir que todos os valores são strings e retornar array vazio se não for array
       return Array.isArray(images) ? images.map(item => String(item)) : [];
     }
     
-    // Se não encontrou no banco ou teve erro, tenta listar imagens do bucket
-    const { data: listData, error: listError } = await supabase.storage
-      .from('site_images')
-      .list('site/', {
-        limit: 10,
-        sortBy: { column: 'name', order: 'desc' }
-      });
-    
-    if (listError) {
-      console.error('Erro ao listar imagens do bucket:', listError);
-      return [];
-    }
-    
-    // Filtrar apenas arquivos (não pastas) e criar URLs públicas
-    const imageFiles = listData
-      .filter(item => !item.id.endsWith('/'))
-      .map(item => {
-        const { data } = supabase.storage
-          .from('site_images')
-          .getPublicUrl(`site/${item.name}`);
-        return data.publicUrl;
-      });
-    
-    return imageFiles;
+    // Se não encontrou no banco ou teve erro, retorna array vazio
+    return [];
   } catch (error) {
     console.error('Erro ao obter imagens do carrossel:', error);
     return [];
