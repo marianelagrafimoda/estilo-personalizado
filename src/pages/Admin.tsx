@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -167,7 +166,7 @@ const AdminPage: React.FC = () => {
           await logAdminActivity({
             adminEmail: user.email,
             actionType: 'delete',
-            entityType: 'carousel_images',
+            entityType: 'carousel_image',
             details: {
               action: 'clear_all_images'
             }
