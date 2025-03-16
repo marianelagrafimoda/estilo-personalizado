@@ -35,10 +35,11 @@ import ImageUploader from '../components/ImageUploader';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { setupDatabase } from '../lib/supabase';
+import { logAdminActivity } from '../lib/admin-activity-logger';
 
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { user, isAuthenticated, isAdmin } = useAuth();
   const { siteInfo, updateSiteInfo, uploadSiteImage, isLoading: isSiteLoading } = useSiteInfo();
   const { products, updateProduct, addProduct, removeProduct, uploadProductImage, isLoading: isProductsLoading } = useProducts();
   const { toast } = useToast();
