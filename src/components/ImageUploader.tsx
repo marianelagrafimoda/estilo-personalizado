@@ -4,25 +4,30 @@ import { Upload, X, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useToast } from '../hooks/use-toast';
 import { setupDatabase } from '../lib/supabase';
+import { logAdminActivity } from '../lib/admin-activity-logger';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ImageUploaderProps {
   onImageUpload: (file: File) => Promise<string>;
   label?: string;
   accept?: string;
   maxSize?: number; // em MB
+  bucketType?: 'site_images' | 'product_images';
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({
   onImageUpload,
   label = "Subir imagen",
   accept = "image/*",
-  maxSize = 4
+  maxSize = 10, // Aumentamos para 10MB
+  bucketType = 'site_images'
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Verificar a configuração do banco de dados ao montar o componente
   React.useEffect(() => {
@@ -63,6 +68,21 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         fileInputRef.current.value = '';
       }
       
+      // Registra a atividade se for um administrador
+      if (user && user.isAdmin) {
+        await logAdminActivity({
+          adminEmail: user.email,
+          actionType: 'create',
+          entityType: bucketType === 'site_images' ? 'carousel_image' : 'product',
+          details: {
+            filename: file.name,
+            fileSize: file.size,
+            fileType: file.type,
+            bucket: bucketType
+          }
+        });
+      }
+      
       toast({
         title: "Imagem enviada com sucesso",
         description: "A imagem foi enviada corretamente."
@@ -80,16 +100,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         
         // Mensagens específicas para diferentes tipos de erros
         if (error.message.includes('bucket')) {
-          errorMessage = error.message;
+          errorMessage = `Erro no bucket ${bucketType}: ${error.message}`;
           setUploadError(errorMessage);
         } else if (error.message.includes('storage')) {
-          errorMessage = "Erro de armazenamento: não foi possível acessar o bucket de imagens.";
+          errorMessage = `Erro de armazenamento: não foi possível acessar o bucket ${bucketType}.`;
           setUploadError(errorMessage);
         } else if (error.message.includes('conexão')) {
           errorMessage = "Falha na conexão com o servidor de armazenamento. Verifique sua conexão à internet.";
           setUploadError(errorMessage);
         } else {
-          errorMessage = "Erro ao acessar o armazenamento. Verifique sua conexão e tente novamente.";
+          errorMessage = `Erro ao acessar o armazenamento ${bucketType}. Verifique sua conexão e tente novamente.`;
           setUploadError(errorMessage);
         }
       }
@@ -137,7 +157,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       }
     } catch (error) {
       console.error("Erro ao reconfigurar o banco de dados:", error);
-      setUploadError("Falha na reconfiguração. Tente novamente mais tarde.");
+      setUploadError(`Falha na reconfiguração do bucket ${bucketType}. Tente novamente mais tarde.`);
       toast({
         title: "Erro de configuração",
         description: "Não foi possível configurar o sistema de armazenamento.",

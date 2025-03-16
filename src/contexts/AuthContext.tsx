@@ -6,6 +6,7 @@ import { useToast } from '../hooks/use-toast';
 interface User {
   email: string;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
 }
 
 interface AuthContextType {
@@ -14,6 +15,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,6 +27,8 @@ export const useAuth = () => {
   }
   return context;
 };
+
+const SUPER_ADMIN_EMAIL = 'marianela.grafimoda@gmail.com';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -43,8 +47,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.session?.user) {
         const { email } = data.session.user;
         // Check if admin in a real app, we would use claims or a separate table
-        const isAdmin = email === 'marianela.grafimoda@gmail.com';
-        const userData = { email, isAdmin };
+        const isAdmin = email === SUPER_ADMIN_EMAIL;
+        const isSuperAdmin = email === SUPER_ADMIN_EMAIL;
+        const userData = { email, isAdmin, isSuperAdmin };
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
       }
@@ -57,8 +62,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {
           const { email } = session.user;
-          const isAdmin = email === 'marianela.grafimoda@gmail.com';
-          const userData = { email, isAdmin };
+          const isAdmin = email === SUPER_ADMIN_EMAIL;
+          const isSuperAdmin = email === SUPER_ADMIN_EMAIL;
+          const userData = { email, isAdmin, isSuperAdmin };
           setUser(userData);
           localStorage.setItem('user', JSON.stringify(userData));
         } else if (event === 'SIGNED_OUT') {
@@ -85,8 +91,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Supabase login error:', error.message);
         
         // Fallback to hard-coded admin for development
-        if (email === 'marianela.grafimoda@gmail.com' && password === 'marianelalinda2025') {
-          const adminUser = { email, isAdmin: true };
+        if (email === SUPER_ADMIN_EMAIL && password === 'marianelalinda2025') {
+          const adminUser = { 
+            email, 
+            isAdmin: true,
+            isSuperAdmin: true 
+          };
           setUser(adminUser);
           localStorage.setItem('user', JSON.stringify(adminUser));
           return true;
@@ -105,8 +115,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Login error:', error);
       
       // Fallback to hard-coded admin
-      if (email === 'marianela.grafimoda@gmail.com' && password === 'marianelalinda2025') {
-        const adminUser = { email, isAdmin: true };
+      if (email === SUPER_ADMIN_EMAIL && password === 'marianelalinda2025') {
+        const adminUser = { 
+          email, 
+          isAdmin: true,
+          isSuperAdmin: true 
+        };
         setUser(adminUser);
         localStorage.setItem('user', JSON.stringify(adminUser));
         return true;
@@ -130,6 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         isAuthenticated: !!user,
         isAdmin: user?.isAdmin || false,
+        isSuperAdmin: user?.isSuperAdmin || false,
       }}
     >
       {children}

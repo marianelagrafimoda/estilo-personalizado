@@ -164,6 +164,21 @@ const AdminPage: React.FC = () => {
       
       const imageUrl = await uploadSiteImage(file);
       setNewCarouselImages(prev => [...prev, imageUrl]);
+      
+      // Registra a atividade
+      if (user && user.isAdmin) {
+        await logAdminActivity({
+          adminEmail: user.email,
+          actionType: 'create',
+          entityType: 'carousel_image',
+          details: {
+            filename: file.name,
+            fileSize: file.size,
+            fileType: file.type
+          }
+        });
+      }
+      
       return imageUrl;
     } finally {
       setIsUploadingCarousel(false);
@@ -175,6 +190,22 @@ const AdminPage: React.FC = () => {
     try {
       const imageUrl = await uploadProductImage(file);
       setNewProduct(prev => ({ ...prev, imageUrl }));
+      
+      // Registra a atividade
+      if (user && user.isAdmin) {
+        await logAdminActivity({
+          adminEmail: user.email,
+          actionType: 'create',
+          entityType: 'product',
+          details: {
+            filename: file.name,
+            fileSize: file.size,
+            fileType: file.type,
+            productTitle: newProduct.title
+          }
+        });
+      }
+      
       return imageUrl;
     } finally {
       setIsUploadingProduct(false);
@@ -593,7 +624,8 @@ const AdminPage: React.FC = () => {
                     <ImageUploader 
                       onImageUpload={handleUploadCarouselImage} 
                       label="Subir imagen para el carrusel"
-                      maxSize={4}
+                      maxSize={10}
+                      bucketType="site_images"
                     />
                   </div>
                 </div>
@@ -678,7 +710,8 @@ const AdminPage: React.FC = () => {
                     <ImageUploader 
                       onImageUpload={handleUploadProductImage} 
                       label="Subir imagen del producto"
-                      maxSize={4}
+                      maxSize={10}
+                      bucketType="product_images"
                     />
                   </div>
                   
