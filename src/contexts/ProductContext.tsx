@@ -24,6 +24,7 @@ export interface Product {
   description?: string;
   price: number;
   imageUrl?: string;
+  images?: string[];
   sizes: Size[];
   colors: Color[];
   stockQuantity: number;
@@ -56,6 +57,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     description: 'Camiseta de algodón premium lista para personalizar con tu diseño favorito',
     price: 15.99,
     imageUrl: '/placeholder.svg',
+    images: ['/placeholder.svg'],
     cardColor: '#C8B6E2',
     stockQuantity: 25,
     colors: [
@@ -121,6 +123,7 @@ const productToSupabase = (product: Omit<Product, 'id'> & { id?: string }) => {
     description: product.description || '',
     price: product.price,
     image_url: product.imageUrl || '/placeholder.svg',
+    images: JSON.stringify(product.images || [product.imageUrl || '/placeholder.svg']),
     sizes: JSON.stringify(product.sizes),
     colors: JSON.stringify(product.colors),
     stock_quantity: product.stockQuantity,
@@ -136,6 +139,7 @@ const partialProductToSupabase = (product: Partial<Product> & { id?: string }) =
   if (product.description !== undefined) result.description = product.description;
   if (product.price !== undefined) result.price = product.price;
   if (product.imageUrl !== undefined) result.image_url = product.imageUrl;
+  if (product.images !== undefined) result.images = JSON.stringify(product.images);
   if (product.sizes !== undefined) result.sizes = JSON.stringify(product.sizes);
   if (product.colors !== undefined) result.colors = JSON.stringify(product.colors);
   if (product.stockQuantity !== undefined) result.stock_quantity = product.stockQuantity;
@@ -147,6 +151,7 @@ const partialProductToSupabase = (product: Partial<Product> & { id?: string }) =
 const supabaseToProduct = (data: any): Product => {
   let sizes = data.sizes;
   let colors = data.colors;
+  let images = data.images;
   
   if (typeof sizes === 'string') {
     try {
@@ -164,12 +169,23 @@ const supabaseToProduct = (data: any): Product => {
     }
   }
   
+  if (typeof images === 'string') {
+    try {
+      images = JSON.parse(images);
+    } catch (e) {
+      images = data.image_url ? [data.image_url] : ['/placeholder.svg'];
+    }
+  } else if (!images) {
+    images = data.image_url ? [data.image_url] : ['/placeholder.svg'];
+  }
+  
   return {
     id: data.id,
     title: data.title,
     description: data.description || '',
     price: data.price,
     imageUrl: data.image_url || '/placeholder.svg',
+    images: images,
     sizes: sizes || [],
     colors: colors || [],
     stockQuantity: data.stock_quantity || 0,
