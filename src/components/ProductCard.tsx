@@ -24,8 +24,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [showProductDetails, setShowProductDetails] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [expanded, setExpanded] = useState(false);
 
   // Get available sizes
   const availableSizes = product.sizes?.filter(s => s.available) || [];
@@ -65,26 +65,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <>
       <Card 
-        className={`overflow-hidden transition-all duration-300 ${
-          expanded ? 'shadow-lg' : 'shadow-md hover:shadow-lg'
-        }`}
+        className="overflow-hidden transition-all duration-300 shadow-md hover:shadow-lg"
         style={{ backgroundColor: product.cardColor + '10' }}
       >
-        <div 
-          className="relative h-52 md:h-60 overflow-hidden cursor-pointer"
-          onClick={() => setIsDetailModalOpen(true)}
-        >
-          {productImages.length > 0 ? (
-            <img
-              src={productImages[currentImageIndex]}
-              alt={product.title}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-100">
-              <Package className="h-10 w-10 text-gray-400" />
-            </div>
-          )}
+        <div className="relative h-52 md:h-64 overflow-hidden cursor-pointer">
+          <img
+            src={productImages[currentImageIndex]}
+            alt={product.title}
+            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+          />
 
           {/* Product images navigation */}
           {productImages.length > 1 && (
@@ -116,8 +105,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </>
           )}
 
-          {/* Quick view button */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* "View Images" button with magnifying glass icon */}
+          <div className="absolute bottom-0 right-0 m-2">
             <button 
               className="flex items-center px-3 py-1.5 rounded-md bg-white/90 text-lilac-dark text-sm hover:bg-white transition-colors"
               onClick={(e) => {
@@ -131,31 +120,32 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         </div>
 
-        <CardHeader className="p-3 pb-0">
-          <CardTitle className="font-medium text-lg mb-1 text-lilac-dark">{product.title}</CardTitle>
-          <CardDescription className="text-sm text-gray-600 mb-2">{product.description}</CardDescription>
-          <p className="font-bold text-lg mb-2">${product.price.toFixed(2)}</p>
+        <CardHeader className="p-4 pb-2">
+          <CardTitle className="font-medium text-xl mb-2 text-lilac-dark">{product.title}</CardTitle>
+          <CardDescription className="text-base text-gray-600 mb-2">{product.description}</CardDescription>
+          <p className="font-bold text-xl mb-2">${product.price.toFixed(2)}</p>
         </CardHeader>
         
-        <CardContent className="p-3 pt-2">
-          <button 
-            onClick={() => setExpanded(!expanded)}
-            className="text-sm text-lilac-dark mb-2 hover:underline cursor-pointer"
+        <CardContent className="p-4 pt-0">
+          <Button 
+            onClick={() => setShowProductDetails(!showProductDetails)}
+            variant="outline"
+            className="w-full text-base mb-4 border-lilac text-lilac-dark hover:bg-lilac/10"
           >
-            {expanded ? 'Mostrar menos' : 'Mostrar opciones'}
-          </button>
+            {showProductDetails ? 'Ocultar detalles' : 'Ver detalles'}
+          </Button>
           
-          {expanded && (
-            <div className="space-y-3 pt-2">
+          {showProductDetails && (
+            <div className="space-y-4 pt-2">
               {adultSizes.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-medium mb-1">Tallas para adultos:</h4>
-                  <div className="flex flex-wrap gap-1">
+                  <h4 className="text-sm font-medium mb-2">Tallas para adultos:</h4>
+                  <div className="flex flex-wrap gap-2">
                     {adultSizes.map((size) => (
                       <button
                         key={size.id}
                         onClick={() => setSelectedSize(size.id)}
-                        className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+                        className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                           selectedSize === size.id
                             ? 'bg-lilac text-white'
                             : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
@@ -170,13 +160,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               
               {kidSizes.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-medium mb-1">Tallas para niños:</h4>
-                  <div className="flex flex-wrap gap-1">
+                  <h4 className="text-sm font-medium mb-2">Tallas para niños:</h4>
+                  <div className="flex flex-wrap gap-2">
                     {kidSizes.map((size) => (
                       <button
                         key={size.id}
                         onClick={() => setSelectedSize(size.id)}
-                        className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+                        className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                           selectedSize === size.id
                             ? 'bg-lilac text-white'
                             : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
@@ -190,13 +180,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               )}
               
               <div>
-                <h4 className="text-xs font-medium mb-1">Colores:</h4>
-                <div className="flex flex-wrap gap-1">
+                <h4 className="text-sm font-medium mb-2">Colores:</h4>
+                <div className="flex flex-wrap gap-2">
                   {product.colors.map((color) => (
                     <button
                       key={color.id}
                       onClick={() => setSelectedColor(color.id)}
-                      className={`w-6 h-6 rounded-full border-2 transition-all ${
+                      className={`w-8 h-8 rounded-full border-2 transition-all ${
                         selectedColor === color.id
                           ? 'border-lilac scale-110'
                           : 'border-transparent scale-100 hover:border-gray-300'
@@ -209,18 +199,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               </div>
               
               <div>
-                <h4 className="text-xs font-medium mb-1">Cantidad:</h4>
-                <div className="flex items-center w-24 border rounded-md overflow-hidden">
+                <h4 className="text-sm font-medium mb-2">Cantidad:</h4>
+                <div className="flex items-center w-32 border rounded-md overflow-hidden">
                   <button
-                    className="px-2 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                    className="px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={quantity <= 1}
                   >
                     -
                   </button>
-                  <div className="flex-1 text-center text-sm py-1">{quantity}</div>
+                  <div className="flex-1 text-center text-base py-2">{quantity}</div>
                   <button
-                    className="px-2 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                    className="px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
                     onClick={() => setQuantity(Math.min(product.stockQuantity, quantity + 1))}
                     disabled={quantity >= product.stockQuantity}
                   >
@@ -232,14 +222,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
         </CardContent>
         
-        <CardFooter className="p-3 pt-0">
+        <CardFooter className="p-4 pt-0">
           <Button 
             onClick={handleAddToCart}
-            disabled={!selectedSize || !selectedColor || product.stockQuantity <= 0}
-            className="w-full bg-lilac hover:bg-lilac-dark flex items-center justify-center gap-2"
+            disabled={showProductDetails && (!selectedSize || !selectedColor || product.stockQuantity <= 0)}
+            className="w-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center gap-2 text-base py-6"
           >
-            <ShoppingCart className="h-4 w-4" />
-            {expanded ? 'Añadir al carrito' : 'Comprar'}
+            <ShoppingCart className="h-5 w-5" />
+            Comprar
           </Button>
         </CardFooter>
       </Card>

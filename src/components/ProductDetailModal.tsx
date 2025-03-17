@@ -25,9 +25,9 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl p-0 overflow-hidden bg-white">
+      <DialogContent className="sm:max-w-4xl p-0 overflow-hidden bg-white rounded-lg">
         <div className="relative">
-          <DialogClose className="absolute right-2 top-2 z-10 rounded-full bg-white/70 p-1 hover:bg-white">
+          <DialogClose className="absolute right-4 top-4 z-10 rounded-full bg-white/70 p-2 hover:bg-white shadow-md">
             <X className="h-5 w-5" />
           </DialogClose>
           
@@ -35,7 +35,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <CarouselContent className="h-full">
               {productImages.map((image, index) => (
                 <CarouselItem key={index}>
-                  <div className="flex items-center justify-center p-2 h-[60vh]">
+                  <div className="flex items-center justify-center p-4 h-[70vh]">
                     <img 
                       src={image} 
                       alt={`${product.title} - imagen ${index + 1}`} 
@@ -47,8 +47,8 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </CarouselContent>
             {productImages.length > 1 && (
               <>
-                <CarouselPrevious className="left-2" />
-                <CarouselNext className="right-2" />
+                <CarouselPrevious className="left-4 bg-white/80 hover:bg-white shadow-md h-10 w-10" />
+                <CarouselNext className="right-4 bg-white/80 hover:bg-white shadow-md h-10 w-10" />
               </>
             )}
           </Carousel>
