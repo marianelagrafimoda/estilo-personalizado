@@ -4,7 +4,6 @@ import { supabase } from '../integrations/supabase/client';
 import { uploadImage } from '../lib/supabase';
 import { useToast } from '../hooks/use-toast';
 import { useAuth } from './AuthContext';
-import { v4 as uuidv4 } from 'uuid';
 
 export interface Size {
   id: string;
@@ -52,7 +51,7 @@ export const useProducts = () => {
 
 const DEFAULT_PRODUCTS: Product[] = [
   {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     title: 'Camiseta Personalizada',
     description: 'Camiseta de algodón premium lista para personalizar con tu diseño favorito',
     price: 15.99,
@@ -74,7 +73,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     ]
   },
   {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     title: 'Sudadera con Capucha',
     description: 'Sudadera cómoda y cálida, perfecta para estampados y bordados personalizados',
     price: 29.99,
@@ -95,7 +94,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     ]
   },
   {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     title: 'Gorra Personalizada',
     description: 'Gorra de alta calidad para personalizar con tu logo o diseño preferido',
     price: 12.99,
@@ -114,7 +113,7 @@ const DEFAULT_PRODUCTS: Product[] = [
 ];
 
 const productToSupabase = (product: Omit<Product, 'id'> & { id?: string }) => {
-  const productId = product.id || uuidv4();
+  const productId = product.id || crypto.randomUUID();
   
   return {
     id: productId,
@@ -274,11 +273,14 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addProduct = async (product: Omit<Product, 'id'> & { id?: string }) => {
-    const newProductId = product.id || uuidv4();
+    const newProductId = product.id || crypto.randomUUID();
     
     const newProduct = {
       ...product,
-      id: newProductId
+      id: newProductId,
+      description: product.description || '',
+      imageUrl: product.imageUrl || '/placeholder.svg',
+      cardColor: product.cardColor || '#C8B6E2'
     };
     
     const newProductAsProduct = newProduct as Product;
@@ -314,7 +316,13 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateProduct = async (id: string, updates: Partial<Product>) => {
     const updatedProducts = products.map(product => 
-      product.id === id ? { ...product, ...updates } : product
+      product.id === id ? { 
+        ...product, 
+        ...updates,
+        description: updates.description ?? product.description ?? '',
+        imageUrl: updates.imageUrl ?? product.imageUrl ?? '/placeholder.svg',
+        cardColor: updates.cardColor ?? product.cardColor ?? '#C8B6E2'
+      } : product
     );
     
     setProducts(updatedProducts);

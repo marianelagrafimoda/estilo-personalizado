@@ -30,7 +30,7 @@ import {
 } from '../components/ui/card';
 import { useAuth } from '../contexts/AuthContext';
 import { useSiteInfo } from '../contexts/SiteContext';
-import { useProducts, Color } from '../contexts/ProductContext';
+import { useProducts, Color, Product } from '../contexts/ProductContext';
 import { useToast } from '../hooks/use-toast';
 import ImageUploader from '../components/ImageUploader';
 import Navbar from '../components/Navbar';
@@ -44,6 +44,8 @@ const AdminPage: React.FC = () => {
   const { siteInfo, updateSiteInfo, uploadSiteImage, clearAllImages, isLoading: isSiteLoading } = useSiteInfo();
   const { products, updateProduct, addProduct, removeProduct, uploadProductImage, isLoading: isProductsLoading } = useProducts();
   const { toast } = useToast();
+  
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   
   const [newSlogan, setNewSlogan] = useState(siteInfo.slogan);
   const [newWhatsappNumber, setNewWhatsappNumber] = useState(siteInfo.whatsappNumber);
@@ -226,7 +228,7 @@ const AdminPage: React.FC = () => {
     
     try {
       const imageUrl = await uploadProductImage(file);
-      setEditingProduct(prev => ({ ...prev, imageUrl }));
+      setEditingProduct(prev => prev ? { ...prev, imageUrl } : null);
       return imageUrl;
     } catch (error) {
       console.error("Error uploading product image:", error);
@@ -275,17 +277,15 @@ const AdminPage: React.FC = () => {
   const handleAddProduct = () => {
     if (
       newProduct.title &&
-      newProduct.description &&
-      newProduct.price > 0 &&
-      newProduct.imageUrl
+      newProduct.price > 0
     ) {
       const productToAdd = {
         ...newProduct,
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         title: newProduct.title,
-        description: newProduct.description,
+        description: newProduct.description || '',
         price: newProduct.price,
-        imageUrl: newProduct.imageUrl,
+        imageUrl: newProduct.imageUrl || '/placeholder.svg',
         stockQuantity: newProduct.stockQuantity,
         cardColor: newProduct.cardColor,
         sizes: newProduct.sizes,
@@ -323,15 +323,15 @@ const AdminPage: React.FC = () => {
     } else {
       toast({
         title: "Error",
-        description: "Por favor complete todos los campos requeridos",
+        description: "Por favor complete el título y precio del producto",
         variant: "destructive",
         duration: 3000,
       });
     }
   };
 
-  const startEditingProduct = (product: any) => {
-    const hasKidsSizes = product.sizes.some((size: any) => 
+  const startEditingProduct = (product: Product) => {
+    const hasKidsSizes = product.sizes.some((size) => 
       size.id === 'kids-s' || size.id === 'kids-m' || size.id === 'kids-l' || size.isChildSize
     );
     
@@ -357,11 +357,11 @@ const AdminPage: React.FC = () => {
       const productToUpdate = {
         ...editingProduct,
         title: editingProduct.title,
-        description: editingProduct.description,
+        description: editingProduct.description || '',
         price: editingProduct.price,
-        imageUrl: editingProduct.imageUrl,
+        imageUrl: editingProduct.imageUrl || '/placeholder.svg',
         stockQuantity: editingProduct.stockQuantity,
-        cardColor: editingProduct.cardColor,
+        cardColor: editingProduct.cardColor || '#C8B6E2',
         sizes: editingProduct.sizes,
         colors: editingProduct.colors
       };
@@ -392,17 +392,17 @@ const AdminPage: React.FC = () => {
       size.id === sizeId ? { ...size, available: !size.available } : size
     );
     
-    if (editingProduct) {
+    if (editingProduct && editingProduct.id === product.id) {
       setEditingProduct({...editingProduct, sizes: updatedSizes});
     } else {
       const productToUpdate = {
         ...product,
         title: product.title,
-        description: product.description,
+        description: product.description || '',
         price: product.price,
-        imageUrl: product.imageUrl,
+        imageUrl: product.imageUrl || '/placeholder.svg',
         stockQuantity: product.stockQuantity,
-        cardColor: product.cardColor,
+        cardColor: product.cardColor || '#C8B6E2',
         sizes: updatedSizes,
         colors: product.colors
       };
@@ -1007,7 +1007,7 @@ const AdminPage: React.FC = () => {
                                 ))}
                               </div>
                               
-                              <p className="text-xs text-gray-500">Niños:</p>
+                              <p className="text-xs text-gray-500 mt-2">Niños:</p>
                               <div className="flex flex-wrap gap-1">
                                 {editingProduct.sizes.filter((size: any) => size.isChildSize).map((size: any) => (
                                   <button
