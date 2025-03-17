@@ -69,6 +69,33 @@ export const uploadImage = async (file: File, bucketName: string = 'site_images'
 };
 
 /**
+ * Remove uma imagem do bucket especificado
+ */
+export const removeImage = async (imageUrl: string, bucketName: string = 'site_images'): Promise<boolean> => {
+  try {
+    // Extrair o caminho do arquivo da URL
+    const url = new URL(imageUrl);
+    const pathSegments = url.pathname.split('/');
+    const filePath = pathSegments[pathSegments.length - 1];
+    
+    // Remover a imagem
+    const { error } = await supabase.storage
+      .from(bucketName)
+      .remove([filePath]);
+      
+    if (error) {
+      console.error(`Erro ao remover imagem de ${bucketName}:`, error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error(`Erro ao remover imagem de ${bucketName}:`, error);
+    return false;
+  }
+};
+
+/**
  * Salva informações do site
  */
 export const saveSiteInfo = async (siteInfo: any): Promise<boolean> => {
