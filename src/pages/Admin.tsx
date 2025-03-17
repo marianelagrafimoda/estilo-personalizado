@@ -817,4 +817,151 @@ const AdminPage: React.FC = () => {
                     />
                     <div className="flex items-center gap-2">
                       <input
-                        type="color
+                        type="color"
+                        value={newProduct.newColorHex}
+                        onChange={(e) => {
+                          // @ts-ignore
+                          setNewProduct({...newProduct, newColorHex: e.target.value});
+                        }}
+                        className="w-10 h-10 rounded border p-1"
+                      />
+                      <Button
+                        onClick={() => {
+                          if (newProduct.newColorName) {
+                            const colorId = newProduct.newColorName.toLowerCase().replace(/\s+/g, '-');
+                            const newColor: Color = {
+                              id: colorId,
+                              name: newProduct.newColorName,
+                              // @ts-ignore
+                              hex: newProduct.newColorHex || '#FFFFFF'
+                            };
+                            setNewProduct({
+                              ...newProduct,
+                              colors: [...newProduct.colors, newColor],
+                              // @ts-ignore
+                              newColorName: '',
+                              // @ts-ignore
+                              newColorHex: '#FFFFFF'
+                            });
+                          }
+                        }}
+                        type="button"
+                        className="bg-lilac hover:bg-lilac-dark"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Agregar
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={handleAddProduct}
+                  className="w-full bg-lilac hover:bg-lilac-dark"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Agregar Producto
+                </Button>
+              </CardFooter>
+            </Card>
+
+            {editingProduct ? (
+              <ProductEditor
+                product={editingProduct}
+                onSave={saveEditedProduct}
+                onCancel={cancelEditingProduct}
+                onImageUpload={handleUploadProductImage}
+              />
+            ) : (
+              <Card className="shadow-md border-lilac/20 mt-6">
+                <CardHeader>
+                  <CardTitle className="font-serif">Productos Existentes</CardTitle>
+                  <CardDescription>
+                    Administre los productos existentes en su tienda
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {products.length === 0 ? (
+                      <p className="text-center text-gray-500 py-8">
+                        No hay productos. Agregue uno nuevo utilizando el formulario de arriba.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {products.map((product) => (
+                          <div key={product.id} className="border rounded-lg overflow-hidden shadow-sm">
+                            <div className="relative h-40">
+                              <img 
+                                src={product.imageUrl || '/placeholder.svg'}
+                                alt={product.title}
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="mx-1"
+                                  onClick={() => startEditingProduct(product)}
+                                >
+                                  <Edit3 className="w-4 h-4 mr-1" />
+                                  Editar
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="mx-1"
+                                  onClick={() => previewProductDetails(product)}
+                                >
+                                  <Search className="w-4 h-4 mr-1" />
+                                  Ver
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="mx-1"
+                                  onClick={() => handleDeleteProduct(product.id)}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-1" />
+                                  Eliminar
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="p-3" style={{ backgroundColor: product.cardColor || '#C8B6E2' }}>
+                              <h3 className="font-medium text-white truncate">{product.title}</h3>
+                              <p className="text-white text-opacity-90 text-sm">
+                                ${product.price.toFixed(2)}
+                              </p>
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {product.sizes.filter(size => size.available).map(size => (
+                                  <span key={size.id} className="text-xs bg-white bg-opacity-30 text-white px-2 py-0.5 rounded">
+                                    {size.name}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+      <Footer />
+      
+      {previewProduct && (
+        <ProductDetailModal
+          product={previewProduct}
+          isOpen={isPreviewModalOpen}
+          onClose={() => setIsPreviewModalOpen(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default AdminPage;
