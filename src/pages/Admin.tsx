@@ -37,13 +37,10 @@ import ImageUploader from '../components/ImageUploader';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { setupDatabase } from '../lib/supabase';
-import { logAdminActivity } from '../lib/admin-activity-logger';
+import { logAdminActivity, EntityType } from '../lib/admin-activity-logger';
 import ProductEditor from '../components/ProductEditor';
 import ProductImagesUploader from '../components/ProductImagesUploader';
 import ProductDetailModal from '../components/ProductDetailModal';
-
-// Define the entity types for activity logging
-type EntityType = 'carousel_image' | 'product' | 'product_image' | 'site_info';
 
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
@@ -222,7 +219,7 @@ const AdminPage: React.FC = () => {
         await logAdminActivity({
           adminEmail: user.email,
           actionType: 'create',
-          entityType: 'product_image' as EntityType,
+          entityType: 'product' as EntityType,
           details: {
             filename: file.name,
             fileSize: file.size,
