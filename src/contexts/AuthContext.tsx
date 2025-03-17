@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth deve ser usado dentro de un AuthProvider');
+    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
   }
   return context;
 };
@@ -43,15 +43,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Check session with Supabase
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session?.user) {
-        const { email } = data.session.user;
-        // Check if admin in a real app, we would use claims or a separate table
-        const isAdmin = email === SUPER_ADMIN_EMAIL;
-        const isSuperAdmin = email === SUPER_ADMIN_EMAIL;
-        const userData = { email, isAdmin, isSuperAdmin };
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.user) {
+          const { email } = data.session.user;
+          // Check if admin in a real app, we would use claims or a separate table
+          const isAdmin = email === SUPER_ADMIN_EMAIL;
+          const isSuperAdmin = email === SUPER_ADMIN_EMAIL;
+          const userData = { email, isAdmin, isSuperAdmin };
+          setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
+          
+          console.log('User session restored:', email);
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
       }
     };
     
@@ -60,6 +66,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Setup auth listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event);
+        
         if (event === 'SIGNED_IN' && session?.user) {
           const { email } = session.user;
           const isAdmin = email === SUPER_ADMIN_EMAIL;
@@ -67,9 +75,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const userData = { email, isAdmin, isSuperAdmin };
           setUser(userData);
           localStorage.setItem('user', JSON.stringify(userData));
+          
+          toast({
+            title: "Sesión iniciada",
+            description: `Bienvenido, ${email}`,
+          });
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           localStorage.removeItem('user');
+          
+          toast({
+            title: "Sesión cerrada",
+            description: "Has cerrado sesión correctamente",
+          });
         }
       }
     );
@@ -77,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [toast]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -99,6 +117,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           };
           setUser(adminUser);
           localStorage.setItem('user', JSON.stringify(adminUser));
+          
+          toast({
+            title: "Sesión iniciada",
+            description: `Bienvenido, ${email} (modo desarrollo)`,
+          });
+          
           return true;
         }
         
@@ -131,9 +155,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    localStorage.removeItem('user');
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      localStorage.removeItem('user');
+      localStorage.removeItem('cart');
+      
+      toast({
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión correctamente",
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      
+      // Force logout on client side if Supabase fails
+      setUser(null);
+      localStorage.removeItem('user');
+      localStorage.removeItem('cart');
+    }
   };
 
   return (

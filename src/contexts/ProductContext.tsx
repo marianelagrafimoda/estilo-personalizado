@@ -199,7 +199,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   
   const fetchProducts = async () => {
     setIsLoading(true);
@@ -227,11 +227,11 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           
           if (isAdmin) {
             try {
-              await Promise.all(
-                DEFAULT_PRODUCTS.map(product => 
-                  supabase.from('products').insert(productToSupabase(product))
-                )
-              );
+              for (const product of DEFAULT_PRODUCTS) {
+                await supabase
+                  .from('products')
+                  .insert(productToSupabase(product));
+              }
               console.log('Seeded default products to Supabase');
             } catch (seedError) {
               console.error('Failed to seed default products:', seedError);
@@ -291,63 +291,101 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addProduct = async (product: Omit<Product, 'id'> & { id?: string }) => {
-    const newProductId = product.id || crypto.randomUUID();
-    
-    const newProduct = {
-      ...product,
-      id: newProductId,
-      description: product.description || '',
-      imageUrl: product.imageUrl || '/placeholder.svg',
-      cardColor: product.cardColor || '#C8B6E2'
-    };
-    
-    const newProductAsProduct = newProduct as Product;
-    const updatedProducts = [...products, newProductAsProduct];
-    setProducts(updatedProducts);
-    
     try {
+      if (!user) {
+        toast({
+          title: "Acceso denegado",
+          description: "Debe iniciar sesión como administrador para añadir productos.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const newProductId = product.id || crypto.randomUUID();
+      
+      const newProduct = {
+        ...product,
+        id: newProductId,
+        description: product.description || '',
+        imageUrl: product.imageUrl || '/placeholder.svg',
+        cardColor: product.cardColor || '#C8B6E2'
+      };
+      
+      const newProductAsProduct = newProduct as Product;
+      
       const supabaseData = productToSupabase(newProduct);
+      
       const { error } = await supabase.from('products').insert(supabaseData);
       
       if (error) {
         console.error('Error adding product to Supabase:', error);
+        
+        if (error.message.includes('violates row-level security policy')) {
+          toast({
+            title: "Error de permisos",
+            description: "Su sesión no tiene permisos de administrador. Por favor, cierre sesión y vuelva a iniciar sesión.",
+            variant: "destructive",
+            duration: 5000,
+          });
+          return;
+        }
+        
         toast({
           title: "Error al añadir producto",
           description: error.message,
           variant: "destructive",
         });
         
+        const updatedProducts = [...products, newProductAsProduct];
+        setProducts(updatedProducts);
         localStorage.setItem('products', JSON.stringify(updatedProducts));
         return;
       }
+      
+      const updatedProducts = [...products, newProductAsProduct];
+      setProducts(updatedProducts);
+      localStorage.setItem('products', JSON.stringify(updatedProducts));
       
       toast({
         title: "Producto añadido",
         description: "El producto ha sido añadido correctamente.",
       });
     } catch (error) {
-      console.error('Failed to add product to Supabase:', error);
+      console.error('Failed to add product:', error);
       
-      localStorage.setItem('products', JSON.stringify(updatedProducts));
+      toast({
+        title: "Error al añadir producto",
+        description: "Ocurrió un error inesperado. Intente nuevamente.",
+        variant: "destructive",
+      });
     }
   };
 
   const updateProduct = async (id: string, updates: Partial<Product>) => {
-    const updatedProducts = products.map(product => 
-      product.id === id ? { 
-        ...product, 
-        ...updates,
-        description: updates.description ?? product.description ?? '',
-        imageUrl: updates.imageUrl ?? product.imageUrl ?? '/placeholder.svg',
-        cardColor: updates.cardColor ?? product.cardColor ?? '#C8B6E2'
-      } : product
-    );
-    
-    setProducts(updatedProducts);
-    
     try {
-      const supabaseData = partialProductToSupabase({ id, ...updates });
+      if (!user) {
+        toast({
+          title: "Acceso denegado",
+          description: "Debe iniciar sesión como administrador para modificar productos.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const updatedProducts = products.map(product => 
+        product.id === id ? { 
+          ...product, 
+          ...updates,
+          description: updates.description ?? product.description ?? '',
+          imageUrl: updates.imageUrl ?? product.imageUrl ?? '/placeholder.svg',
+          cardColor: updates.cardColor ?? product.cardColor ?? '#C8B6E2'
+        } : product
+      );
       
+      setProducts(updatedProducts);
+      localStorage.setItem('products', JSON.stringify(updatedProducts));
+      
+      const supabaseData = partialProductToSupabase({ id, ...updates });
       delete supabaseData.id;
       
       const { error } = await supabase
@@ -357,13 +395,22 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       if (error) {
         console.error('Error updating product in Supabase:', error);
+        
+        if (error.message.includes('violates row-level security policy')) {
+          toast({
+            title: "Error de permisos",
+            description: "Su sesión no tiene permisos de administrador. Por favor, cierre sesión y vuelva a iniciar sesión.",
+            variant: "destructive",
+            duration: 5000,
+          });
+          return;
+        }
+        
         toast({
           title: "Error al actualizar producto",
           description: error.message,
           variant: "destructive",
         });
-        
-        localStorage.setItem('products', JSON.stringify(updatedProducts));
         return;
       }
       
@@ -372,17 +419,31 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         description: "El producto ha sido actualizado correctamente.",
       });
     } catch (error) {
-      console.error('Failed to update product in Supabase:', error);
+      console.error('Failed to update product:', error);
       
-      localStorage.setItem('products', JSON.stringify(updatedProducts));
+      toast({
+        title: "Error al actualizar producto",
+        description: "Ocurrió un error inesperado. Intente nuevamente.",
+        variant: "destructive",
+      });
     }
   };
 
   const removeProduct = async (id: string) => {
-    const updatedProducts = products.filter(product => product.id !== id);
-    setProducts(updatedProducts);
-    
     try {
+      if (!user) {
+        toast({
+          title: "Acceso denegado",
+          description: "Debe iniciar sesión como administrador para eliminar productos.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const updatedProducts = products.filter(product => product.id !== id);
+      setProducts(updatedProducts);
+      localStorage.setItem('products', JSON.stringify(updatedProducts));
+      
       const { error } = await supabase
         .from('products')
         .delete()
@@ -390,13 +451,22 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       if (error) {
         console.error('Error removing product from Supabase:', error);
+        
+        if (error.message.includes('violates row-level security policy')) {
+          toast({
+            title: "Error de permisos",
+            description: "Su sesión no tiene permisos de administrador. Por favor, cierre sesión y vuelva a iniciar sesión.",
+            variant: "destructive",
+            duration: 5000,
+          });
+          return;
+        }
+        
         toast({
           title: "Error al eliminar producto",
           description: error.message,
           variant: "destructive",
         });
-        
-        localStorage.setItem('products', JSON.stringify(updatedProducts));
         return;
       }
       
@@ -405,9 +475,13 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         description: "El producto ha sido eliminado correctamente.",
       });
     } catch (error) {
-      console.error('Failed to remove product from Supabase:', error);
+      console.error('Failed to remove product:', error);
       
-      localStorage.setItem('products', JSON.stringify(updatedProducts));
+      toast({
+        title: "Error al eliminar producto",
+        description: "Ocurrió un error inesperado. Intente nuevamente.",
+        variant: "destructive",
+      });
     }
   };
 
