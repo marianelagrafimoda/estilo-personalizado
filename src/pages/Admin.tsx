@@ -42,6 +42,9 @@ import ProductEditor from '../components/ProductEditor';
 import ProductImagesUploader from '../components/ProductImagesUploader';
 import ProductDetailModal from '../components/ProductDetailModal';
 
+// Define the entity types for activity logging
+type EntityType = 'carousel_image' | 'product' | 'product_image' | 'site_info';
+
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, isAdmin } = useAuth();
@@ -219,7 +222,7 @@ const AdminPage: React.FC = () => {
         await logAdminActivity({
           adminEmail: user.email,
           actionType: 'create',
-          entityType: 'product_image',
+          entityType: 'product_image' as EntityType,
           details: {
             filename: file.name,
             fileSize: file.size,
@@ -956,8 +959,8 @@ const AdminPage: React.FC = () => {
       {previewProduct && (
         <ProductDetailModal
           product={previewProduct}
-          isOpen={isPreviewModalOpen}
-          onClose={() => setIsPreviewModalOpen(false)}
+          open={isPreviewModalOpen}
+          onOpenChange={setIsPreviewModalOpen}
         />
       )}
     </div>

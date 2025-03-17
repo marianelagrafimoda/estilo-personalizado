@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
+import { X, ShoppingCart } from 'lucide-react';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from './ui/dialog';
 import { Product, Color } from '../contexts/ProductContext';

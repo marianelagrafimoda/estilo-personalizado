@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { uploadImage } from '../lib/supabase';
@@ -29,6 +28,9 @@ export interface Product {
   colors: Color[];
   stockQuantity: number;
   cardColor?: string;
+  // Add properties for color management in the Admin interface
+  newColorName?: string;
+  newColorHex?: string;
 }
 
 interface ProductContextType {
