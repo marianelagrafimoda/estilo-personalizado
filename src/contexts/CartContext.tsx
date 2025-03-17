@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product } from './ProductContext';
 import { supabase } from '../integrations/supabase/client';
@@ -14,7 +13,7 @@ interface CartItem {
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product, selectedSize: string, selectedColor: string) => void;
+  addToCart: (product: Product, selectedSize: string, selectedColor: string, quantity?: number) => void;
   removeFromCart: (productId: string, selectedSize: string, selectedColor: string) => void;
   updateQuantity: (productId: string, selectedSize: string, selectedColor: string, quantity: number) => void;
   clearCart: () => void;
@@ -36,12 +35,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [items, setItems] = useState<CartItem[]>([]);
   const { user } = useAuth();
   
-  // Load cart data when user changes
   useEffect(() => {
     const loadCart = async () => {
       try {
         if (user) {
-          // If user is logged in, try to fetch their cart from Supabase
           const { data, error } = await supabase
             .from('user_carts')
             .select('cart_data')
@@ -54,13 +51,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           
           if (data?.cart_data) {
-            // Parse the cart data - it's already a JSON object from Supabase
             setItems(data.cart_data as unknown as CartItem[]);
             return;
           }
         }
         
-        // Fallback to localStorage if not logged in or no cart in Supabase
         const storedCart = localStorage.getItem('cart');
         if (storedCart) {
           setItems(JSON.parse(storedCart));
@@ -68,7 +63,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error('Failed to load cart:', error);
         
-        // Fallback to localStorage
         const storedCart = localStorage.getItem('cart');
         if (storedCart) {
           setItems(JSON.parse(storedCart));
@@ -79,13 +73,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loadCart();
   }, [user]);
 
-  // Save cart whenever it changes
   useEffect(() => {
     const saveCart = async () => {
-      // Always save to localStorage as fallback
       localStorage.setItem('cart', JSON.stringify(items));
       
-      // If user is logged in, also save to Supabase
       if (user) {
         try {
           const { data, error: fetchError } = await supabase
@@ -98,11 +89,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('Error checking existing cart:', fetchError);
           }
           
-          // Convert CartItem[] to a format acceptable for Json type
           const cartDataJson = JSON.parse(JSON.stringify(items)) as Json;
           
           if (data) {
-            // Update existing cart
             const { error: updateError } = await supabase
               .from('user_carts')
               .update({ cart_data: cartDataJson })
@@ -112,7 +101,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
               console.error('Error updating cart in Supabase:', updateError);
             }
           } else {
-            // Insert new cart
             const { error: insertError } = await supabase
               .from('user_carts')
               .insert({ 
@@ -135,8 +123,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [items, user]);
 
-  const addToCart = (product: Product, selectedSize: string, selectedColor: string) => {
-    // Check if item with same product, size and color already exists
+  const addToCart = (product: Product, selectedSize: string, selectedColor: string, quantity: number = 1) => {
     const existingItemIndex = items.findIndex(
       item => item.product.id === product.id && 
               item.selectedSize === selectedSize && 
@@ -144,13 +131,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     if (existingItemIndex !== -1) {
-      // Update quantity of existing item
       const updatedItems = [...items];
-      updatedItems[existingItemIndex].quantity += 1;
+      updatedItems[existingItemIndex].quantity += quantity;
       setItems(updatedItems);
     } else {
-      // Add new item
-      setItems([...items, { product, quantity: 1, selectedSize, selectedColor }]);
+      setItems([...items, { product, quantity, selectedSize, selectedColor }]);
     }
   };
 
@@ -180,7 +165,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearCart = () => {
     setItems([]);
     
-    // When clearing cart, also remove from Supabase if user is logged in
     if (user) {
       try {
         supabase
