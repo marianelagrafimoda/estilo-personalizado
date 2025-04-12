@@ -95,6 +95,9 @@ const AdminPage: React.FC = () => {
     id: '' // Will be set when adding
   });
 
+  const [newAdultSizeName, setNewAdultSizeName] = useState('');
+  const [newChildSizeName, setNewChildSizeName] = useState('');
+
   React.useEffect(() => {
     if (!isAuthenticated || !isAdmin) {
       navigate('/login');
@@ -369,6 +372,41 @@ const AdminPage: React.FC = () => {
   const previewProductDetails = (product: Product) => {
     setPreviewProduct(product);
     setIsPreviewModalOpen(true);
+  };
+
+  const handleAddAdultSize = () => {
+    if (newAdultSizeName) {
+      const sizeId = `adult-${newAdultSizeName.toLowerCase().replace(/\s+/g, '-')}`;
+      // Check if size already exists
+      if (!newProduct.sizes.some(size => size.id === sizeId)) {
+        const newSizes = [
+          ...newProduct.sizes,
+          { id: sizeId, name: newAdultSizeName, available: true, isChildSize: false }
+        ];
+        setNewProduct({...newProduct, sizes: newSizes});
+        setNewAdultSizeName('');
+      }
+    }
+  };
+
+  const handleAddChildSize = () => {
+    if (newChildSizeName) {
+      const sizeId = `child-${newChildSizeName.toLowerCase().replace(/\s+/g, '-')}`;
+      // Check if size already exists
+      if (!newProduct.sizes.some(size => size.id === sizeId)) {
+        const newSizes = [
+          ...newProduct.sizes,
+          { id: sizeId, name: newChildSizeName, available: true, isChildSize: true }
+        ];
+        setNewProduct({...newProduct, sizes: newSizes});
+        setNewChildSizeName('');
+      }
+    }
+  };
+
+  const handleRemoveSize = (sizeId: string) => {
+    const newSizes = newProduct.sizes.filter(size => size.id !== sizeId);
+    setNewProduct({...newProduct, sizes: newSizes});
   };
 
   if (!isAuthenticated || !isAdmin) {
@@ -734,49 +772,101 @@ const AdminPage: React.FC = () => {
                 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Tallas Disponibles</label>
-                  <div className="space-y-2">
-                    <p className="text-xs text-gray-600">Tallas para adultos:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {newProduct.sizes.filter(size => !size.isChildSize).map((size) => (
-                        <button
-                          key={size.id}
-                          onClick={() => {
-                            const updatedSizes = newProduct.sizes.map(s => 
-                              s.id === size.id ? {...s, available: !s.available} : s
-                            );
-                            setNewProduct({...newProduct, sizes: updatedSizes});
-                          }}
-                          className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                            size.available
-                              ? 'bg-lilac text-white'
-                              : 'bg-gray-200 text-gray-500'
-                          }`}
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Tallas para adultos:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {newProduct.sizes.filter(size => !size.isChildSize).map((size) => (
+                          <div key={size.id} className="flex items-center bg-gray-100 rounded-lg text-sm">
+                            <button
+                              onClick={() => {
+                                const updatedSizes = newProduct.sizes.map(s => 
+                                  s.id === size.id ? {...s, available: !s.available} : s
+                                );
+                                setNewProduct({...newProduct, sizes: updatedSizes});
+                              }}
+                              className={`px-2 py-1 rounded-l-lg ${
+                                size.available
+                                  ? 'bg-lilac text-white'
+                                  : 'bg-gray-200 text-gray-500'
+                              }`}
+                            >
+                              {size.name}
+                            </button>
+                            <button
+                              onClick={() => handleRemoveSize(size.id)}
+                              className="px-1 text-gray-500 hover:text-red-500 rounded-r-lg"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="flex mt-2">
+                        <Input
+                          value={newAdultSizeName}
+                          onChange={(e) => setNewAdultSizeName(e.target.value)}
+                          placeholder="Nueva talla adulto"
+                          className="border-lilac/30 text-sm max-w-[180px]"
+                        />
+                        <Button 
+                          size="sm" 
+                          onClick={handleAddAdultSize}
+                          className="ml-2 bg-lilac hover:bg-lilac-dark"
+                          disabled={!newAdultSizeName}
                         >
-                          {size.name}
-                        </button>
-                      ))}
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                     
-                    <p className="text-xs text-gray-600 mt-2">Tallas para niños:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {newProduct.sizes.filter(size => size.isChildSize).map((size) => (
-                        <button
-                          key={size.id}
-                          onClick={() => {
-                            const updatedSizes = newProduct.sizes.map(s => 
-                              s.id === size.id ? {...s, available: !s.available} : s
-                            );
-                            setNewProduct({...newProduct, sizes: updatedSizes});
-                          }}
-                          className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                            size.available
-                              ? 'bg-lilac text-white'
-                              : 'bg-gray-200 text-gray-500'
-                          }`}
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Tallas para niños:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {newProduct.sizes.filter(size => size.isChildSize).map((size) => (
+                          <div key={size.id} className="flex items-center bg-gray-100 rounded-lg text-sm">
+                            <button
+                              onClick={() => {
+                                const updatedSizes = newProduct.sizes.map(s => 
+                                  s.id === size.id ? {...s, available: !s.available} : s
+                                );
+                                setNewProduct({...newProduct, sizes: updatedSizes});
+                              }}
+                              className={`px-2 py-1 rounded-l-lg ${
+                                size.available
+                                  ? 'bg-lilac text-white'
+                                  : 'bg-gray-200 text-gray-500'
+                              }`}
+                            >
+                              {size.name}
+                            </button>
+                            <button
+                              onClick={() => handleRemoveSize(size.id)}
+                              className="px-1 text-gray-500 hover:text-red-500 rounded-r-lg"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="flex mt-2">
+                        <Input
+                          value={newChildSizeName}
+                          onChange={(e) => setNewChildSizeName(e.target.value)}
+                          placeholder="Nueva talla niño"
+                          className="border-lilac/30 text-sm max-w-[180px]"
+                        />
+                        <Button 
+                          size="sm" 
+                          onClick={handleAddChildSize}
+                          className="ml-2 bg-lilac hover:bg-lilac-dark"
+                          disabled={!newChildSizeName}
                         >
-                          {size.name}
-                        </button>
-                      ))}
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>

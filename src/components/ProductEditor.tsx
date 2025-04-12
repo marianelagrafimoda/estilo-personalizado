@@ -22,6 +22,8 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
   const [editingProduct, setEditingProduct] = useState<Product>({...product});
   const [newColorName, setNewColorName] = useState('');
   const [newColorHex, setNewColorHex] = useState('#FFFFFF');
+  const [newAdultSizeName, setNewAdultSizeName] = useState('');
+  const [newChildSizeName, setNewChildSizeName] = useState('');
 
   useEffect(() => {
     // Make sure images is initialized
@@ -65,6 +67,41 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
       size.id === sizeId ? { ...size, available: !size.available } : size
     );
     setEditingProduct({...editingProduct, sizes: updatedSizes});
+  };
+
+  const handleAddAdultSize = () => {
+    if (newAdultSizeName) {
+      const sizeId = `adult-${newAdultSizeName.toLowerCase().replace(/\s+/g, '-')}`;
+      // Check if size already exists
+      if (!editingProduct.sizes.some(size => size.id === sizeId)) {
+        const newSizes = [
+          ...editingProduct.sizes,
+          { id: sizeId, name: newAdultSizeName, available: true, isChildSize: false }
+        ];
+        setEditingProduct({...editingProduct, sizes: newSizes});
+        setNewAdultSizeName('');
+      }
+    }
+  };
+
+  const handleAddChildSize = () => {
+    if (newChildSizeName) {
+      const sizeId = `child-${newChildSizeName.toLowerCase().replace(/\s+/g, '-')}`;
+      // Check if size already exists
+      if (!editingProduct.sizes.some(size => size.id === sizeId)) {
+        const newSizes = [
+          ...editingProduct.sizes,
+          { id: sizeId, name: newChildSizeName, available: true, isChildSize: true }
+        ];
+        setEditingProduct({...editingProduct, sizes: newSizes});
+        setNewChildSizeName('');
+      }
+    }
+  };
+
+  const handleRemoveSize = (sizeId: string) => {
+    const newSizes = editingProduct.sizes.filter(size => size.id !== sizeId);
+    setEditingProduct({...editingProduct, sizes: newSizes});
   };
 
   const handleSave = () => {
@@ -153,39 +190,91 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
       
       <div>
         <label className="text-sm font-medium">Tallas disponibles</label>
-        <div className="mt-2 space-y-2">
-          <p className="text-xs text-gray-500">Adultos:</p>
-          <div className="flex flex-wrap gap-1">
-            {editingProduct.sizes.filter(size => !size.isChildSize).map(size => (
-              <button
-                key={size.id}
-                onClick={() => toggleSizeAvailability(size.id)}
-                className={`px-2 py-1 text-xs rounded ${
-                  size.available
-                    ? 'bg-lilac text-white'
-                    : 'bg-gray-200 text-gray-500'
-                }`}
+        <div className="mt-2 space-y-3">
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Adultos:</p>
+            <div className="flex flex-wrap gap-2">
+              {editingProduct.sizes.filter(size => !size.isChildSize).map(size => (
+                <div key={size.id} className="flex items-center bg-gray-100 rounded-lg text-sm">
+                  <button
+                    onClick={() => toggleSizeAvailability(size.id)}
+                    className={`px-2 py-1 rounded-l-lg ${
+                      size.available
+                        ? 'bg-lilac text-white'
+                        : 'bg-gray-200 text-gray-500'
+                    }`}
+                  >
+                    {size.name}
+                  </button>
+                  <button
+                    onClick={() => handleRemoveSize(size.id)}
+                    className="px-1 text-gray-500 hover:text-red-500 rounded-r-lg"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex mt-2">
+              <Input
+                value={newAdultSizeName}
+                onChange={(e) => setNewAdultSizeName(e.target.value)}
+                placeholder="Nueva talla adulto"
+                className="border-lilac/30 text-sm max-w-[180px]"
+              />
+              <Button 
+                size="sm" 
+                onClick={handleAddAdultSize}
+                className="ml-2 bg-lilac hover:bg-lilac-dark"
+                disabled={!newAdultSizeName}
               >
-                {size.name}
-              </button>
-            ))}
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
           
-          <p className="text-xs text-gray-500 mt-2">Niños:</p>
-          <div className="flex flex-wrap gap-1">
-            {editingProduct.sizes.filter(size => size.isChildSize).map(size => (
-              <button
-                key={size.id}
-                onClick={() => toggleSizeAvailability(size.id)}
-                className={`px-2 py-1 text-xs rounded ${
-                  size.available
-                    ? 'bg-lilac text-white'
-                    : 'bg-gray-200 text-gray-500'
-                }`}
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Niños:</p>
+            <div className="flex flex-wrap gap-2">
+              {editingProduct.sizes.filter(size => size.isChildSize).map(size => (
+                <div key={size.id} className="flex items-center bg-gray-100 rounded-lg text-sm">
+                  <button
+                    onClick={() => toggleSizeAvailability(size.id)}
+                    className={`px-2 py-1 rounded-l-lg ${
+                      size.available
+                        ? 'bg-lilac text-white'
+                        : 'bg-gray-200 text-gray-500'
+                    }`}
+                  >
+                    {size.name}
+                  </button>
+                  <button
+                    onClick={() => handleRemoveSize(size.id)}
+                    className="px-1 text-gray-500 hover:text-red-500 rounded-r-lg"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex mt-2">
+              <Input
+                value={newChildSizeName}
+                onChange={(e) => setNewChildSizeName(e.target.value)}
+                placeholder="Nueva talla niño"
+                className="border-lilac/30 text-sm max-w-[180px]"
+              />
+              <Button 
+                size="sm" 
+                onClick={handleAddChildSize}
+                className="ml-2 bg-lilac hover:bg-lilac-dark"
+                disabled={!newChildSizeName}
               >
-                {size.name}
-              </button>
-            ))}
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -228,6 +317,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
               size="sm"
               onClick={handleAddColor}
               className="bg-lilac hover:bg-lilac-dark"
+              disabled={!newColorName}
             >
               <Plus className="w-4 h-4" />
             </Button>
