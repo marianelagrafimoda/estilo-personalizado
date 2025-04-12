@@ -4,6 +4,11 @@ import { saveSiteInfo, uploadImage, getCarouselImages, clearCarouselImages } fro
 import { useToast } from '../hooks/use-toast';
 import { Json } from '../integrations/supabase/types';
 
+interface CustomLink {
+  label: string;
+  url: string;
+}
+
 interface SiteInfo {
   slogan: string;
   whatsappNumber: string;
@@ -18,6 +23,15 @@ interface SiteInfo {
   serviceTitle: string;
   serviceDescription: string;
   faqTitle: string;
+  footerLogoUrl: string;
+  footerAboutText: string;
+  footerLinksTitle: string;
+  footerContactTitle: string;
+  footerCustomLinks: CustomLink[];
+  emailAddress: string;
+  address: string;
+  footerAdditionalInfo: string;
+  footerCopyrightText: string;
 }
 
 interface SiteContextType {
@@ -42,6 +56,15 @@ const DEFAULT_SITE_INFO: SiteInfo = {
   serviceTitle: "Atención Personalizada",
   serviceDescription: "Te guiamos durante todo el proceso para asegurar que obtengas exactamente lo que deseas.",
   faqTitle: "Todo lo que necesitas saber",
+  footerLogoUrl: "",
+  footerAboutText: "",
+  footerLinksTitle: "Enlaces Rápidos",
+  footerContactTitle: "Contacto",
+  footerCustomLinks: [],
+  emailAddress: "marianela.grafimoda@gmail.com",
+  address: "",
+  footerAdditionalInfo: "",
+  footerCopyrightText: "",
 };
 
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
@@ -64,21 +87,22 @@ const snakeToCamel = (str: string) => {
 
 const prepareForSupabase = (data: Partial<SiteInfo>) => {
   const completeData = { ...DEFAULT_SITE_INFO, ...data };
-  return {
-    carousel_images: completeData.carouselImages as Json,
-    design_description: completeData.designDescription,
-    design_title: completeData.designTitle,
-    faq_title: completeData.faqTitle,
-    instagram_link: completeData.instagramLink,
-    facebook_link: completeData.facebookLink,
-    materials_description: completeData.materialsDescription,
-    materials_title: completeData.materialsTitle,
-    service_description: completeData.serviceDescription,
-    service_title: completeData.serviceTitle,
-    slogan: completeData.slogan,
-    unique_style_title: completeData.uniqueStyleTitle,
-    whatsapp_number: completeData.whatsappNumber,
-  };
+  const result: Record<string, any> = {};
+  
+  Object.keys(completeData).forEach(key => {
+    const snakeKey = camelToSnake(key);
+    let value = completeData[key as keyof SiteInfo];
+    
+    if (key === 'carouselImages') {
+      result.carousel_images = value as Json;
+    } else if (key === 'footerCustomLinks') {
+      result.footer_custom_links = value as Json;
+    } else {
+      result[snakeKey] = value;
+    }
+  });
+  
+  return result;
 };
 
 const prepareFromSupabase = (data: Record<string, any>): Partial<SiteInfo> => {
@@ -100,6 +124,18 @@ const prepareFromSupabase = (data: Record<string, any>): Partial<SiteInfo> => {
           result.carouselImages = value.map(String);
         } else {
           result.carouselImages = [];
+        }
+      } else if (key === 'footer_custom_links') {
+        try {
+          if (typeof value === 'string') {
+            result.footerCustomLinks = JSON.parse(value);
+          } else if (Array.isArray(value)) {
+            result.footerCustomLinks = value;
+          } else {
+            result.footerCustomLinks = [];
+          }
+        } catch (e) {
+          result.footerCustomLinks = [];
         }
       } else {
         result[camelKey] = value;

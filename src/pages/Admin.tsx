@@ -59,8 +59,23 @@ const AdminPage: React.FC = () => {
   const [newFacebookLink, setNewFacebookLink] = useState(siteInfo.facebookLink || 'https://www.facebook.com/');
   const [newCarouselImages, setNewCarouselImages] = useState<string[]>(siteInfo.carouselImages);
   
+  const [footerLogoUrl, setFooterLogoUrl] = useState(siteInfo.footerLogoUrl);
+  const [footerAboutText, setFooterAboutText] = useState(siteInfo.footerAboutText || '');
+  const [footerLinksTitle, setFooterLinksTitle] = useState(siteInfo.footerLinksTitle || 'Enlaces Rápidos');
+  const [footerContactTitle, setFooterContactTitle] = useState(siteInfo.footerContactTitle || 'Contacto');
+  const [emailAddress, setEmailAddress] = useState(siteInfo.emailAddress || 'marianela.grafimoda@gmail.com');
+  const [address, setAddress] = useState(siteInfo.address || '');
+  const [footerAdditionalInfo, setFooterAdditionalInfo] = useState(siteInfo.footerAdditionalInfo || '');
+  const [footerCopyrightText, setFooterCopyrightText] = useState(siteInfo.footerCopyrightText || '');
+  const [footerCustomLinks, setFooterCustomLinks] = useState<Array<{label: string; url: string}>>(
+    siteInfo.footerCustomLinks || []
+  );
+  const [newLinkLabel, setNewLinkLabel] = useState('');
+  const [newLinkUrl, setNewLinkUrl] = useState('');
+  
   const [isUploadingProduct, setIsUploadingProduct] = useState(false);
   const [isUploadingCarousel, setIsUploadingCarousel] = useState(false);
+  const [isUploadingFooterLogo, setIsUploadingFooterLogo] = useState(false);
   const [isClearingImages, setIsClearingImages] = useState(false);
   
   const [newMaterialsTitle, setNewMaterialsTitle] = useState(siteInfo.materialsTitle);
@@ -123,6 +138,16 @@ const AdminPage: React.FC = () => {
       setNewServiceDesc(siteInfo.serviceDescription);
       setNewFaqTitle(siteInfo.faqTitle);
       setNewUniqueStyleTitle(siteInfo.uniqueStyleTitle);
+      
+      setFooterLogoUrl(siteInfo.footerLogoUrl || '');
+      setFooterAboutText(siteInfo.footerAboutText || '');
+      setFooterLinksTitle(siteInfo.footerLinksTitle || 'Enlaces Rápidos');
+      setFooterContactTitle(siteInfo.footerContactTitle || 'Contacto');
+      setEmailAddress(siteInfo.emailAddress || 'marianela.grafimoda@gmail.com');
+      setAddress(siteInfo.address || '');
+      setFooterAdditionalInfo(siteInfo.footerAdditionalInfo || '');
+      setFooterCopyrightText(siteInfo.footerCopyrightText || '');
+      setFooterCustomLinks(siteInfo.footerCustomLinks || []);
     }
   }, [siteInfo, isSiteLoading]);
 
@@ -140,7 +165,16 @@ const AdminPage: React.FC = () => {
       serviceTitle: newServiceTitle,
       serviceDescription: newServiceDesc,
       faqTitle: newFaqTitle,
-      uniqueStyleTitle: newUniqueStyleTitle
+      uniqueStyleTitle: newUniqueStyleTitle,
+      footerLogoUrl,
+      footerAboutText,
+      footerLinksTitle,
+      footerContactTitle,
+      emailAddress,
+      address,
+      footerAdditionalInfo,
+      footerCopyrightText,
+      footerCustomLinks
     });
     toast({
       title: "¡Actualizado!",
@@ -208,8 +242,6 @@ const AdminPage: React.FC = () => {
     try {
       const imageUrl = await uploadProductImage(file);
       
-      // If editing product, do nothing here (handled in ProductEditor)
-      // If new product, set as main image and add to images array
       if (!editingProduct) {
         setNewProduct(prev => ({ 
           ...prev, 
@@ -242,7 +274,6 @@ const AdminPage: React.FC = () => {
     setNewProduct({
       ...newProduct,
       images: newImages,
-      // Update imageUrl to be the first image, for backwards compatibility
       imageUrl: newImages.length > 0 ? newImages[0] : ''
     });
   };
@@ -307,14 +338,12 @@ const AdminPage: React.FC = () => {
   };
 
   const startEditingProduct = (product: Product) => {
-    // Make sure the product has all necessary fields
     const hasKidsSizes = product.sizes.some((size) => 
       size.id === 'kids-s' || size.id === 'kids-m' || size.id === 'kids-l' || size.isChildSize
     );
     
     const productToEdit = {
       ...product,
-      // Initialize images array if it doesn't exist
       images: product.images || (product.imageUrl ? [product.imageUrl] : [])
     };
     
@@ -377,7 +406,6 @@ const AdminPage: React.FC = () => {
   const handleAddAdultSize = () => {
     if (newAdultSizeName) {
       const sizeId = `adult-${newAdultSizeName.toLowerCase().replace(/\s+/g, '-')}`;
-      // Check if size already exists
       if (!newProduct.sizes.some(size => size.id === sizeId)) {
         const newSizes = [
           ...newProduct.sizes,
@@ -392,7 +420,6 @@ const AdminPage: React.FC = () => {
   const handleAddChildSize = () => {
     if (newChildSizeName) {
       const sizeId = `child-${newChildSizeName.toLowerCase().replace(/\s+/g, '-')}`;
-      // Check if size already exists
       if (!newProduct.sizes.some(size => size.id === sizeId)) {
         const newSizes = [
           ...newProduct.sizes,
@@ -407,6 +434,70 @@ const AdminPage: React.FC = () => {
   const handleRemoveSize = (sizeId: string) => {
     const newSizes = newProduct.sizes.filter(size => size.id !== sizeId);
     setNewProduct({...newProduct, sizes: newSizes});
+  };
+
+  const handleUploadFooterLogo = async (file: File) => {
+    setIsUploadingFooterLogo(true);
+    try {
+      await setupDatabase();
+      
+      const imageUrl = await uploadSiteImage(file);
+      setFooterLogoUrl(imageUrl);
+      
+      if (user && user.isAdmin) {
+        await logAdminActivity({
+          adminEmail: user.email,
+          actionType: 'update',
+          entityType: 'site_info',
+          details: {
+            field: 'footer_logo',
+            filename: file.name,
+            fileSize: file.size,
+            fileType: file.type
+          }
+        });
+      }
+      
+      return imageUrl;
+    } finally {
+      setIsUploadingFooterLogo(false);
+    }
+  };
+
+  const handleFooterInfoUpdate = () => {
+    updateSiteInfo({
+      footerLogoUrl,
+      footerAboutText,
+      footerLinksTitle,
+      footerContactTitle,
+      emailAddress,
+      address,
+      footerAdditionalInfo,
+      footerCopyrightText,
+      footerCustomLinks
+    });
+    toast({
+      title: "¡Actualizado!",
+      description: "Información del footer actualizada con éxito",
+      duration: 3000,
+    });
+  };
+
+  const handleAddCustomLink = () => {
+    if (newLinkLabel && newLinkUrl) {
+      setFooterCustomLinks([...footerCustomLinks, {
+        label: newLinkLabel,
+        url: newLinkUrl
+      }]);
+      setNewLinkLabel('');
+      setNewLinkUrl('');
+    }
+  };
+
+  const handleRemoveCustomLink = (index: number) => {
+    const updatedLinks = [...footerCustomLinks];
+    updatedLinks.splice(index, 1);
+    setFooterCustomLinks(updatedLinks);
   };
 
   if (!isAuthenticated || !isAdmin) {
@@ -444,6 +535,10 @@ const AdminPage: React.FC = () => {
             <TabsTrigger value="carousel" className="flex-1 data-[state=active]:bg-lilac data-[state=active]:text-white">
               <ImageIcon className="w-4 h-4 mr-2" />
               Imágenes de Carrusel
+            </TabsTrigger>
+            <TabsTrigger value="footer" className="flex-1 data-[state=active]:bg-lilac data-[state=active]:text-white">
+              <Edit3 className="w-4 h-4 mr-2" />
+              Pie de Página
             </TabsTrigger>
             <TabsTrigger value="products" className="flex-1 data-[state=active]:bg-lilac data-[state=active]:text-white">
               <Tag className="w-4 h-4 mr-2" />
@@ -673,6 +768,204 @@ const AdminPage: React.FC = () => {
               <CardFooter>
                 <Button 
                   onClick={handleSiteInfoUpdate} 
+                  className="w-full bg-lilac hover:bg-lilac-dark"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Guardar Cambios
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="footer" className="space-y-6 animate-fade-in">
+            <Card className="shadow-md border-lilac/20">
+              <CardHeader>
+                <CardTitle className="font-serif">Personalización del Pie de Página</CardTitle>
+                <CardDescription>
+                  Personalice la información que aparece en el pie de página de su sitio
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Logo del Footer</label>
+                      <div className="mt-2">
+                        <ImageUploader 
+                          onImageUpload={handleUploadFooterLogo} 
+                          label="Subir logo para el footer"
+                          maxSize={5}
+                          bucketType="site_images"
+                        />
+                        {footerLogoUrl && (
+                          <div className="mt-2 relative h-20 w-40 border rounded">
+                            <img 
+                              src={footerLogoUrl} 
+                              alt="Logo Footer" 
+                              className="h-full w-auto object-contain"
+                            />
+                            <button
+                              onClick={() => setFooterLogoUrl('')}
+                              className="absolute top-1 right-1 p-1 rounded-full bg-red-500 text-white text-xs"
+                              title="Eliminar logo"
+                              aria-label="Eliminar logo"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+                        <p className="text-xs text-gray-500 mt-1">
+                          Si no sube un logo, se usará el logo por defecto.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Texto Adicional (Debajo del Logo)</label>
+                      <Input
+                        value={footerAboutText}
+                        onChange={(e) => setFooterAboutText(e.target.value)}
+                        placeholder="Información adicional sobre su negocio"
+                        className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Título para Enlaces Rápidos</label>
+                      <Input
+                        value={footerLinksTitle}
+                        onChange={(e) => setFooterLinksTitle(e.target.value)}
+                        placeholder="Enlaces Rápidos"
+                        className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Título para Sección de Contacto</label>
+                      <Input
+                        value={footerContactTitle}
+                        onChange={(e) => setFooterContactTitle(e.target.value)}
+                        placeholder="Contacto"
+                        className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                  <div>
+                    <h3 className="text-sm font-medium mb-3">Información de Contacto</h3>
+                    
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <label className="text-xs text-gray-600">Dirección</label>
+                        <Input
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          placeholder="Dirección física de su negocio"
+                          className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                        />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <label className="text-xs text-gray-600">Correo Electrónico</label>
+                        <Input
+                          type="email"
+                          value={emailAddress}
+                          onChange={(e) => setEmailAddress(e.target.value)}
+                          placeholder="correo@ejemplo.com"
+                          className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                        />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <label className="text-xs text-gray-600">Información adicional</label>
+                        <Input
+                          value={footerAdditionalInfo}
+                          onChange={(e) => setFooterAdditionalInfo(e.target.value)}
+                          placeholder="Horario de atención, etc."
+                          className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium mb-3">Enlaces Personalizados</h3>
+                    
+                    <div className="space-y-2 mb-3">
+                      {footerCustomLinks.map((link, index) => (
+                        <div key={index} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
+                          <span className="flex-grow truncate">
+                            <b>{link.label}</b>: {link.url}
+                          </span>
+                          <button
+                            onClick={() => handleRemoveCustomLink(index)}
+                            className="text-red-500 hover:text-red-700"
+                            title="Eliminar enlace"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                      {footerCustomLinks.length === 0 && (
+                        <p className="text-xs text-gray-500">No hay enlaces personalizados.</p>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="space-y-1">
+                        <label className="text-xs text-gray-600">Texto del Enlace</label>
+                        <Input
+                          value={newLinkLabel}
+                          onChange={(e) => setNewLinkLabel(e.target.value)}
+                          placeholder="Texto a mostrar"
+                          className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                        />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <label className="text-xs text-gray-600">URL del Enlace</label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={newLinkUrl}
+                            onChange={(e) => setNewLinkUrl(e.target.value)}
+                            placeholder="https://ejemplo.com"
+                            className="border-lilac/30 focus:border-lilac focus:ring-lilac flex-grow"
+                          />
+                          <Button
+                            onClick={handleAddCustomLink}
+                            disabled={!newLinkLabel || !newLinkUrl}
+                            className="bg-lilac hover:bg-lilac-dark"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Texto de Copyright</label>
+                    <Input
+                      value={footerCopyrightText}
+                      onChange={(e) => setFooterCopyrightText(e.target.value)}
+                      placeholder={`© ${new Date().getFullYear()} GrafiModa. Todos los derechos reservados.`}
+                      className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Si deja este campo vacío, se usará el texto por defecto con el año actual.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={handleFooterInfoUpdate} 
                   className="w-full bg-lilac hover:bg-lilac-dark"
                 >
                   <Save className="w-4 h-4 mr-2" />
