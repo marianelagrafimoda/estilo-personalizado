@@ -8,7 +8,9 @@ import { v4 as uuidv4 } from 'uuid';
 export const setupDatabase = async (): Promise<boolean> => {
   try {
     // Verifica a conexão com o Supabase
-    const { error: connectionError } = await supabase.from('site_info').select('count', { count: 'exact', head: true });
+    const { error: connectionError } = await supabase
+      .from('site_info')
+      .select('count', { count: 'exact', head: true });
     
     if (connectionError) {
       console.error("Erro de conexão com Supabase:", connectionError);

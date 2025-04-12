@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { uploadImage } from '../lib/supabase';
@@ -315,7 +316,9 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       const supabaseData = productToSupabase(newProduct);
       
-      const { error } = await supabase.from('products').insert(supabaseData);
+      const { error } = await supabase
+        .from('products')
+        .insert(supabaseData);
       
       if (error) {
         console.error('Error adding product to Supabase:', error);
