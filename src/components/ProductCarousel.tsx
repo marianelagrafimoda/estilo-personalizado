@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSiteInfo } from '../contexts/SiteContext';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import WhatsAppButton from './WhatsAppButton';
 
 const ProductCarousel: React.FC = () => {
   const { siteInfo } = useSiteInfo();
@@ -89,12 +90,9 @@ const ProductCarousel: React.FC = () => {
           <p className="text-gray-700 text-xl md:text-2xl mb-8 animate-slide-up">
             {siteInfo.slogan}
           </p>
-          <a
-            href="#personalizacion"
+          <WhatsAppButton
             className="inline-block px-6 py-3 bg-lilac hover:bg-lilac-dark text-white rounded-md font-medium transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg animate-slide-up"
-          >
-            Quiero personalizar mi estilo
-          </a>
+          />
         </div>
       </div>
     );
@@ -130,12 +128,9 @@ const ProductCarousel: React.FC = () => {
           <p className="text-white text-xl md:text-2xl mb-8 animate-slide-up">
             {siteInfo.slogan}
           </p>
-          <a
-            href="#personalizacion"
+          <WhatsAppButton
             className="inline-block px-6 py-3 bg-lilac hover:bg-lilac-dark text-white rounded-md font-medium transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg animate-slide-up"
-          >
-            Quiero personalizar mi estilo
-          </a>
+          />
         </div>
       </div>
 

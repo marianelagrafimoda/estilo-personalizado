@@ -43,8 +43,10 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
   };
   
   const handleClick = () => {
+    // Use the specified WhatsApp number or fallback to the one in siteInfo
+    const whatsappNumber = "593990893095"; // Number without + as requested
     const message = generateWhatsAppMessage();
-    const whatsappUrl = `https://wa.me/${siteInfo.whatsappNumber.replace(/\+/g, '')}?text=${message}`;
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };
   

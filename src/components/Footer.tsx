@@ -10,7 +10,7 @@ const Footer: React.FC = () => {
   
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    const whatsappUrl = `https://wa.me/${siteInfo.whatsappNumber.replace(/\+/g, '')}`;
+    const whatsappUrl = `https://wa.me/593990893095`;
     window.open(whatsappUrl, '_blank');
   };
 
@@ -74,7 +74,7 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <a 
-                  href={`https://wa.me/${siteInfo.whatsappNumber.replace(/\+/g, '')}?text=Quiero%20personalizar%20mi%20propio%20estilo`}
+                  href={`https://wa.me/593990893095?text=Quiero%20personalizar%20mi%20propio%20estilo`}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-gray-600 hover:text-lilac-dark transition-colors"
@@ -109,12 +109,12 @@ const Footer: React.FC = () => {
               <li className="flex items-center">
                 <Phone className="w-5 h-5 mr-2 text-lilac-dark" />
                 <a 
-                  href={`https://wa.me/${siteInfo.whatsappNumber.replace(/\+/g, '')}`}
+                  href={`https://wa.me/593990893095`}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-gray-600 hover:text-lilac-dark transition-colors"
                 >
-                  {siteInfo.whatsappNumber}
+                  +593990893095
                 </a>
               </li>
               <li className="flex items-center">

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { saveSiteInfo, uploadImage, getCarouselImages, clearCarouselImages } from '../lib/supabase';
@@ -85,13 +86,13 @@ const snakeToCamel = (str: string) => {
   return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 };
 
+// Convert siteInfo object to format suitable for Supabase
 const prepareForSupabase = (data: Partial<SiteInfo>) => {
-  const completeData = { ...DEFAULT_SITE_INFO, ...data };
   const result: Record<string, any> = {};
   
-  Object.keys(completeData).forEach(key => {
+  Object.keys(data).forEach(key => {
     const snakeKey = camelToSnake(key);
-    let value = completeData[key as keyof SiteInfo];
+    const value = data[key as keyof Partial<SiteInfo>];
     
     if (key === 'carouselImages') {
       result.carousel_images = value as Json;
@@ -181,7 +182,8 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('siteInfo', JSON.stringify(DEFAULT_SITE_INFO));
         
         try {
-          await saveSiteInfo(prepareForSupabase(DEFAULT_SITE_INFO));
+          // Fixed: Pass complete data object to saveSiteInfo instead of converted result
+          await saveSiteInfo({ ...DEFAULT_SITE_INFO });
         } catch (initError) {
           console.error('Failed to initialize site_info:', initError);
         }
@@ -284,14 +286,17 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       let result;
       if (existingData && existingData.length > 0) {
+        // Fix: Use supabaseData (not prepareForSupabase(updatedInfo))
         result = await supabase
           .from('site_info')
-          .update(prepareForSupabase(updatedInfo))
+          .update(supabaseData)
           .eq('id', existingData[0].id);
       } else {
+        // Convert the full updatedInfo (not just updates) to Supabase format
+        const fullData = prepareForSupabase(updatedInfo);
         result = await supabase
           .from('site_info')
-          .insert(prepareForSupabase(updatedInfo));
+          .insert(fullData);
       }
       
       if (result.error) {
