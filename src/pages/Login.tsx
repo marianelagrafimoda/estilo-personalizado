@@ -1,10 +1,12 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -14,7 +16,7 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
@@ -29,46 +31,55 @@ const Login: React.FC = () => {
       return;
     }
     
-    // Attempt login
-    const success = login(email, password);
-    
-    if (success) {
-      toast({
-        title: "Inicio de sesión exitoso",
-        description: "Bienvenido al panel de administración",
-      });
-      navigate('/admin');
-    } else {
+    try {
+      // Attempt login
+      const success = await login(email, password);
+      
+      if (success) {
+        toast({
+          title: "Inicio de sesión exitoso",
+          description: "Bienvenido al panel de administración",
+        });
+        navigate('/admin');
+      } else {
+        toast({
+          title: "Error",
+          description: "Credenciales incorrectas",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: "Error",
-        description: "Credenciales incorrectas",
+        description: "Ocurrió un problema al iniciar sesión",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <main className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-gray-100">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h2 className="font-serif text-3xl font-bold">Iniciar Sesión</h2>
+            <h2 className="font-serif text-3xl font-bold text-gray-800">Panel de Administración</h2>
             <p className="mt-2 text-gray-600">
-              Ingresa tus credenciales para acceder al panel de administración
+              Ingresa tus credenciales para acceder
             </p>
           </div>
           
-          <div className="glass-card rounded-lg p-8">
+          <div className="bg-white shadow-xl rounded-lg p-8 border border-gray-200">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Correo Electrónico
                 </label>
-                <input
+                <Input
                   id="email"
                   name="email"
                   type="email"
@@ -76,7 +87,7 @@ const Login: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lilac focus:border-transparent"
+                  className="w-full"
                   placeholder="ejemplo@correo.com"
                 />
               </div>
@@ -85,7 +96,7 @@ const Login: React.FC = () => {
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                   Contraseña
                 </label>
-                <input
+                <Input
                   id="password"
                   name="password"
                   type="password"
@@ -93,18 +104,18 @@ const Login: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lilac focus:border-transparent"
+                  className="w-full"
                 />
               </div>
               
               <div>
-                <button
+                <Button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full btn-primary ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  className="w-full bg-lilac hover:bg-lilac-dark text-white"
                 >
                   {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
