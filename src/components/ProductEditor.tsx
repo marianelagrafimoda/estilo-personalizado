@@ -24,6 +24,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
   const [newColorHex, setNewColorHex] = useState('#FFFFFF');
   const [newAdultSizeName, setNewAdultSizeName] = useState('');
   const [newChildSizeName, setNewChildSizeName] = useState('');
+  const [newChildAgeSize, setNewChildAgeSize] = useState('');
 
   useEffect(() => {
     // Make sure images is initialized
@@ -95,6 +96,28 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
         ];
         setEditingProduct({...editingProduct, sizes: newSizes});
         setNewChildSizeName('');
+      }
+    }
+  };
+
+  const handleAddChildAgeSize = () => {
+    if (newChildAgeSize && !isNaN(parseInt(newChildAgeSize)) && parseInt(newChildAgeSize) >= 1 && parseInt(newChildAgeSize) <= 12) {
+      const age = parseInt(newChildAgeSize);
+      const sizeId = `child-age-${age}`;
+      
+      // Check if size already exists
+      if (!editingProduct.sizes.some(size => size.id === sizeId)) {
+        const newSizes = [
+          ...editingProduct.sizes,
+          { 
+            id: sizeId, 
+            name: `${age} año${age !== 1 ? 's' : ''}`, 
+            available: true, 
+            isChildSize: true 
+          }
+        ];
+        setEditingProduct({...editingProduct, sizes: newSizes});
+        setNewChildAgeSize('');
       }
     }
   };
@@ -271,6 +294,26 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
                 onClick={handleAddChildSize}
                 className="ml-2 bg-lilac hover:bg-lilac-dark"
                 disabled={!newChildSizeName}
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <div className="flex mt-2">
+              <Input
+                type="number"
+                min="1"
+                max="12"
+                value={newChildAgeSize}
+                onChange={(e) => setNewChildAgeSize(e.target.value)}
+                placeholder="Edad (1-12 años)"
+                className="border-lilac/30 text-sm max-w-[180px]"
+              />
+              <Button 
+                size="sm" 
+                onClick={handleAddChildAgeSize}
+                className="ml-2 bg-lilac hover:bg-lilac-dark"
+                disabled={!newChildAgeSize || isNaN(parseInt(newChildAgeSize)) || parseInt(newChildAgeSize) < 1 || parseInt(newChildAgeSize) > 12}
               >
                 <Plus className="w-4 h-4" />
               </Button>
