@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { saveSiteInfo, uploadImage, getCarouselImages, clearCarouselImages } from '../lib/supabase';
@@ -212,7 +211,6 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('siteInfo', JSON.stringify(DEFAULT_SITE_INFO));
         
         try {
-          // Fixed: Pass complete data object to saveSiteInfo instead of converted result
           await saveSiteInfo({ ...DEFAULT_SITE_INFO });
         } catch (initError) {
           console.error('Failed to initialize site_info:', initError);
