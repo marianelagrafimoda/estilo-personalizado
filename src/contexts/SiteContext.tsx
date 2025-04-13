@@ -35,6 +35,35 @@ interface SiteInfo {
   footerCopyrightText: string;
 }
 
+// Define a type that matches the Supabase table schema
+interface SiteInfoSupabase {
+  carousel_images: Json;
+  created_at?: string;
+  design_description: string;
+  design_title: string;
+  facebook_link?: string;
+  faq_title: string;
+  id?: string;
+  instagram_link?: string;
+  materials_description: string;
+  materials_title: string;
+  service_description: string;
+  service_title: string;
+  slogan: string;
+  unique_style_title: string;
+  updated_at?: string;
+  whatsapp_number: string;
+  footer_logo_url?: string;
+  footer_about_text?: string;
+  footer_links_title?: string;
+  footer_contact_title?: string;
+  footer_custom_links?: Json;
+  email_address?: string;
+  address?: string;
+  footer_additional_info?: string;
+  footer_copyright_text?: string;
+}
+
 interface SiteContextType {
   siteInfo: SiteInfo;
   updateSiteInfo: (updates: Partial<SiteInfo>) => Promise<void>;
@@ -87,8 +116,8 @@ const snakeToCamel = (str: string) => {
 };
 
 // Convert siteInfo object to format suitable for Supabase
-const prepareForSupabase = (data: Partial<SiteInfo>) => {
-  const result: Record<string, any> = {};
+const prepareForSupabase = (data: Partial<SiteInfo>): Partial<SiteInfoSupabase> => {
+  const result: Partial<SiteInfoSupabase> = {};
   
   Object.keys(data).forEach(key => {
     const snakeKey = camelToSnake(key);
@@ -99,7 +128,8 @@ const prepareForSupabase = (data: Partial<SiteInfo>) => {
     } else if (key === 'footerCustomLinks') {
       result.footer_custom_links = value as Json;
     } else {
-      result[snakeKey] = value;
+      // Use type assertion to add the property to the result
+      (result as any)[snakeKey] = value;
     }
   });
   
@@ -286,17 +316,34 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       let result;
       if (existingData && existingData.length > 0) {
-        // Fix: Use supabaseData (not prepareForSupabase(updatedInfo))
+        // Type-safe update with supabaseData
         result = await supabase
           .from('site_info')
           .update(supabaseData)
           .eq('id', existingData[0].id);
       } else {
+        // For insertion, we need a complete record that satisfies the required fields
         // Convert the full updatedInfo (not just updates) to Supabase format
         const fullData = prepareForSupabase(updatedInfo);
+        
+        // Ensure all required fields are present
+        const requiredFields: (keyof SiteInfoSupabase)[] = [
+          'carousel_images', 'design_description', 'design_title', 'faq_title',
+          'materials_description', 'materials_title', 'service_description', 
+          'service_title', 'slogan', 'unique_style_title', 'whatsapp_number'
+        ];
+        
+        const missingFields = requiredFields.filter(field => fullData[field] === undefined);
+        
+        if (missingFields.length > 0) {
+          console.error('Missing required fields:', missingFields);
+          throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+        }
+        
+        // Cast to any as a last resort since we've manually checked the required fields
         result = await supabase
           .from('site_info')
-          .insert(fullData);
+          .insert(fullData as any);
       }
       
       if (result.error) {
