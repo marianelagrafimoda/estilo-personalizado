@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { MessageSquare } from 'lucide-react';
 import { Button } from './ui/button';
@@ -50,14 +49,14 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
     window.open(whatsappUrl, '_blank');
   };
   
-  const defaultClassName = "bg-lilac text-white hover:bg-lilac-dark flex items-center justify-center gap-2 font-medium transition-all duration-300 shadow-sm hover:shadow transform hover:-translate-y-0.5";
+  const defaultClassName = "bg-white text-black hover:bg-gray-100 flex items-center justify-center gap-2 font-medium transition-all duration-300 shadow-sm hover:shadow";
   
   return (
     <Button 
       onClick={handleClick}
-      className={`${defaultClassName} ${className}`}
+      className={`${defaultClassName} ${className} px-6 py-3 rounded-md text-base`}
     >
-      <MessageSquare className="h-5 w-5" />
+      <MessageSquare className="h-5 w-5 mr-2" />
       {mode === 'cart' ? 'Finalizar Compra por WhatsApp' : 'Quiero personalizar mi estilo'}
     </Button>
   );

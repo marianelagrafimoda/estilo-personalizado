@@ -156,7 +156,9 @@ const Index: React.FC = () => {
             <p className="max-w-2xl mx-auto mb-8">
               Contáctanos ahora y comienza a crear prendas únicas que reflejen tu personalidad y estilo.
             </p>
-            <WhatsAppButton className="bg-white text-black hover:bg-gray-100" />
+            <div className="flex justify-center">
+              <WhatsAppButton className="bg-white text-black hover:bg-gray-100" />
+            </div>
           </div>
         </div>
       </section>
