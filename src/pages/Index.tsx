@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ArrowRight, Gem, Palette, Users } from 'lucide-react';
 import Navbar from '../components/Navbar';

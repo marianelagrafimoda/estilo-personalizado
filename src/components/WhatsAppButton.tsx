@@ -11,7 +11,7 @@ interface WhatsAppButtonProps {
 }
 
 const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({ 
-  className = "bg-lilac hover:bg-lilac-dark text-black font-medium",
+  className = "",
   mode = 'default'
 }) => {
   const { siteInfo } = useSiteInfo();
@@ -50,12 +50,14 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
     window.open(whatsappUrl, '_blank');
   };
   
+  const defaultClassName = "bg-lilac text-white hover:bg-lilac-dark flex items-center justify-center gap-2 font-medium transition-all duration-300 shadow-sm hover:shadow transform hover:-translate-y-0.5";
+  
   return (
     <Button 
       onClick={handleClick}
-      className={className}
+      className={`${defaultClassName} ${className}`}
     >
-      <MessageSquare className="mr-2 h-5 w-5" />
+      <MessageSquare className="h-5 w-5" />
       {mode === 'cart' ? 'Finalizar Compra por WhatsApp' : 'Quiero personalizar mi estilo'}
     </Button>
   );
