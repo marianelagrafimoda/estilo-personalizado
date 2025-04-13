@@ -90,8 +90,8 @@ const DEFAULT_SITE_INFO: SiteInfo = {
   footerLinksTitle: "Enlaces Rápidos",
   footerContactTitle: "Contacto",
   footerCustomLinks: [],
-  emailAddress: "marianela.grafimoda@gmail.com",
-  address: "",
+  emailAddress: "grafimodastore@gmail.com",
+  address: "Guayaquil, Ecuador",
   footerAdditionalInfo: "",
   footerCopyrightText: "",
 };
