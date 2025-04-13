@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ArrowRight, Gem, Palette, Users } from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -95,53 +96,19 @@ const Index: React.FC = () => {
           </div>
           
           <div className="max-w-3xl mx-auto divide-y divide-lilac/20">
-            <div className="py-5">
-              <h3 className="font-medium text-lg flex items-center">
-                <span className="text-lilac-dark mr-2">
-                  <ArrowRight className="h-5 w-5" />
-                </span>
-                ¿Cuánto tiempo tarda en llegar mi pedido personalizado?
-              </h3>
-              <p className="mt-2 text-gray-600 pl-7">
-                El tiempo de entrega varía según la complejidad del diseño y la cantidad de prendas. Generalmente, los pedidos personalizados tardan entre 7 y 14 días hábiles.
-              </p>
-            </div>
-            
-            <div className="py-5">
-              <h3 className="font-medium text-lg flex items-center">
-                <span className="text-lilac-dark mr-2">
-                  <ArrowRight className="h-5 w-5" />
-                </span>
-                ¿Puedo enviar mi propio diseño para personalizarlo?
-              </h3>
-              <p className="mt-2 text-gray-600 pl-7">
-                ¡Absolutamente! Puedes enviarnos tu diseño por WhatsApp y trabajaremos juntos para aplicarlo a la prenda que elijas.
-              </p>
-            </div>
-            
-            <div className="py-5">
-              <h3 className="font-medium text-lg flex items-center">
-                <span className="text-lilac-dark mr-2">
-                  <ArrowRight className="h-5 w-5" />
-                </span>
-                ¿Ofrecen descuentos para pedidos al por mayor?
-              </h3>
-              <p className="mt-2 text-gray-600 pl-7">
-                Sí, ofrecemos precios especiales para pedidos de 10 o más prendas. Contáctanos directamente para obtener una cotización personalizada.
-              </p>
-            </div>
-            
-            <div className="py-5">
-              <h3 className="font-medium text-lg flex items-center">
-                <span className="text-lilac-dark mr-2">
-                  <ArrowRight className="h-5 w-5" />
-                </span>
-                ¿Qué métodos de pago aceptan?
-              </h3>
-              <p className="mt-2 text-gray-600 pl-7">
-                Aceptamos transferencias bancarias, depósitos y efectivo contra entrega. Los detalles de pago se proporcionarán al finalizar tu pedido.
-              </p>
-            </div>
+            {siteInfo.faqItems?.map((faq, index) => (
+              <div className="py-5" key={index}>
+                <h3 className="font-medium text-lg flex items-center">
+                  <span className="text-lilac-dark mr-2">
+                    <ArrowRight className="h-5 w-5" />
+                  </span>
+                  {faq.question}
+                </h3>
+                <p className="mt-2 text-gray-600 pl-7">
+                  {faq.answer}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

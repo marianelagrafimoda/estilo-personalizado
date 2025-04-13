@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { saveSiteInfo, uploadImage, getCarouselImages, clearCarouselImages } from '../lib/supabase';
@@ -7,6 +8,11 @@ import { Json } from '../integrations/supabase/types';
 interface CustomLink {
   label: string;
   url: string;
+}
+
+interface FaqItem {
+  question: string;
+  answer: string;
 }
 
 interface SiteInfo {
@@ -23,6 +29,7 @@ interface SiteInfo {
   serviceTitle: string;
   serviceDescription: string;
   faqTitle: string;
+  faqItems: FaqItem[];
   footerLogoUrl: string;
   footerAboutText: string;
   footerLinksTitle: string;
@@ -42,6 +49,7 @@ interface SiteInfoSupabase {
   design_title: string;
   facebook_link?: string;
   faq_title: string;
+  faq_items?: Json;
   id?: string;
   instagram_link?: string;
   materials_description: string;
@@ -85,6 +93,24 @@ const DEFAULT_SITE_INFO: SiteInfo = {
   serviceTitle: "Atención Personalizada",
   serviceDescription: "Te guiamos durante todo el proceso para asegurar que obtengas exactamente lo que deseas.",
   faqTitle: "Todo lo que necesitas saber",
+  faqItems: [
+    {
+      question: "¿Cuánto tiempo tarda en llegar mi pedido personalizado?",
+      answer: "El tiempo de entrega varía según la complejidad del diseño y la cantidad de prendas. Generalmente, los pedidos personalizados tardan entre 7 y 14 días hábiles."
+    },
+    {
+      question: "¿Puedo enviar mi propio diseño para personalizarlo?",
+      answer: "¡Absolutamente! Puedes enviarnos tu diseño por WhatsApp y trabajaremos juntos para aplicarlo a la prenda que elijas."
+    },
+    {
+      question: "¿Ofrecen descuentos para pedidos al por mayor?",
+      answer: "Sí, ofrecemos precios especiales para pedidos de 10 o más prendas. Contáctanos directamente para obtener una cotización personalizada."
+    },
+    {
+      question: "¿Qué métodos de pago aceptan?",
+      answer: "Aceptamos transferencias bancarias, depósitos y efectivo contra entrega. Los detalles de pago se proporcionarán al finalizar tu pedido."
+    }
+  ],
   footerLogoUrl: "",
   footerAboutText: "",
   footerLinksTitle: "Enlaces Rápidos",
@@ -166,6 +192,18 @@ const prepareFromSupabase = (data: Record<string, any>): Partial<SiteInfo> => {
           }
         } catch (e) {
           result.footerCustomLinks = [];
+        }
+      } else if (key === 'faq_items') {
+        try {
+          if (typeof value === 'string') {
+            result.faqItems = JSON.parse(value);
+          } else if (Array.isArray(value)) {
+            result.faqItems = value;
+          } else {
+            result.faqItems = [];
+          }
+        } catch (e) {
+          result.faqItems = DEFAULT_SITE_INFO.faqItems;
         }
       } else {
         result[camelKey] = value;

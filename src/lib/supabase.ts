@@ -113,6 +113,17 @@ export const saveSiteInfo = async (siteInfo: any): Promise<boolean> => {
       siteInfo.carousel_images = [];
     }
     
+    // Garantir que temos um array de FAQs válido
+    if (typeof siteInfo.faq_items === 'string') {
+      try {
+        siteInfo.faq_items = JSON.parse(siteInfo.faq_items);
+      } catch {
+        siteInfo.faq_items = [];
+      }
+    } else if (!Array.isArray(siteInfo.faq_items)) {
+      siteInfo.faq_items = [];
+    }
+    
     // Verificar se já existe um registro
     const { data: existingData, error: fetchError } = await supabase
       .from('site_info')

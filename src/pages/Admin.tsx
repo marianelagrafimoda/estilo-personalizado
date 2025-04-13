@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings, 
@@ -41,8 +42,9 @@ import { logAdminActivity, EntityType } from '../lib/admin-activity-logger';
 import ProductEditor from '../components/ProductEditor';
 import ProductImagesUploader from '../components/ProductImagesUploader';
 import ProductDetailModal from '../components/ProductDetailModal';
+import FaqEditor from '../components/admin/FaqEditor';
 
-const AdminPage: React.FC = () => {
+const Admin: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, isAdmin } = useAuth();
   const { siteInfo, updateSiteInfo, uploadSiteImage, clearAllImages, isLoading: isSiteLoading } = useSiteInfo();
@@ -514,7 +516,7 @@ const AdminPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen bg-gray-50 flex flex-col bg-background">
       <Navbar />
       <div className="container mx-auto px-4 py-8 flex-grow">
         <div className="mb-8">
@@ -526,27 +528,374 @@ const AdminPage: React.FC = () => {
           </p>
         </div>
 
-        <Tabs defaultValue="site-info" className="w-full">
-          <TabsList className="w-full mb-8 bg-lilac/20 p-1 rounded-lg flex flex-wrap">
-            <TabsTrigger value="site-info" className="flex-1 data-[state=active]:bg-lilac data-[state=active]:text-white">
-              <Settings className="w-4 h-4 mr-2" />
-              Información del Sitio
-            </TabsTrigger>
-            <TabsTrigger value="carousel" className="flex-1 data-[state=active]:bg-lilac data-[state=active]:text-white">
-              <ImageIcon className="w-4 h-4 mr-2" />
-              Imágenes de Carrusel
-            </TabsTrigger>
-            <TabsTrigger value="footer" className="flex-1 data-[state=active]:bg-lilac data-[state=active]:text-white">
-              <Edit3 className="w-4 h-4 mr-2" />
-              Pie de Página
-            </TabsTrigger>
-            <TabsTrigger value="products" className="flex-1 data-[state=active]:bg-lilac data-[state=active]:text-white">
-              <Tag className="w-4 h-4 mr-2" />
-              Productos
-            </TabsTrigger>
+        <Tabs defaultValue="products">
+          <TabsList className="grid w-full md:w-auto md:inline-flex grid-cols-2 md:grid-cols-none h-auto">
+            <TabsTrigger value="products">Productos</TabsTrigger>
+            <TabsTrigger value="site">Sitio</TabsTrigger>
+            <TabsTrigger value="carousel">Carrusel</TabsTrigger>
+            <TabsTrigger value="footer">Pie de página</TabsTrigger>
+            <TabsTrigger value="faq">Preguntas Frecuentes</TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="products" className="space-y-6 animate-fade-in">
+            <Card className="shadow-md border-lilac/20">
+              <CardHeader>
+                <CardTitle className="font-serif">Agregar Nuevo Producto</CardTitle>
+                <CardDescription>
+                  Complete el formulario para agregar un nuevo producto
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Título</label>
+                    <Input
+                      value={newProduct.title}
+                      onChange={(e) => setNewProduct({...newProduct, title: e.target.value})}
+                      placeholder="Nombre del producto"
+                      className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Precio ($)</label>
+                    <Input
+                      type="number"
+                      value={newProduct.price || ''}
+                      onChange={(e) => setNewProduct({...newProduct, price: parseFloat(e.target.value) || 0})}
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
+                      className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Descripción</label>
+                  <Input
+                    value={newProduct.description}
+                    onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
+                    placeholder="Descripción corta del producto"
+                    className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Imágenes del Producto</label>
+                  <div className="mt-2">
+                    <ProductImagesUploader 
+                      images={newProduct.images || []}
+                      onImagesChange={handleProductImagesChange}
+                      onImageUpload={handleUploadProductImage}
+                      maxImages={6}
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Cantidad en Stock</label>
+                  <Input
+                    type="number"
+                    value={newProduct.stockQuantity || ''}
+                    onChange={(e) => setNewProduct({...newProduct, stockQuantity: parseInt(e.target.value) || 0})}
+                    placeholder="0"
+                    min="0"
+                    className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center">
+                    <Palette className="w-4 h-4 mr-2" />
+                    Color de la Tarjeta
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="color"
+                      value={newProduct.cardColor}
+                      onChange={(e) => setNewProduct({...newProduct, cardColor: e.target.value})}
+                      className="w-10 h-10 rounded border p-1"
+                    />
+                    <Input
+                      value={newProduct.cardColor}
+                      onChange={(e) => setNewProduct({...newProduct, cardColor: e.target.value})}
+                      placeholder="#C8B6E2"
+                      className="border-lilac/30 focus:border-lilac focus:ring-lilac"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Tallas Disponibles</label>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Tallas para adultos:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {newProduct.sizes.filter(size => !size.isChildSize).map((size) => (
+                          <div key={size.id} className="flex items-center bg-gray-100 rounded-lg text-sm">
+                            <button
+                              onClick={() => {
+                                const updatedSizes = newProduct.sizes.map(s => 
+                                  s.id === size.id ? {...s, available: !s.available} : s
+                                );
+                                setNewProduct({...newProduct, sizes: updatedSizes});
+                              }}
+                              className={`px-2 py-1 rounded-l-lg ${
+                                size.available
+                                  ? 'bg-lilac text-white'
+                                  : 'bg-gray-200 text-gray-500'
+                              }`}
+                            >
+                              {size.name}
+                            </button>
+                            <button
+                              onClick={() => handleRemoveSize(size.id)}
+                              className="px-1 text-gray-500 hover:text-red-500 rounded-r-lg"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="flex mt-2">
+                        <Input
+                          value={newAdultSizeName}
+                          onChange={(e) => setNewAdultSizeName(e.target.value)}
+                          placeholder="Nueva talla adulto"
+                          className="border-lilac/30 text-sm max-w-[180px]"
+                        />
+                        <Button 
+                          size="sm" 
+                          onClick={handleAddAdultSize}
+                          className="ml-2 bg-lilac hover:bg-lilac-dark"
+                          disabled={!newAdultSizeName}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Tallas para niños:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {newProduct.sizes.filter(size => size.isChildSize).map((size) => (
+                          <div key={size.id} className="flex items-center bg-gray-100 rounded-lg text-sm">
+                            <button
+                              onClick={() => {
+                                const updatedSizes = newProduct.sizes.map(s => 
+                                  s.id === size.id ? {...s, available: !s.available} : s
+                                );
+                                setNewProduct({...newProduct, sizes: updatedSizes});
+                              }}
+                              className={`px-2 py-1 rounded-l-lg ${
+                                size.available
+                                  ? 'bg-lilac text-white'
+                                  : 'bg-gray-200 text-gray-500'
+                              }`}
+                            >
+                              {size.name}
+                            </button>
+                            <button
+                              onClick={() => handleRemoveSize(size.id)}
+                              className="px-1 text-gray-500 hover:text-red-500 rounded-r-lg"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="flex mt-2">
+                        <Input
+                          value={newChildSizeName}
+                          onChange={(e) => setNewChildSizeName(e.target.value)}
+                          placeholder="Nueva talla niño"
+                          className="border-lilac/30 text-sm max-w-[180px]"
+                        />
+                        <Button 
+                          size="sm" 
+                          onClick={handleAddChildSize}
+                          className="ml-2 bg-lilac hover:bg-lilac-dark"
+                          disabled={!newChildSizeName}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-3 border-t pt-4 mt-2">
+                  <label className="text-sm font-medium">Colores Disponibles</label>
+                  
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {newProduct.colors.map((color) => (
+                      <div key={color.id} className="flex items-center gap-2 bg-gray-100 p-1 pr-2 rounded">
+                        <div 
+                          className="w-6 h-6 rounded-full" 
+                          style={{ backgroundColor: color.hex }}
+                        ></div>
+                        <span className="text-sm">{color.name}</span>
+                        <button 
+                          onClick={() => {
+                            const newColors = newProduct.colors.filter(c => c.id !== color.id);
+                            setNewProduct({...newProduct, colors: newColors});
+                          }}
+                          className="text-red-500 hover:text-red-700 ml-1"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex flex-wrap md:flex-nowrap gap-2">
+                    <Input
+                      value={newProduct.newColorName}
+                      onChange={(e) => {
+                        // @ts-ignore
+                        setNewProduct({...newProduct, newColorName: e.target.value});
+                      }}
+                      placeholder="Nombre del color"
+                      className="border-lilac/30 focus:border-lilac focus:ring-lilac flex-1"
+                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={newProduct.newColorHex}
+                        onChange={(e) => {
+                          // @ts-ignore
+                          setNewProduct({...newProduct, newColorHex: e.target.value});
+                        }}
+                        className="w-10 h-10 rounded border p-1"
+                      />
+                      <Button
+                        onClick={() => {
+                          if (newProduct.newColorName) {
+                            const colorId = newProduct.newColorName.toLowerCase().replace(/\s+/g, '-');
+                            const newColor: Color = {
+                              id: colorId,
+                              name: newProduct.newColorName,
+                              // @ts-ignore
+                              hex: newProduct.newColorHex || '#FFFFFF'
+                            };
+                            setNewProduct({
+                              ...newProduct,
+                              colors: [...newProduct.colors, newColor],
+                              // @ts-ignore
+                              newColorName: '',
+                              // @ts-ignore
+                              newColorHex: '#FFFFFF'
+                            });
+                          }
+                        }}
+                        type="button"
+                        className="bg-lilac hover:bg-lilac-dark"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Agregar
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={handleAddProduct}
+                  className="w-full bg-lilac hover:bg-lilac-dark"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Agregar Producto
+                </Button>
+              </CardFooter>
+            </Card>
 
-          <TabsContent value="site-info" className="space-y-6 animate-fade-in">
+            {editingProduct ? (
+              <ProductEditor
+                product={editingProduct}
+                onSave={saveEditedProduct}
+                onCancel={cancelEditingProduct}
+                onImageUpload={handleUploadProductImage}
+              />
+            ) : (
+              <Card className="shadow-md border-lilac/20 mt-6">
+                <CardHeader>
+                  <CardTitle className="font-serif">Productos Existentes</CardTitle>
+                  <CardDescription>
+                    Administre los productos existentes en su tienda
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {products.length === 0 ? (
+                      <p className="text-center text-gray-500 py-8">
+                        No hay productos. Agregue uno nuevo utilizando el formulario de arriba.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {products.map((product) => (
+                          <div key={product.id} className="border rounded-lg overflow-hidden shadow-sm">
+                            <div className="relative h-40">
+                              <img 
+                                src={product.imageUrl || '/placeholder.svg'}
+                                alt={product.title}
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="mx-1"
+                                  onClick={() => startEditingProduct(product)}
+                                >
+                                  <Edit3 className="w-4 h-4 mr-1" />
+                                  Editar
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="mx-1"
+                                  onClick={() => previewProductDetails(product)}
+                                >
+                                  <Search className="w-4 h-4 mr-1" />
+                                  Ver
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="mx-1"
+                                  onClick={() => handleDeleteProduct(product.id)}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-1" />
+                                  Eliminar
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="p-3" style={{ backgroundColor: product.cardColor || '#C8B6E2' }}>
+                              <h3 className="font-medium text-white truncate">{product.title}</h3>
+                              <p className="text-white text-opacity-90 text-sm">
+                                ${product.price.toFixed(2)}
+                              </p>
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {product.sizes.filter(size => size.available).map(size => (
+                                  <span key={size.id} className="text-xs bg-white bg-opacity-30 text-white px-2 py-0.5 rounded">
+                                    {size.name}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="site" className="space-y-6 animate-fade-in">
             <Card className="shadow-md border-lilac/20">
               <CardHeader>
                 <CardTitle className="font-serif">Información General</CardTitle>
@@ -975,362 +1324,8 @@ const AdminPage: React.FC = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="products" className="space-y-6 animate-fade-in">
-            <Card className="shadow-md border-lilac/20">
-              <CardHeader>
-                <CardTitle className="font-serif">Agregar Nuevo Producto</CardTitle>
-                <CardDescription>
-                  Complete el formulario para agregar un nuevo producto
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Título</label>
-                    <Input
-                      value={newProduct.title}
-                      onChange={(e) => setNewProduct({...newProduct, title: e.target.value})}
-                      placeholder="Nombre del producto"
-                      className="border-lilac/30 focus:border-lilac focus:ring-lilac"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Precio ($)</label>
-                    <Input
-                      type="number"
-                      value={newProduct.price || ''}
-                      onChange={(e) => setNewProduct({...newProduct, price: parseFloat(e.target.value) || 0})}
-                      placeholder="0.00"
-                      min="0"
-                      step="0.01"
-                      className="border-lilac/30 focus:border-lilac focus:ring-lilac"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Descripción</label>
-                  <Input
-                    value={newProduct.description}
-                    onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
-                    placeholder="Descripción corta del producto"
-                    className="border-lilac/30 focus:border-lilac focus:ring-lilac"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Imágenes del Producto</label>
-                  <div className="mt-2">
-                    <ProductImagesUploader 
-                      images={newProduct.images || []}
-                      onImagesChange={handleProductImagesChange}
-                      onImageUpload={handleUploadProductImage}
-                      maxImages={6}
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Cantidad en Stock</label>
-                  <Input
-                    type="number"
-                    value={newProduct.stockQuantity || ''}
-                    onChange={(e) => setNewProduct({...newProduct, stockQuantity: parseInt(e.target.value) || 0})}
-                    placeholder="0"
-                    min="0"
-                    className="border-lilac/30 focus:border-lilac focus:ring-lilac"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium flex items-center">
-                    <Palette className="w-4 h-4 mr-2" />
-                    Color de la Tarjeta
-                  </label>
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="color"
-                      value={newProduct.cardColor}
-                      onChange={(e) => setNewProduct({...newProduct, cardColor: e.target.value})}
-                      className="w-10 h-10 rounded border p-1"
-                    />
-                    <Input
-                      value={newProduct.cardColor}
-                      onChange={(e) => setNewProduct({...newProduct, cardColor: e.target.value})}
-                      placeholder="#C8B6E2"
-                      className="border-lilac/30 focus:border-lilac focus:ring-lilac"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Tallas Disponibles</label>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-xs text-gray-600 mb-1">Tallas para adultos:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {newProduct.sizes.filter(size => !size.isChildSize).map((size) => (
-                          <div key={size.id} className="flex items-center bg-gray-100 rounded-lg text-sm">
-                            <button
-                              onClick={() => {
-                                const updatedSizes = newProduct.sizes.map(s => 
-                                  s.id === size.id ? {...s, available: !s.available} : s
-                                );
-                                setNewProduct({...newProduct, sizes: updatedSizes});
-                              }}
-                              className={`px-2 py-1 rounded-l-lg ${
-                                size.available
-                                  ? 'bg-lilac text-white'
-                                  : 'bg-gray-200 text-gray-500'
-                              }`}
-                            >
-                              {size.name}
-                            </button>
-                            <button
-                              onClick={() => handleRemoveSize(size.id)}
-                              className="px-1 text-gray-500 hover:text-red-500 rounded-r-lg"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      <div className="flex mt-2">
-                        <Input
-                          value={newAdultSizeName}
-                          onChange={(e) => setNewAdultSizeName(e.target.value)}
-                          placeholder="Nueva talla adulto"
-                          className="border-lilac/30 text-sm max-w-[180px]"
-                        />
-                        <Button 
-                          size="sm" 
-                          onClick={handleAddAdultSize}
-                          className="ml-2 bg-lilac hover:bg-lilac-dark"
-                          disabled={!newAdultSizeName}
-                        >
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <p className="text-xs text-gray-600 mb-1">Tallas para niños:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {newProduct.sizes.filter(size => size.isChildSize).map((size) => (
-                          <div key={size.id} className="flex items-center bg-gray-100 rounded-lg text-sm">
-                            <button
-                              onClick={() => {
-                                const updatedSizes = newProduct.sizes.map(s => 
-                                  s.id === size.id ? {...s, available: !s.available} : s
-                                );
-                                setNewProduct({...newProduct, sizes: updatedSizes});
-                              }}
-                              className={`px-2 py-1 rounded-l-lg ${
-                                size.available
-                                  ? 'bg-lilac text-white'
-                                  : 'bg-gray-200 text-gray-500'
-                              }`}
-                            >
-                              {size.name}
-                            </button>
-                            <button
-                              onClick={() => handleRemoveSize(size.id)}
-                              className="px-1 text-gray-500 hover:text-red-500 rounded-r-lg"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      <div className="flex mt-2">
-                        <Input
-                          value={newChildSizeName}
-                          onChange={(e) => setNewChildSizeName(e.target.value)}
-                          placeholder="Nueva talla niño"
-                          className="border-lilac/30 text-sm max-w-[180px]"
-                        />
-                        <Button 
-                          size="sm" 
-                          onClick={handleAddChildSize}
-                          className="ml-2 bg-lilac hover:bg-lilac-dark"
-                          disabled={!newChildSizeName}
-                        >
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-3 border-t pt-4 mt-2">
-                  <label className="text-sm font-medium">Colores Disponibles</label>
-                  
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {newProduct.colors.map((color) => (
-                      <div key={color.id} className="flex items-center gap-2 bg-gray-100 p-1 pr-2 rounded">
-                        <div 
-                          className="w-6 h-6 rounded-full" 
-                          style={{ backgroundColor: color.hex }}
-                        ></div>
-                        <span className="text-sm">{color.name}</span>
-                        <button 
-                          onClick={() => {
-                            const newColors = newProduct.colors.filter(c => c.id !== color.id);
-                            setNewProduct({...newProduct, colors: newColors});
-                          }}
-                          className="text-red-500 hover:text-red-700 ml-1"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="flex flex-wrap md:flex-nowrap gap-2">
-                    <Input
-                      value={newProduct.newColorName}
-                      onChange={(e) => {
-                        // @ts-ignore
-                        setNewProduct({...newProduct, newColorName: e.target.value});
-                      }}
-                      placeholder="Nombre del color"
-                      className="border-lilac/30 focus:border-lilac focus:ring-lilac flex-1"
-                    />
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={newProduct.newColorHex}
-                        onChange={(e) => {
-                          // @ts-ignore
-                          setNewProduct({...newProduct, newColorHex: e.target.value});
-                        }}
-                        className="w-10 h-10 rounded border p-1"
-                      />
-                      <Button
-                        onClick={() => {
-                          if (newProduct.newColorName) {
-                            const colorId = newProduct.newColorName.toLowerCase().replace(/\s+/g, '-');
-                            const newColor: Color = {
-                              id: colorId,
-                              name: newProduct.newColorName,
-                              // @ts-ignore
-                              hex: newProduct.newColorHex || '#FFFFFF'
-                            };
-                            setNewProduct({
-                              ...newProduct,
-                              colors: [...newProduct.colors, newColor],
-                              // @ts-ignore
-                              newColorName: '',
-                              // @ts-ignore
-                              newColorHex: '#FFFFFF'
-                            });
-                          }
-                        }}
-                        type="button"
-                        className="bg-lilac hover:bg-lilac-dark"
-                      >
-                        <Plus className="w-4 h-4 mr-1" />
-                        Agregar
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  onClick={handleAddProduct}
-                  className="w-full bg-lilac hover:bg-lilac-dark"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Agregar Producto
-                </Button>
-              </CardFooter>
-            </Card>
-
-            {editingProduct ? (
-              <ProductEditor
-                product={editingProduct}
-                onSave={saveEditedProduct}
-                onCancel={cancelEditingProduct}
-                onImageUpload={handleUploadProductImage}
-              />
-            ) : (
-              <Card className="shadow-md border-lilac/20 mt-6">
-                <CardHeader>
-                  <CardTitle className="font-serif">Productos Existentes</CardTitle>
-                  <CardDescription>
-                    Administre los productos existentes en su tienda
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {products.length === 0 ? (
-                      <p className="text-center text-gray-500 py-8">
-                        No hay productos. Agregue uno nuevo utilizando el formulario de arriba.
-                      </p>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {products.map((product) => (
-                          <div key={product.id} className="border rounded-lg overflow-hidden shadow-sm">
-                            <div className="relative h-40">
-                              <img 
-                                src={product.imageUrl || '/placeholder.svg'}
-                                alt={product.title}
-                                className="w-full h-full object-cover"
-                              />
-                              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                <Button
-                                  variant="secondary"
-                                  size="sm"
-                                  className="mx-1"
-                                  onClick={() => startEditingProduct(product)}
-                                >
-                                  <Edit3 className="w-4 h-4 mr-1" />
-                                  Editar
-                                </Button>
-                                <Button
-                                  variant="secondary"
-                                  size="sm"
-                                  className="mx-1"
-                                  onClick={() => previewProductDetails(product)}
-                                >
-                                  <Search className="w-4 h-4 mr-1" />
-                                  Ver
-                                </Button>
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  className="mx-1"
-                                  onClick={() => handleDeleteProduct(product.id)}
-                                >
-                                  <Trash2 className="w-4 h-4 mr-1" />
-                                  Eliminar
-                                </Button>
-                              </div>
-                            </div>
-                            <div className="p-3" style={{ backgroundColor: product.cardColor || '#C8B6E2' }}>
-                              <h3 className="font-medium text-white truncate">{product.title}</h3>
-                              <p className="text-white text-opacity-90 text-sm">
-                                ${product.price.toFixed(2)}
-                              </p>
-                              <div className="mt-2 flex flex-wrap gap-1">
-                                {product.sizes.filter(size => size.available).map(size => (
-                                  <span key={size.id} className="text-xs bg-white bg-opacity-30 text-white px-2 py-0.5 rounded">
-                                    {size.name}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+          <TabsContent value="faq" className="space-y-6">
+            <FaqEditor />
           </TabsContent>
         </Tabs>
       </div>
@@ -1347,4 +1342,4 @@ const AdminPage: React.FC = () => {
   );
 };
 
-export default AdminPage;
+export default Admin;
