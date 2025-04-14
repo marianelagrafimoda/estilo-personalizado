@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useSiteInfo } from '../contexts/SiteContext';
 import { ChevronLeft, ChevronRight, Palette } from 'lucide-react';
@@ -89,7 +90,9 @@ const ProductCarousel: React.FC = () => {
           <p className="text-gray-700 text-xl md:text-2xl mb-8 animate-slide-up">
             {siteInfo.slogan}
           </p>
-          <WhatsAppButton className="px-6 py-3 rounded-md text-lg" />
+          <div className="flex justify-center">
+            <WhatsAppButton className="px-6 py-3 rounded-md text-lg" />
+          </div>
         </div>
       </div>
     );
@@ -125,7 +128,9 @@ const ProductCarousel: React.FC = () => {
           <p className="text-white text-xl md:text-2xl mb-8 animate-slide-up">
             {siteInfo.slogan}
           </p>
-          <WhatsAppButton className="px-6 py-3 rounded-md text-lg" />
+          <div className="flex justify-center">
+            <WhatsAppButton className="px-6 py-3 rounded-md text-lg" />
+          </div>
         </div>
       </div>
 

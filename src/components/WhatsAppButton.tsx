@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { MessageSquare } from 'lucide-react';
 import { Button } from './ui/button';
@@ -49,7 +50,7 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
     window.open(whatsappUrl, '_blank');
   };
   
-  const defaultClassName = "bg-white text-black hover:bg-gray-100 flex items-center justify-center gap-2 font-medium transition-all duration-300 shadow-sm hover:shadow";
+  const defaultClassName = "bg-white text-black hover:bg-gray-100 flex items-center justify-center gap-2 font-medium transition-all duration-300 shadow-sm hover:shadow mx-auto";
   
   return (
     <Button 

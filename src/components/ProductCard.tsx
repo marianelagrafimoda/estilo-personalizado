@@ -65,7 +65,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <>
       <Card 
-        className="overflow-hidden transition-all duration-300 shadow-md hover:shadow-lg"
+        className="overflow-hidden transition-all duration-300 shadow-md hover:shadow-lg h-full flex flex-col"
         style={{ backgroundColor: product.cardColor + '10' }}
       >
         <div className="relative h-52 md:h-64 overflow-hidden cursor-pointer">
@@ -122,11 +122,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
         <CardHeader className="p-4 pb-2">
           <CardTitle className="font-medium text-xl mb-2 text-lilac-dark">{product.title}</CardTitle>
-          <CardDescription className="text-base text-gray-600 mb-2">{product.description}</CardDescription>
+          <CardDescription className="text-base text-gray-600 mb-2 line-clamp-3 md:h-[4.5rem]">{product.description}</CardDescription>
           <p className="font-bold text-xl mb-2">${product.price.toFixed(2)}</p>
         </CardHeader>
         
-        <CardContent className="p-4 pt-0">
+        <CardContent className="p-4 pt-0 flex-grow">
           <Button 
             onClick={() => setShowProductDetails(!showProductDetails)}
             variant="outline"
@@ -222,7 +222,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
         </CardContent>
         
-        <CardFooter className="p-4 pt-0">
+        <CardFooter className="p-4 pt-0 mt-auto">
           <Button 
             onClick={handleAddToCart}
             disabled={showProductDetails && (!selectedSize || !selectedColor || product.stockQuantity <= 0)}
