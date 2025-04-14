@@ -1,4 +1,3 @@
-
 import { supabase } from '../integrations/supabase/client';
 import { verifyAndCreateBuckets } from './admin-activity-logger';
 import { Json } from '../integrations/supabase/types';
@@ -240,6 +239,31 @@ export const clearCarouselImages = async (): Promise<boolean> => {
     return false;
   } catch (error) {
     console.error('Falha ao limpar imagens do carrossel:', error);
+    return false;
+  }
+};
+
+/**
+ * Atualiza um pedido existente no banco de dados
+ */
+export const updatePedido = async (pedidoId: string, pedidoData: any): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('pedidos')
+      .update({
+        ...pedidoData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', pedidoId);
+      
+    if (error) {
+      console.error('Erro ao atualizar pedido:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Falha ao atualizar pedido:', error);
     return false;
   }
 };

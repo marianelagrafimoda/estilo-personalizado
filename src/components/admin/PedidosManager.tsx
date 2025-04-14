@@ -17,7 +17,10 @@ import {
   User,
   DollarSign,
   FileText,
-  RefreshCcw
+  RefreshCcw,
+  Edit,
+  Save,
+  X
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import { supabase } from '../../integrations/supabase/client';
@@ -48,6 +51,15 @@ const PedidosManager: React.FC = () => {
   const [direccion, setDireccion] = useState('');
   const [valor, setValor] = useState('');
   const [descripcion, setDescripcion] = useState('');
+  
+  // Estado para edición de pedidos
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editNombre, setEditNombre] = useState('');
+  const [editTelefono, setEditTelefono] = useState('');
+  const [editDireccion, setEditDireccion] = useState('');
+  const [editValor, setEditValor] = useState('');
+  const [editDescripcion, setEditDescripcion] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   
   // Cargar pedidos al montar el componente
   useEffect(() => {
@@ -209,6 +221,88 @@ const PedidosManager: React.FC = () => {
         description: 'No se pudo actualizar el estado del pedido',
         variant: 'destructive',
       });
+    }
+  };
+  
+  // Función para comenzar a editar un pedido
+  const startEditing = (pedido: Pedido) => {
+    setEditingId(pedido.id);
+    setEditNombre(pedido.nombre);
+    setEditTelefono(pedido.telefono);
+    setEditDireccion(pedido.direccion);
+    setEditValor(pedido.valor.toString());
+    setEditDescripcion(pedido.descripcion);
+  };
+  
+  // Función para cancelar la edición
+  const cancelEditing = () => {
+    setEditingId(null);
+  };
+  
+  // Función para guardar los cambios del pedido editado
+  const saveEditing = async () => {
+    if (!editNombre || !editTelefono || !editDireccion || !editValor || !editDescripcion) {
+      toast({
+        title: 'Error',
+        description: 'Todos los campos son obligatorios',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    try {
+      setIsSaving(true);
+      
+      const valorNumerico = parseFloat(editValor);
+      if (isNaN(valorNumerico)) {
+        throw new Error('El valor debe ser un número válido');
+      }
+      
+      const { error } = await supabase
+        .from('pedidos')
+        .update({
+          nombre: editNombre,
+          telefono: editTelefono,
+          direccion: editDireccion,
+          valor: valorNumerico,
+          descripcion: editDescripcion,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingId);
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Actualizar la lista de pedidos
+      setPedidos(pedidos.map(pedido => 
+        pedido.id === editingId 
+          ? { 
+              ...pedido, 
+              nombre: editNombre,
+              telefono: editTelefono,
+              direccion: editDireccion,
+              valor: valorNumerico,
+              descripcion: editDescripcion
+            } 
+          : pedido
+      ));
+      
+      setEditingId(null);
+      
+      toast({
+        title: '¡Actualizado!',
+        description: 'Pedido actualizado correctamente',
+      });
+    } catch (error: any) {
+      console.error('Error al actualizar pedido:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'No se pudo actualizar el pedido',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
   
@@ -385,69 +479,159 @@ const PedidosManager: React.FC = () => {
                 <TableBody>
                   {pedidos.map((pedido) => (
                     <TableRow key={pedido.id}>
-                      <TableCell className="font-mono text-xs">
-                        {formatDate(pedido.created_at)}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {pedido.nombre}
-                      </TableCell>
-                      <TableCell>
-                        <a 
-                          href={getWhatsAppLink(pedido.telefono)} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center text-blue-600 hover:underline"
-                        >
-                          <Phone className="h-3 w-3 mr-1" />
-                          {pedido.telefono}
-                        </a>
-                      </TableCell>
-                      <TableCell>
-                        ${parseFloat(pedido.valor.toString()).toFixed(2)}
-                      </TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          pedido.estado === 'completado' 
-                            ? 'bg-green-100 text-green-800' 
-                            : pedido.estado === 'cancelado'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {pedido.estado}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => updateEstado(pedido.id, 'completado')}
-                            disabled={pedido.estado === 'completado'}
-                            title="Marcar como completado"
-                          >
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                          </Button>
-                          
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => updateEstado(pedido.id, 'cancelado')}
-                            disabled={pedido.estado === 'cancelado'}
-                            title="Marcar como cancelado"
-                          >
-                            <XCircle className="h-4 w-4 text-red-600" />
-                          </Button>
-                          
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(pedido.id)}
-                            title="Eliminar pedido"
-                          >
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      {editingId === pedido.id ? (
+                        <TableCell colSpan={6}>
+                          <div className="space-y-3 p-2 border rounded-md bg-gray-50">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-xs font-medium">Nombre</label>
+                                <Input 
+                                  value={editNombre}
+                                  onChange={(e) => setEditNombre(e.target.value)}
+                                  className="mt-1 text-sm"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium">Teléfono</label>
+                                <Input 
+                                  value={editTelefono}
+                                  onChange={(e) => setEditTelefono(e.target.value)}
+                                  className="mt-1 text-sm"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <label className="text-xs font-medium">Dirección</label>
+                              <Input 
+                                value={editDireccion}
+                                onChange={(e) => setEditDireccion(e.target.value)}
+                                className="mt-1 text-sm"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="text-xs font-medium">Valor ($)</label>
+                              <Input 
+                                type="number"
+                                value={editValor}
+                                onChange={(e) => setEditValor(e.target.value)}
+                                min="0"
+                                step="0.01"
+                                className="mt-1 text-sm"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="text-xs font-medium">Descripción</label>
+                              <Textarea 
+                                value={editDescripcion}
+                                onChange={(e) => setEditDescripcion(e.target.value)}
+                                className="mt-1 text-sm min-h-[80px]"
+                              />
+                            </div>
+                            
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={cancelEditing}
+                              >
+                                <X className="h-4 w-4 mr-1" />
+                                Cancelar
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={saveEditing}
+                                disabled={isSaving}
+                                className="bg-lilac hover:bg-lilac-dark"
+                              >
+                                {isSaving ? (
+                                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                                ) : (
+                                  <Save className="h-4 w-4 mr-1" />
+                                )}
+                                Guardar
+                              </Button>
+                            </div>
+                          </div>
+                        </TableCell>
+                      ) : (
+                        <>
+                          <TableCell className="font-mono text-xs">
+                            {formatDate(pedido.created_at)}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {pedido.nombre}
+                          </TableCell>
+                          <TableCell>
+                            <a 
+                              href={getWhatsAppLink(pedido.telefono)} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center text-blue-600 hover:underline"
+                            >
+                              <Phone className="h-3 w-3 mr-1" />
+                              {pedido.telefono}
+                            </a>
+                          </TableCell>
+                          <TableCell>
+                            ${parseFloat(pedido.valor.toString()).toFixed(2)}
+                          </TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              pedido.estado === 'completado' 
+                                ? 'bg-green-100 text-green-800' 
+                                : pedido.estado === 'cancelado'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {pedido.estado}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => startEditing(pedido)}
+                                title="Editar pedido"
+                              >
+                                <Edit className="h-4 w-4 text-blue-600" />
+                              </Button>
+                              
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => updateEstado(pedido.id, 'completado')}
+                                disabled={pedido.estado === 'completado'}
+                                title="Marcar como completado"
+                              >
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                              </Button>
+                              
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => updateEstado(pedido.id, 'cancelado')}
+                                disabled={pedido.estado === 'cancelado'}
+                                title="Marcar como cancelado"
+                              >
+                                <XCircle className="h-4 w-4 text-red-600" />
+                              </Button>
+                              
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(pedido.id)}
+                                title="Eliminar pedido"
+                              >
+                                <Trash2 className="h-4 w-4 text-red-600" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
