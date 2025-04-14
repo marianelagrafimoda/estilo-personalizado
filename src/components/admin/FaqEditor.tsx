@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -17,16 +17,28 @@ const FaqEditor: React.FC = () => {
   const { siteInfo, updateSiteInfo } = useSiteInfo();
   const { toast } = useToast();
   
-  const [faqItems, setFaqItems] = useState<FaqItem[]>(
-    siteInfo.faqItems || [
-      { question: '', answer: '' },
-      { question: '', answer: '' },
-      { question: '', answer: '' },
-      { question: '', answer: '' }
-    ]
-  );
+  // Inicializar con los datos de siteInfo o con valores predeterminados
+  const [faqItems, setFaqItems] = useState<FaqItem[]>([]);
+  const [faqTitle, setFaqTitle] = useState('');
   
-  const [faqTitle, setFaqTitle] = useState(siteInfo.faqTitle || 'Todo lo que necesitas saber');
+  // Actualizar el estado cuando cambian los datos en siteInfo
+  useEffect(() => {
+    if (siteInfo) {
+      setFaqTitle(siteInfo.faqTitle || 'Todo lo que necesitas saber');
+      
+      if (siteInfo.faqItems && Array.isArray(siteInfo.faqItems)) {
+        setFaqItems(siteInfo.faqItems);
+      } else {
+        // Valores predeterminados si no hay datos
+        setFaqItems([
+          { question: '', answer: '' },
+          { question: '', answer: '' },
+          { question: '', answer: '' },
+          { question: '', answer: '' }
+        ]);
+      }
+    }
+  }, [siteInfo]);
   
   const handleAddFaq = () => {
     setFaqItems([...faqItems, { question: '', answer: '' }]);
@@ -72,6 +84,7 @@ const FaqEditor: React.FC = () => {
     }
     
     try {
+      // Guardar tanto el título como los elementos FAQ
       await updateSiteInfo({
         faqTitle,
         faqItems

@@ -91,6 +91,7 @@ export type Database = {
           design_description: string
           design_title: string
           facebook_link: string | null
+          faq_items: Json | null
           faq_title: string
           id: string
           instagram_link: string | null
@@ -109,6 +110,7 @@ export type Database = {
           design_description: string
           design_title: string
           facebook_link?: string | null
+          faq_items?: Json | null
           faq_title: string
           id?: string
           instagram_link?: string | null
@@ -127,6 +129,7 @@ export type Database = {
           design_description?: string
           design_title?: string
           facebook_link?: string | null
+          faq_items?: Json | null
           faq_title?: string
           id?: string
           instagram_link?: string | null

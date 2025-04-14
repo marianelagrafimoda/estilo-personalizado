@@ -152,6 +152,8 @@ const prepareForSupabase = (data: Partial<SiteInfo>): Partial<SiteInfoSupabase> 
       result.carousel_images = value as Json;
     } else if (key === 'footerCustomLinks') {
       result.footer_custom_links = value as Json;
+    } else if (key === 'faqItems') {
+      result.faq_items = value as Json;
     } else {
       // Use type assertion to add the property to the result
       (result as any)[snakeKey] = value;
