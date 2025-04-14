@@ -23,6 +23,17 @@ export const setupDatabase = async (): Promise<boolean> => {
       return false;
     }
     
+    // Verifica a tabela de pedidos
+    const { error: pedidosError } = await supabase
+      .from('pedidos')
+      .select('count', { count: 'exact', head: true });
+    
+    // Se houver erro, é provável que a tabela não exista (para verificação apenas)
+    if (pedidosError) {
+      console.warn("A tabela de pedidos pode não existir:", pedidosError);
+      // Continua a execução mesmo com erro na verificação
+    }
+    
     console.log("Configuração do banco de dados concluída com sucesso");
     return true;
   } catch (error) {

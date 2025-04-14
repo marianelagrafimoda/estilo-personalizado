@@ -39,6 +39,42 @@ export type Database = {
         }
         Relationships: []
       }
+      pedidos: {
+        Row: {
+          created_at: string
+          descripcion: string
+          direccion: string
+          estado: string
+          id: string
+          nombre: string
+          telefono: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          descripcion: string
+          direccion: string
+          estado?: string
+          id?: string
+          nombre: string
+          telefono: string
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string
+          direccion?: string
+          estado?: string
+          id?: string
+          nombre?: string
+          telefono?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           card_color: string | null

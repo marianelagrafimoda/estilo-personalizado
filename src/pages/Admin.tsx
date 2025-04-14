@@ -17,7 +17,8 @@ import {
   Instagram,
   Facebook,
   RefreshCcw,
-  Search
+  Search,
+  ClipboardList
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -43,6 +44,7 @@ import ProductEditor from '../components/ProductEditor';
 import ProductImagesUploader from '../components/ProductImagesUploader';
 import ProductDetailModal from '../components/ProductDetailModal';
 import FaqEditor from '../components/admin/FaqEditor';
+import PedidosManager from '../components/admin/PedidosManager';
 
 const Admin: React.FC = () => {
   const navigate = useNavigate();
@@ -535,6 +537,7 @@ const Admin: React.FC = () => {
             <TabsTrigger value="carousel">Carrusel</TabsTrigger>
             <TabsTrigger value="footer">Pie de página</TabsTrigger>
             <TabsTrigger value="faq">Preguntas Frecuentes</TabsTrigger>
+            <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
           </TabsList>
           
           <TabsContent value="products" className="space-y-6 animate-fade-in">
@@ -1326,6 +1329,10 @@ const Admin: React.FC = () => {
 
           <TabsContent value="faq" className="space-y-6">
             <FaqEditor />
+          </TabsContent>
+          
+          <TabsContent value="pedidos" className="space-y-6">
+            <PedidosManager />
           </TabsContent>
         </Tabs>
       </div>
