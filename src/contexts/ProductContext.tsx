@@ -1,43 +1,29 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '../integrations/supabase/client';
-import { uploadImage } from '../lib/supabase';
 import { useToast } from '../hooks/use-toast';
-import { useAuth } from './AuthContext';
 
-export interface Size {
-  id: string;
-  name: string;
-  available: boolean;
-  isChildSize?: boolean;
-}
-
-export interface Color {
-  id: string;
-  name: string;
-  hex: string;
+interface ProductContextType {
+  products: Product[];
+  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
+  updateProduct: (id: string, updates: Partial<Product>) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
+  revalidateProducts: () => void;
 }
 
 export interface Product {
   id: string;
   title: string;
-  description?: string;
+  description: string;
   price: number;
-  imageUrl?: string;
-  images?: string[];
-  sizes: Size[];
-  colors: Color[];
-  stockQuantity: number;
-  cardColor?: string;
-  segments?: string[];
-}
-
-interface ProductContextType {
-  products: Product[];
-  addProduct: (product: Omit<Product, 'id'> & { id?: string }) => Promise<void>;
-  updateProduct: (id: string, updates: Partial<Product>) => Promise<void>;
-  removeProduct: (id: string) => Promise<void>;
-  uploadProductImage: (file: File) => Promise<string>;
-  isLoading: boolean;
+  images: string[];
+  colors: { name: string; hex: string }[];
+  sizes: string[];
+  stock?: number;
+  featured?: boolean;
+  newColorName?: string; // Add this field
+  newColorHex?: string;  // Add this field
+  segments?: string[];   // Keep the segments field
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -50,327 +36,72 @@ export const useProducts = () => {
   return context;
 };
 
-const DEFAULT_PRODUCTS: Product[] = [
-  {
-    id: crypto.randomUUID(),
-    title: 'Camiseta Personalizada',
-    description: 'Camiseta de algodón premium lista para personalizar con tu diseño favorito',
-    price: 15.99,
-    imageUrl: '/placeholder.svg',
-    images: ['/placeholder.svg'],
-    cardColor: '#C8B6E2',
-    stockQuantity: 25,
-    colors: [
-      { id: 'white', name: 'Blanco', hex: '#FFFFFF' },
-      { id: 'black', name: 'Negro', hex: '#000000' },
-      { id: 'blue', name: 'Azul', hex: '#0EA5E9' }
-    ],
-    sizes: [
-      { id: 's', name: 'S', available: true, isChildSize: false },
-      { id: 'm', name: 'M', available: true, isChildSize: false },
-      { id: 'l', name: 'L', available: true, isChildSize: false },
-      { id: 'xl', name: 'XL', available: false, isChildSize: false },
-      { id: 'child-s', name: 'S (Niño)', available: true, isChildSize: true },
-      { id: 'child-m', name: 'M (Niño)', available: true, isChildSize: true },
-    ],
-    segments: ['segment1', 'segment2']
-  },
-  {
-    id: crypto.randomUUID(),
-    title: 'Sudadera con Capucha',
-    description: 'Sudadera cómoda y cálida, perfecta para estampados y bordados personalizados',
-    price: 29.99,
-    imageUrl: '/placeholder.svg',
-    cardColor: '#E6DEFF',
-    stockQuantity: 15,
-    colors: [
-      { id: 'gray', name: 'Gris', hex: '#888888' },
-      { id: 'black', name: 'Negro', hex: '#000000' }
-    ],
-    sizes: [
-      { id: 's', name: 'S', available: false, isChildSize: false },
-      { id: 'm', name: 'M', available: true, isChildSize: false },
-      { id: 'l', name: 'L', available: true, isChildSize: false },
-      { id: 'xl', name: 'XL', available: true, isChildSize: false },
-      { id: 'child-s', name: 'S (Niño)', available: true, isChildSize: true },
-      { id: 'child-m', name: 'M (Niño)', available: true, isChildSize: true },
-    ],
-    segments: ['segment3', 'segment4']
-  },
-  {
-    id: crypto.randomUUID(),
-    title: 'Gorra Personalizada',
-    description: 'Gorra de alta calidad para personalizar con tu logo o diseño preferido',
-    price: 12.99,
-    imageUrl: '/placeholder.svg',
-    cardColor: '#A78BDA',
-    stockQuantity: 30,
-    colors: [
-      { id: 'white', name: 'Blanco', hex: '#FFFFFF' },
-      { id: 'red', name: 'Rojo', hex: '#EF4444' }
-    ],
-    sizes: [
-      { id: 'uni', name: 'Única', available: true, isChildSize: false },
-      { id: 'child-uni', name: 'Única (Niño)', available: true, isChildSize: true },
-    ],
-    segments: ['segment5', 'segment6']
-  }
-];
-
-const productToSupabase = (product: Omit<Product, 'id'> & { id?: string }) => {
-  const productId = product.id || crypto.randomUUID();
-  
-  return {
-    id: productId,
-    title: product.title,
-    description: product.description || '',
-    price: product.price,
-    image_url: product.imageUrl || '/placeholder.svg',
-    images: JSON.stringify(product.images || [product.imageUrl || '/placeholder.svg']),
-    sizes: JSON.stringify(product.sizes),
-    colors: JSON.stringify(product.colors),
-    stock_quantity: product.stockQuantity,
-    card_color: product.cardColor || '#C8B6E2',
-    segments: JSON.stringify(product.segments || [])
-  };
-};
-
-const partialProductToSupabase = (product: Partial<Product> & { id?: string }) => {
-  const result: Record<string, any> = {};
-  
-  if (product.id !== undefined) result.id = product.id;
-  if (product.title !== undefined) result.title = product.title;
-  if (product.description !== undefined) result.description = product.description;
-  if (product.price !== undefined) result.price = product.price;
-  if (product.imageUrl !== undefined) result.image_url = product.imageUrl;
-  if (product.images !== undefined) result.images = JSON.stringify(product.images);
-  if (product.sizes !== undefined) result.sizes = JSON.stringify(product.sizes);
-  if (product.colors !== undefined) result.colors = JSON.stringify(product.colors);
-  if (product.stockQuantity !== undefined) result.stock_quantity = product.stockQuantity;
-  if (product.cardColor !== undefined) result.card_color = product.cardColor;
-  if (product.segments !== undefined) result.segments = JSON.stringify(product.segments);
-  
-  return result;
-};
-
-const supabaseToProduct = (data: any): Product => {
-  let sizes = data.sizes;
-  let colors = data.colors;
-  let images = data.images;
-  let segments = data.segments;
-  
-  if (typeof sizes === 'string') {
-    try {
-      sizes = JSON.parse(sizes);
-    } catch (e) {
-      sizes = [];
-    }
-  }
-  
-  if (typeof colors === 'string') {
-    try {
-      colors = JSON.parse(colors);
-    } catch (e) {
-      colors = [];
-    }
-  }
-  
-  if (typeof images === 'string') {
-    try {
-      images = JSON.parse(images);
-    } catch (e) {
-      images = data.image_url ? [data.image_url] : ['/placeholder.svg'];
-    }
-  } else if (!images) {
-    images = data.image_url ? [data.image_url] : ['/placeholder.svg'];
-  }
-  
-  if (typeof segments === 'string') {
-    try {
-      segments = JSON.parse(segments);
-    } catch (e) {
-      segments = [];
-    }
-  }
-  
-  return {
-    id: data.id,
-    title: data.title,
-    description: data.description || '',
-    price: data.price,
-    imageUrl: data.image_url || '/placeholder.svg',
-    images: images,
-    sizes: sizes || [],
-    colors: colors || [],
-    stockQuantity: data.stock_quantity || 0,
-    cardColor: data.card_color || '#C8B6E2',
-    segments: segments || []
-  };
-};
-
 export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isRevalidating, setIsRevalidating] = useState(false);
   const { toast } = useToast();
-  const { isAdmin, user } = useAuth();
-  
-  const fetchProducts = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching products:', error);
-        throw error;
-      }
-      
-      if (data && data.length > 0) {
-        const formattedProducts = data.map(supabaseToProduct);
-        setProducts(formattedProducts);
-      } else {
-        const storedProducts = localStorage.getItem('products');
-        if (storedProducts) {
-          setProducts(JSON.parse(storedProducts));
-        } else {
-          setProducts(DEFAULT_PRODUCTS);
-          localStorage.setItem('products', JSON.stringify(DEFAULT_PRODUCTS));
-          
-          if (isAdmin) {
-            try {
-              for (const product of DEFAULT_PRODUCTS) {
-                await supabase
-                  .from('products')
-                  .insert(productToSupabase(product));
-              }
-              console.log('Seeded default products to Supabase');
-            } catch (seedError) {
-              console.error('Failed to seed default products:', seedError);
-            }
-          }
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*');
+
+        if (error) {
+          console.error('Error fetching products:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load products.",
+            variant: "destructive",
+          });
         }
-      }
-    } catch (error) {
-      console.error('Failed to fetch products from Supabase:', error);
-      
-      const storedProducts = localStorage.getItem('products');
-      if (storedProducts) {
-        setProducts(JSON.parse(storedProducts));
-      } else {
-        setProducts(DEFAULT_PRODUCTS);
-        localStorage.setItem('products', JSON.stringify(DEFAULT_PRODUCTS));
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  useEffect(() => {
-    fetchProducts();
-  }, [isAdmin]);
 
-  useEffect(() => {
-    const channel = supabase
-      .channel('public:products')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'products' 
-      }, (payload) => {
-        console.log('Realtime update:', payload);
-        fetchProducts();
-      })
-      .subscribe();
-      
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const uploadProductImage = async (file: File): Promise<string> => {
-    try {
-      return await uploadImage(file, 'product_images', 'products/');
-    } catch (error) {
-      console.error('Error uploading product image:', error);
-      toast({
-        title: "Error al subir imagen",
-        description: "No se pudo cargar la imagen. Inténtalo de nuevo.",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  const addProduct = async (product: Omit<Product, 'id'> & { id?: string }) => {
-    try {
-      if (!user) {
+        if (data) {
+          setProducts(data);
+        }
+      } catch (error) {
+        console.error('Unexpected error fetching products:', error);
         toast({
-          title: "Acceso denegado",
-          description: "Debe iniciar sesión como administrador para añadir productos.",
+          title: "Error",
+          description: "An unexpected error occurred while loading products.",
           variant: "destructive",
         });
-        return;
       }
+    };
 
-      const newProductId = product.id || crypto.randomUUID();
-      
-      const newProduct = {
-        ...product,
-        id: newProductId,
-        description: product.description || '',
-        imageUrl: product.imageUrl || '/placeholder.svg',
-        cardColor: product.cardColor || '#C8B6E2'
-      };
-      
-      const newProductAsProduct = newProduct as Product;
-      
-      const supabaseData = productToSupabase(newProduct);
-      
+    fetchProducts();
+  }, [toast, isRevalidating]);
+
+  const addProduct = async (product: Omit<Product, 'id'>) => {
+    try {
+      const newProductId = uuidv4();
+      const newProduct = { ...product, id: newProductId };
+
       const { error } = await supabase
         .from('products')
-        .insert(supabaseData);
-      
+        .insert([newProduct]);
+
       if (error) {
-        console.error('Error adding product to Supabase:', error);
-        
-        if (error.message.includes('violates row-level security policy')) {
-          toast({
-            title: "Error de permisos",
-            description: "Su sesión no tiene permisos de administrador. Por favor, cierre sesión y vuelva a iniciar sesión.",
-            variant: "destructive",
-            duration: 5000,
-          });
-          return;
-        }
-        
+        console.error('Error adding product:', error);
         toast({
-          title: "Error al añadir producto",
-          description: error.message,
+          title: "Error",
+          description: "Failed to add product.",
           variant: "destructive",
         });
-        
-        const updatedProducts = [...products, newProductAsProduct];
-        setProducts(updatedProducts);
-        localStorage.setItem('products', JSON.stringify(updatedProducts));
         return;
       }
-      
-      const updatedProducts = [...products, newProductAsProduct];
-      setProducts(updatedProducts);
-      localStorage.setItem('products', JSON.stringify(updatedProducts));
-      
+
+      setProducts(prevProducts => [...prevProducts, newProduct]);
       toast({
-        title: "Producto añadido",
-        description: "El producto ha sido añadido correctamente.",
+        title: "Success",
+        description: "Product added successfully.",
       });
     } catch (error) {
-      console.error('Failed to add product:', error);
-      
+      console.error('Unexpected error adding product:', error);
       toast({
-        title: "Error al añadir producto",
-        description: "Ocurrió un error inesperado. Intente nuevamente.",
+        title: "Error",
+        description: "An unexpected error occurred while adding the product.",
         variant: "destructive",
       });
     }
@@ -378,137 +109,76 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateProduct = async (id: string, updates: Partial<Product>) => {
     try {
-      if (!user) {
+      const { error } = await supabase
+        .from('products')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error updating product:', error);
         toast({
-          title: "Acceso denegado",
-          description: "Debe iniciar sesión como administrador para modificar productos.",
+          title: "Error",
+          description: "Failed to update product.",
           variant: "destructive",
         });
         return;
       }
 
-      const updatedProducts = products.map(product => 
-        product.id === id ? { 
-          ...product, 
-          ...updates,
-          description: updates.description ?? product.description ?? '',
-          imageUrl: updates.imageUrl ?? product.imageUrl ?? '/placeholder.svg',
-          cardColor: updates.cardColor ?? product.cardColor ?? '#C8B6E2'
-        } : product
+      setProducts(prevProducts =>
+        prevProducts.map(product => (product.id === id ? { ...product, ...updates } : product))
       );
-      
-      setProducts(updatedProducts);
-      localStorage.setItem('products', JSON.stringify(updatedProducts));
-      
-      const supabaseData = partialProductToSupabase({ id, ...updates });
-      delete supabaseData.id;
-      
-      const { error } = await supabase
-        .from('products')
-        .update(supabaseData)
-        .eq('id', id);
-      
-      if (error) {
-        console.error('Error updating product in Supabase:', error);
-        
-        if (error.message.includes('violates row-level security policy')) {
-          toast({
-            title: "Error de permisos",
-            description: "Su sesión no tiene permisos de administrador. Por favor, cierre sesión y vuelva a iniciar sesión.",
-            variant: "destructive",
-            duration: 5000,
-          });
-          return;
-        }
-        
-        toast({
-          title: "Error al actualizar producto",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-      
       toast({
-        title: "Producto actualizado",
-        description: "El producto ha sido actualizado correctamente.",
+        title: "Success",
+        description: "Product updated successfully.",
       });
     } catch (error) {
-      console.error('Failed to update product:', error);
-      
+      console.error('Unexpected error updating product:', error);
       toast({
-        title: "Error al actualizar producto",
-        description: "Ocurrió un error inesperado. Intente nuevamente.",
+        title: "Error",
+        description: "An unexpected error occurred while updating the product.",
         variant: "destructive",
       });
     }
   };
 
-  const removeProduct = async (id: string) => {
+  const deleteProduct = async (id: string) => {
     try {
-      if (!user) {
-        toast({
-          title: "Acceso denegado",
-          description: "Debe iniciar sesión como administrador para eliminar productos.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const updatedProducts = products.filter(product => product.id !== id);
-      setProducts(updatedProducts);
-      localStorage.setItem('products', JSON.stringify(updatedProducts));
-      
       const { error } = await supabase
         .from('products')
         .delete()
         .eq('id', id);
-      
+
       if (error) {
-        console.error('Error removing product from Supabase:', error);
-        
-        if (error.message.includes('violates row-level security policy')) {
-          toast({
-            title: "Error de permisos",
-            description: "Su sesión no tiene permisos de administrador. Por favor, cierre sesión y vuelva a iniciar sesión.",
-            variant: "destructive",
-            duration: 5000,
-          });
-          return;
-        }
-        
+        console.error('Error deleting product:', error);
         toast({
-          title: "Error al eliminar producto",
-          description: error.message,
+          title: "Error",
+          description: "Failed to delete product.",
           variant: "destructive",
         });
         return;
       }
-      
+
+      setProducts(prevProducts => prevProducts.filter(product => product.id !== id));
       toast({
-        title: "Producto eliminado",
-        description: "El producto ha sido eliminado correctamente.",
+        title: "Success",
+        description: "Product deleted successfully.",
       });
     } catch (error) {
-      console.error('Failed to remove product:', error);
-      
+      console.error('Unexpected error deleting product:', error);
       toast({
-        title: "Error al eliminar producto",
-        description: "Ocurrió un error inesperado. Intente nuevamente.",
+        title: "Error",
+        description: "An unexpected error occurred while deleting the product.",
         variant: "destructive",
       });
     }
   };
 
+  const revalidateProducts = () => {
+    setIsRevalidating(prevState => !prevState);
+  };
+
   return (
-    <ProductContext.Provider value={{ 
-      products, 
-      addProduct, 
-      updateProduct, 
-      removeProduct,
-      uploadProductImage,
-      isLoading
-    }}>
+    <ProductContext.Provider value={{ products, addProduct, updateProduct, deleteProduct, revalidateProducts }}>
       {children}
     </ProductContext.Provider>
   );
