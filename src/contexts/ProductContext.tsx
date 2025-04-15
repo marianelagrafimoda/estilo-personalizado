@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '../integrations/supabase/client';
 import { useToast } from '../hooks/use-toast';
+import { Json } from '../integrations/supabase/types';
 
 interface ProductContextType {
   products: Product[];
@@ -87,13 +88,34 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
             title: item.title,
             description: item.description || '',
             price: item.price,
-            images: Array.isArray(item.images) ? item.images : (item.images ? [item.images] : []),
+            // Properly handle different types of images
+            images: Array.isArray(item.images) 
+              ? item.images.map(img => typeof img === 'string' ? img : '') 
+              : (item.images ? [String(item.images)] : []),
             imageUrl: item.image_url,
             cardColor: item.card_color,
             stockQuantity: item.stock_quantity,
-            colors: Array.isArray(item.colors) ? item.colors : [],
-            sizes: Array.isArray(item.sizes) ? item.sizes : [],
-            segments: Array.isArray(item.segments) ? item.segments : []
+            // Properly cast colors and ensure they match the Color interface
+            colors: Array.isArray(item.colors) 
+              ? item.colors.map(color => ({
+                  id: String(color.id || ''),
+                  name: String(color.name || ''),
+                  hex: String(color.hex || '')
+                }))
+              : [],
+            // Properly cast sizes and ensure they match the Size interface
+            sizes: Array.isArray(item.sizes) 
+              ? item.sizes.map(size => ({
+                  id: String(size.id || ''),
+                  name: String(size.name || ''),
+                  available: Boolean(size.available),
+                  isChildSize: Boolean(size.isChildSize)
+                }))
+              : [],
+            // Ensure segments is always an array of strings
+            segments: Array.isArray(item.segments) 
+              ? item.segments.map(seg => String(seg))
+              : []
           }));
           setProducts(transformedProducts);
         }
@@ -127,14 +149,14 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         image_url: newProduct.imageUrl,
         card_color: newProduct.cardColor,
         stock_quantity: newProduct.stockQuantity || 0,
-        colors: newProduct.colors,
-        sizes: newProduct.sizes,
+        colors: newProduct.colors as unknown as Json,
+        sizes: newProduct.sizes as unknown as Json,
         segments: newProduct.segments || []
       };
 
       const { error } = await supabase
         .from('products')
-        .insert([dbProduct]);
+        .insert(dbProduct);
 
       if (error) {
         console.error('Error adding product:', error);
@@ -172,8 +194,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
       if (updates.cardColor !== undefined) dbUpdates.card_color = updates.cardColor;
       if (updates.stockQuantity !== undefined) dbUpdates.stock_quantity = updates.stockQuantity;
-      if (updates.colors !== undefined) dbUpdates.colors = updates.colors;
-      if (updates.sizes !== undefined) dbUpdates.sizes = updates.sizes;
+      if (updates.colors !== undefined) dbUpdates.colors = updates.colors as unknown as Json;
+      if (updates.sizes !== undefined) dbUpdates.sizes = updates.sizes as unknown as Json;
       if (updates.segments !== undefined) dbUpdates.segments = updates.segments;
 
       const { error } = await supabase
