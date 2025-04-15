@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Save, Package, Palette, Plus } from 'lucide-react';
 import { Button } from './ui/button';
@@ -27,7 +26,6 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
   const [newChildAgeSize, setNewChildAgeSize] = useState('');
 
   useEffect(() => {
-    // Make sure images is initialized
     if (!editingProduct.images) {
       setEditingProduct({
         ...editingProduct,
@@ -40,7 +38,6 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
     setEditingProduct({
       ...editingProduct,
       images: newImages,
-      // Update imageUrl to be the first image, for backwards compatibility
       imageUrl: newImages.length > 0 ? newImages[0] : ''
     });
   };
@@ -73,7 +70,6 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
   const handleAddAdultSize = () => {
     if (newAdultSizeName) {
       const sizeId = `adult-${newAdultSizeName.toLowerCase().replace(/\s+/g, '-')}`;
-      // Check if size already exists
       if (!editingProduct.sizes.some(size => size.id === sizeId)) {
         const newSizes = [
           ...editingProduct.sizes,
@@ -88,7 +84,6 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
   const handleAddChildSize = () => {
     if (newChildSizeName) {
       const sizeId = `child-${newChildSizeName.toLowerCase().replace(/\s+/g, '-')}`;
-      // Check if size already exists
       if (!editingProduct.sizes.some(size => size.id === sizeId)) {
         const newSizes = [
           ...editingProduct.sizes,
@@ -105,7 +100,6 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
       const age = parseInt(newChildAgeSize);
       const sizeId = `child-age-${age}`;
       
-      // Check if size already exists
       if (!editingProduct.sizes.some(size => size.id === sizeId)) {
         const newSizes = [
           ...editingProduct.sizes,
@@ -128,7 +122,6 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
   };
 
   const handleSave = () => {
-    // Ensure the product has valid data
     if (!editingProduct.title || editingProduct.price <= 0) {
       return;
     }
