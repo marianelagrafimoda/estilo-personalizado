@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { ArrowRight, Gem, Palette, Users } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -12,13 +12,6 @@ import { useSiteInfo } from '../contexts/SiteContext';
 const Index: React.FC = () => {
   const { products } = useProducts();
   const { siteInfo } = useSiteInfo();
-  const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
-
-  const filteredProducts = selectedSegment
-    ? products.filter(product => product.segments?.includes(selectedSegment))
-    : products;
-
-  const segments = ['Hombre', 'Mujer', 'Pareja', 'Niños'];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -38,27 +31,10 @@ const Index: React.FC = () => {
             <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
               Descubre nuestra selección de prendas de alta calidad listas para ser personalizadas con tu estilo único.
             </p>
-            
-            {/* Segment filters */}
-            <div className="flex justify-center gap-2 mt-6">
-              {segments.map((segment) => (
-                <button
-                  key={segment}
-                  onClick={() => setSelectedSegment(selectedSegment === segment ? null : segment)}
-                  className={`px-4 py-2 rounded-full transition-colors ${
-                    selectedSegment === segment
-                      ? 'bg-lilac text-white'
-                      : 'bg-lilac/10 text-lilac-dark hover:bg-lilac/20'
-                  }`}
-                >
-                  {segment}
-                </button>
-              ))}
-            </div>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
+            {products.map((product) => (
               <div key={product.id} className="h-full">
                 <ProductCard product={product} />
               </div>

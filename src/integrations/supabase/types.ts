@@ -85,7 +85,6 @@ export type Database = {
           image_url: string | null
           images: Json | null
           price: number
-          segments: Json
           sizes: Json
           stock_quantity: number
           title: string
@@ -100,7 +99,6 @@ export type Database = {
           image_url?: string | null
           images?: Json | null
           price: number
-          segments?: Json
           sizes: Json
           stock_quantity?: number
           title: string
@@ -115,7 +113,6 @@ export type Database = {
           image_url?: string | null
           images?: Json | null
           price?: number
-          segments?: Json
           sizes?: Json
           stock_quantity?: number
           title?: string
