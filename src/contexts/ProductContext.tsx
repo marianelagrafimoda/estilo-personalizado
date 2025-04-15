@@ -97,7 +97,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
             stockQuantity: item.stock_quantity,
             // Properly cast colors and ensure they match the Color interface
             colors: Array.isArray(item.colors) 
-              ? item.colors.map(color => ({
+              ? item.colors.map((color: any) => ({
                   id: String(color.id || ''),
                   name: String(color.name || ''),
                   hex: String(color.hex || '')
@@ -105,7 +105,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
               : [],
             // Properly cast sizes and ensure they match the Size interface
             sizes: Array.isArray(item.sizes) 
-              ? item.sizes.map(size => ({
+              ? item.sizes.map((size: any) => ({
                   id: String(size.id || ''),
                   name: String(size.name || ''),
                   available: Boolean(size.available),
