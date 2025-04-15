@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '../integrations/supabase/client';
@@ -9,6 +10,22 @@ interface ProductContextType {
   updateProduct: (id: string, updates: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   revalidateProducts: () => void;
+  removeProduct: (id: string) => Promise<void>;
+  uploadProductImage: (file: File) => Promise<string>;
+  isLoading: boolean;
+}
+
+export interface Size {
+  id: string;
+  name: string;
+  available: boolean;
+  isChildSize: boolean;
+}
+
+export interface Color {
+  id: string;
+  name: string;
+  hex: string;
 }
 
 export interface Product {
@@ -17,13 +34,16 @@ export interface Product {
   description: string;
   price: number;
   images: string[];
-  colors: { name: string; hex: string }[];
-  sizes: string[];
+  colors: Color[];
+  sizes: Size[];
   stock?: number;
   featured?: boolean;
-  newColorName?: string; // Add this field
-  newColorHex?: string;  // Add this field
-  segments?: string[];   // Keep the segments field
+  newColorName?: string;
+  newColorHex?: string;
+  segments?: string[];
+  imageUrl?: string;
+  stockQuantity?: number;
+  cardColor?: string;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -39,11 +59,13 @@ export const useProducts = () => {
 export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isRevalidating, setIsRevalidating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        setIsLoading(true);
         const { data, error } = await supabase
           .from('products')
           .select('*');
@@ -55,10 +77,25 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
             description: "Failed to load products.",
             variant: "destructive",
           });
+          return;
         }
 
         if (data) {
-          setProducts(data);
+          // Transform database data to match Product interface
+          const transformedProducts: Product[] = data.map(item => ({
+            id: item.id,
+            title: item.title,
+            description: item.description || '',
+            price: item.price,
+            images: Array.isArray(item.images) ? item.images : (item.images ? [item.images] : []),
+            imageUrl: item.image_url,
+            cardColor: item.card_color,
+            stockQuantity: item.stock_quantity,
+            colors: Array.isArray(item.colors) ? item.colors : [],
+            sizes: Array.isArray(item.sizes) ? item.sizes : [],
+            segments: Array.isArray(item.segments) ? item.segments : []
+          }));
+          setProducts(transformedProducts);
         }
       } catch (error) {
         console.error('Unexpected error fetching products:', error);
@@ -67,6 +104,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
           description: "An unexpected error occurred while loading products.",
           variant: "destructive",
         });
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -78,9 +117,24 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const newProductId = uuidv4();
       const newProduct = { ...product, id: newProductId };
 
+      // Prepare data for database format
+      const dbProduct = {
+        id: newProduct.id,
+        title: newProduct.title,
+        description: newProduct.description,
+        price: newProduct.price,
+        images: newProduct.images,
+        image_url: newProduct.imageUrl,
+        card_color: newProduct.cardColor,
+        stock_quantity: newProduct.stockQuantity || 0,
+        colors: newProduct.colors,
+        sizes: newProduct.sizes,
+        segments: newProduct.segments || []
+      };
+
       const { error } = await supabase
         .from('products')
-        .insert([newProduct]);
+        .insert([dbProduct]);
 
       if (error) {
         console.error('Error adding product:', error);
@@ -109,9 +163,22 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateProduct = async (id: string, updates: Partial<Product>) => {
     try {
+      // Prepare updates for database format
+      const dbUpdates: any = {};
+      if (updates.title !== undefined) dbUpdates.title = updates.title;
+      if (updates.description !== undefined) dbUpdates.description = updates.description;
+      if (updates.price !== undefined) dbUpdates.price = updates.price;
+      if (updates.images !== undefined) dbUpdates.images = updates.images;
+      if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
+      if (updates.cardColor !== undefined) dbUpdates.card_color = updates.cardColor;
+      if (updates.stockQuantity !== undefined) dbUpdates.stock_quantity = updates.stockQuantity;
+      if (updates.colors !== undefined) dbUpdates.colors = updates.colors;
+      if (updates.sizes !== undefined) dbUpdates.sizes = updates.sizes;
+      if (updates.segments !== undefined) dbUpdates.segments = updates.segments;
+
       const { error } = await supabase
         .from('products')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', id);
 
       if (error) {
@@ -141,7 +208,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const deleteProduct = async (id: string) => {
+  const removeProduct = async (id: string) => {
     try {
       const { error } = await supabase
         .from('products')
@@ -173,12 +240,51 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  // Alias for removeProduct to maintain compatibility
+  const deleteProduct = removeProduct;
+
+  const uploadProductImage = async (file: File): Promise<string> => {
+    try {
+      const filename = `${uuidv4()}-${file.name}`;
+      const { error: uploadError, data } = await supabase.storage
+        .from('product_images')
+        .upload(filename, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('product_images')
+        .getPublicUrl(filename);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload image.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   const revalidateProducts = () => {
     setIsRevalidating(prevState => !prevState);
   };
 
   return (
-    <ProductContext.Provider value={{ products, addProduct, updateProduct, deleteProduct, revalidateProducts }}>
+    <ProductContext.Provider value={{ 
+      products, 
+      addProduct, 
+      updateProduct, 
+      deleteProduct, 
+      revalidateProducts,
+      removeProduct,
+      uploadProductImage,
+      isLoading
+    }}>
       {children}
     </ProductContext.Provider>
   );
