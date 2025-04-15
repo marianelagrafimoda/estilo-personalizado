@@ -121,12 +121,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         <CardHeader className="p-4 pb-2">
-          <CardTitle className="font-medium text-xl mb-2 text-lilac-dark w-full break-words">
-            {product.title}
-          </CardTitle>
-          <CardDescription className="text-base text-gray-600 mb-2 line-clamp-3">
-            {product.description}
-          </CardDescription>
+          <CardTitle className="font-medium text-xl mb-2 text-lilac-dark h-[1.5rem] overflow-hidden">{product.title}</CardTitle>
+          <CardDescription className="text-base text-gray-600 mb-2 line-clamp-3 h-[4.5rem]">{product.description}</CardDescription>
           <p className="font-bold text-xl mb-2 text-center">${product.price.toFixed(2)}</p>
         </CardHeader>
         
@@ -249,3 +245,4 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 };
 
 export default ProductCard;
+
