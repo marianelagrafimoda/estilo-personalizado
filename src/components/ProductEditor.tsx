@@ -1,11 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, Save, Package, Palette, Plus } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Product, Color } from '../contexts/ProductContext';
 import ProductImagesUploader from './ProductImagesUploader';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Checkbox } from './ui/checkbox';
 
 interface ProductEditorProps {
   product: Product;
@@ -26,9 +25,9 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
   const [newAdultSizeName, setNewAdultSizeName] = useState('');
   const [newChildSizeName, setNewChildSizeName] = useState('');
   const [newChildAgeSize, setNewChildAgeSize] = useState('');
-  const [newSegment, setNewSegment] = useState('');
 
   useEffect(() => {
+    // Make sure images is initialized
     if (!editingProduct.images) {
       setEditingProduct({
         ...editingProduct,
@@ -41,6 +40,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
     setEditingProduct({
       ...editingProduct,
       images: newImages,
+      // Update imageUrl to be the first image, for backwards compatibility
       imageUrl: newImages.length > 0 ? newImages[0] : ''
     });
   };
@@ -73,6 +73,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
   const handleAddAdultSize = () => {
     if (newAdultSizeName) {
       const sizeId = `adult-${newAdultSizeName.toLowerCase().replace(/\s+/g, '-')}`;
+      // Check if size already exists
       if (!editingProduct.sizes.some(size => size.id === sizeId)) {
         const newSizes = [
           ...editingProduct.sizes,
@@ -87,6 +88,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
   const handleAddChildSize = () => {
     if (newChildSizeName) {
       const sizeId = `child-${newChildSizeName.toLowerCase().replace(/\s+/g, '-')}`;
+      // Check if size already exists
       if (!editingProduct.sizes.some(size => size.id === sizeId)) {
         const newSizes = [
           ...editingProduct.sizes,
@@ -103,6 +105,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
       const age = parseInt(newChildAgeSize);
       const sizeId = `child-age-${age}`;
       
+      // Check if size already exists
       if (!editingProduct.sizes.some(size => size.id === sizeId)) {
         const newSizes = [
           ...editingProduct.sizes,
@@ -125,21 +128,12 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
   };
 
   const handleSave = () => {
+    // Ensure the product has valid data
     if (!editingProduct.title || editingProduct.price <= 0) {
       return;
     }
     onSave(editingProduct);
   };
-
-  const handleSegmentToggle = (segment: string) => {
-    const currentSegments = editingProduct.segments || [];
-    const updatedSegments = currentSegments.includes(segment)
-      ? currentSegments.filter(s => s !== segment)
-      : [...currentSegments, segment];
-    setEditingProduct({...editingProduct, segments: updatedSegments});
-  };
-
-  const availableSegments = ['Hombre', 'Mujer', 'Pareja', 'Niños'];
 
   return (
     <div className="space-y-4">
@@ -371,27 +365,6 @@ const ProductEditor: React.FC<ProductEditorProps> = ({
               <Plus className="w-4 h-4" />
             </Button>
           </div>
-        </div>
-      </div>
-      
-      <div>
-        <label className="text-sm font-medium mb-2 block">Segmentos</label>
-        <div className="flex flex-wrap gap-2">
-          {availableSegments.map((segment) => (
-            <div key={segment} className="flex items-center space-x-2">
-              <Checkbox
-                id={`segment-${segment}`}
-                checked={(editingProduct.segments || []).includes(segment)}
-                onCheckedChange={() => handleSegmentToggle(segment)}
-              />
-              <label
-                htmlFor={`segment-${segment}`}
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                {segment}
-              </label>
-            </div>
-          ))}
         </div>
       </div>
       

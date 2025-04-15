@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { uploadImage } from '../lib/supabase';
@@ -28,7 +29,9 @@ export interface Product {
   colors: Color[];
   stockQuantity: number;
   cardColor?: string;
-  segments?: string[];
+  // Add properties for color management in the Admin interface
+  newColorName?: string;
+  newColorHex?: string;
 }
 
 interface ProductContextType {
@@ -72,8 +75,7 @@ const DEFAULT_PRODUCTS: Product[] = [
       { id: 'xl', name: 'XL', available: false, isChildSize: false },
       { id: 'child-s', name: 'S (Niño)', available: true, isChildSize: true },
       { id: 'child-m', name: 'M (Niño)', available: true, isChildSize: true },
-    ],
-    segments: ['segment1', 'segment2']
+    ]
   },
   {
     id: crypto.randomUUID(),
@@ -94,8 +96,7 @@ const DEFAULT_PRODUCTS: Product[] = [
       { id: 'xl', name: 'XL', available: true, isChildSize: false },
       { id: 'child-s', name: 'S (Niño)', available: true, isChildSize: true },
       { id: 'child-m', name: 'M (Niño)', available: true, isChildSize: true },
-    ],
-    segments: ['segment3', 'segment4']
+    ]
   },
   {
     id: crypto.randomUUID(),
@@ -112,8 +113,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     sizes: [
       { id: 'uni', name: 'Única', available: true, isChildSize: false },
       { id: 'child-uni', name: 'Única (Niño)', available: true, isChildSize: true },
-    ],
-    segments: ['segment5', 'segment6']
+    ]
   }
 ];
 
@@ -130,8 +130,7 @@ const productToSupabase = (product: Omit<Product, 'id'> & { id?: string }) => {
     sizes: JSON.stringify(product.sizes),
     colors: JSON.stringify(product.colors),
     stock_quantity: product.stockQuantity,
-    card_color: product.cardColor || '#C8B6E2',
-    segments: JSON.stringify(product.segments || [])
+    card_color: product.cardColor || '#C8B6E2'
   };
 };
 
@@ -148,7 +147,6 @@ const partialProductToSupabase = (product: Partial<Product> & { id?: string }) =
   if (product.colors !== undefined) result.colors = JSON.stringify(product.colors);
   if (product.stockQuantity !== undefined) result.stock_quantity = product.stockQuantity;
   if (product.cardColor !== undefined) result.card_color = product.cardColor;
-  if (product.segments !== undefined) result.segments = JSON.stringify(product.segments);
   
   return result;
 };
@@ -157,7 +155,6 @@ const supabaseToProduct = (data: any): Product => {
   let sizes = data.sizes;
   let colors = data.colors;
   let images = data.images;
-  let segments = data.segments;
   
   if (typeof sizes === 'string') {
     try {
@@ -185,14 +182,6 @@ const supabaseToProduct = (data: any): Product => {
     images = data.image_url ? [data.image_url] : ['/placeholder.svg'];
   }
   
-  if (typeof segments === 'string') {
-    try {
-      segments = JSON.parse(segments);
-    } catch (e) {
-      segments = [];
-    }
-  }
-  
   return {
     id: data.id,
     title: data.title,
@@ -203,8 +192,7 @@ const supabaseToProduct = (data: any): Product => {
     sizes: sizes || [],
     colors: colors || [],
     stockQuantity: data.stock_quantity || 0,
-    cardColor: data.card_color || '#C8B6E2',
-    segments: segments || []
+    cardColor: data.card_color || '#C8B6E2'
   };
 };
 
