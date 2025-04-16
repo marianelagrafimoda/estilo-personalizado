@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -837,3 +838,511 @@ const Admin: React.FC = () => {
                   <CardDescription>
                     Administre los productos existentes en su tienda
                   </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {products.length === 0 ? (
+                      <p className="text-muted-foreground">No hay productos existentes.</p>
+                    ) : (
+                      products.map((product) => (
+                        <div 
+                          key={product.id} 
+                          className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                          style={{
+                            backgroundColor: `${product.cardColor}05`, // 05 adds 5% opacity to the color
+                            borderColor: `${product.cardColor}30` // 30 adds 30% opacity to the color
+                          }}
+                        >
+                          <div className="aspect-video relative overflow-hidden bg-gray-100">
+                            {product.imageUrl ? (
+                              <img
+                                src={product.imageUrl}
+                                alt={product.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full items-center justify-center bg-gray-100 text-gray-400">
+                                <ImageIcon className="h-10 w-10" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-4">
+                            <h3 className="font-medium text-lg truncate">{product.title}</h3>
+                            <p className="text-sm text-gray-500 line-clamp-2 h-10">{product.description}</p>
+                            <p className="font-semibold mt-1">${product.price.toFixed(2)}</p>
+                            
+                            <div className="mt-3 flex flex-wrap gap-1">
+                              {product.sizes.filter(size => size.available).map((size) => (
+                                <span key={size.id} className="text-xs bg-white px-2 py-1 rounded-full border">
+                                  {size.name}
+                                </span>
+                              ))}
+                            </div>
+                            
+                            <div className="mt-4 flex space-x-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50"
+                                onClick={() => startEditingProduct(product)}
+                              >
+                                <Edit3 className="w-4 h-4 mr-1" />
+                                Editar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
+                                onClick={() => handleDeleteProduct(product.id)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Borrar
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="site" className="space-y-6 animate-fade-in">
+            <Card>
+              <CardHeader>
+                <CardTitle>Información General del Sitio</CardTitle>
+                <CardDescription>Actualice la información principal de su sitio web</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Slogan</label>
+                    <Input
+                      value={newSlogan}
+                      onChange={(e) => setNewSlogan(e.target.value)}
+                      className="border-lilac/30"
+                      placeholder="El slogan de su sitio web"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">WhatsApp (con código de país)</label>
+                    <Input
+                      value={newWhatsappNumber}
+                      onChange={(e) => setNewWhatsappNumber(e.target.value)}
+                      className="border-lilac/30"
+                      placeholder="+573001234567"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium flex items-center">
+                      <Instagram className="w-4 h-4 mr-2" />
+                      Instagram URL
+                    </label>
+                    <Input
+                      value={newInstagramLink}
+                      onChange={(e) => setNewInstagramLink(e.target.value)}
+                      className="border-lilac/30"
+                      placeholder="https://www.instagram.com/su_cuenta"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium flex items-center">
+                      <Facebook className="w-4 h-4 mr-2" />
+                      Facebook URL
+                    </label>
+                    <Input
+                      value={newFacebookLink}
+                      onChange={(e) => setNewFacebookLink(e.target.value)}
+                      className="border-lilac/30"
+                      placeholder="https://www.facebook.com/su_pagina"
+                    />
+                  </div>
+                </div>
+                
+                <div className="border-t pt-5 mt-2">
+                  <h3 className="text-lg font-medium mb-3">Sección de Productos</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Título de la sección</label>
+                      <Input
+                        value={newProductsTitle}
+                        onChange={(e) => setNewProductsTitle(e.target.value)}
+                        className="border-lilac/30 mt-1"
+                        placeholder="Nuestros Productos"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Subtítulo de la sección</label>
+                      <Input
+                        value={newProductsSubtitle}
+                        onChange={(e) => setNewProductsSubtitle(e.target.value)}
+                        className="border-lilac/30 mt-1"
+                        placeholder="Explora nuestra colección"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Descripción de la sección</label>
+                      <Input
+                        value={newProductsDescription}
+                        onChange={(e) => setNewProductsDescription(e.target.value)}
+                        className="border-lilac/30 mt-1"
+                        placeholder="Descubre nuestra selección de productos únicos..."
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-5 mt-2">
+                  <h3 className="text-lg font-medium mb-3">Sección de Características</h3>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">Título - Materiales</label>
+                        <Input
+                          value={newMaterialsTitle}
+                          onChange={(e) => setNewMaterialsTitle(e.target.value)}
+                          className="border-lilac/30 mt-1"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Descripción - Materiales</label>
+                        <Input
+                          value={newMaterialsDesc}
+                          onChange={(e) => setNewMaterialsDesc(e.target.value)}
+                          className="border-lilac/30 mt-1"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">Título - Diseño</label>
+                        <Input
+                          value={newDesignTitle}
+                          onChange={(e) => setNewDesignTitle(e.target.value)}
+                          className="border-lilac/30 mt-1"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Descripción - Diseño</label>
+                        <Input
+                          value={newDesignDesc}
+                          onChange={(e) => setNewDesignDesc(e.target.value)}
+                          className="border-lilac/30 mt-1"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">Título - Servicio</label>
+                        <Input
+                          value={newServiceTitle}
+                          onChange={(e) => setNewServiceTitle(e.target.value)}
+                          className="border-lilac/30 mt-1"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Descripción - Servicio</label>
+                        <Input
+                          value={newServiceDesc}
+                          onChange={(e) => setNewServiceDesc(e.target.value)}
+                          className="border-lilac/30 mt-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
+                  <div>
+                    <label className="text-sm font-medium">Título - FAQ</label>
+                    <Input
+                      value={newFaqTitle}
+                      onChange={(e) => setNewFaqTitle(e.target.value)}
+                      className="border-lilac/30 mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Título - Estilo Único</label>
+                    <Input
+                      value={newUniqueStyleTitle}
+                      onChange={(e) => setNewUniqueStyleTitle(e.target.value)}
+                      className="border-lilac/30 mt-1"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={handleSiteInfoUpdate}
+                  className="w-full bg-lilac hover:bg-lilac-dark"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Guardar Cambios
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="carousel" className="animate-fade-in">
+            <Card>
+              <CardHeader>
+                <CardTitle>Imágenes del Carrusel</CardTitle>
+                <CardDescription>
+                  Administre las imágenes que se muestran en el carrusel principal de la página
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <ImageUploader 
+                    label="Subir imagen para el carrusel" 
+                    onImageUpload={handleUploadCarouselImage} 
+                  />
+                  
+                  <div className="mt-6">
+                    <h3 className="text-sm font-medium mb-2">Imágenes actuales ({newCarouselImages.length})</h3>
+                    
+                    {newCarouselImages.length === 0 && (
+                      <p className="text-sm text-gray-500">No hay imágenes en el carrusel</p>
+                    )}
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+                      {newCarouselImages.map((image, index) => (
+                        <div key={index} className="relative group border rounded-md overflow-hidden">
+                          <img 
+                            src={image} 
+                            alt={`Imagen de carrusel ${index + 1}`}
+                            className="w-full aspect-[16/9] object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                            <button
+                              onClick={() => removeCarouselImage(image)}
+                              className="bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between border-t pt-6">
+                <Button
+                  variant="outline"
+                  onClick={handleClearAllImages}
+                  disabled={newCarouselImages.length === 0 || isClearingImages}
+                  className="text-red-500 border-red-200 hover:bg-red-50"
+                >
+                  {isClearingImages ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-2" />
+                  )}
+                  Eliminar Todas
+                </Button>
+                
+                <Button 
+                  onClick={handleSiteInfoUpdate}
+                  className="bg-lilac hover:bg-lilac-dark"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Guardar Cambios
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="footer" className="animate-fade-in">
+            <Card>
+              <CardHeader>
+                <CardTitle>Personalizar Pie de Página</CardTitle>
+                <CardDescription>
+                  Administre la información que se muestra en el pie de página del sitio
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <label className="text-sm font-medium">Logo del Pie de Página</label>
+                  <div className="mt-2 flex items-start space-x-4">
+                    <div className="w-32">
+                      <ImageUploader 
+                        label="Subir logo" 
+                        onImageUpload={handleUploadFooterLogo} 
+                      />
+                    </div>
+                    
+                    {footerLogoUrl && (
+                      <div className="border rounded-md overflow-hidden">
+                        <img 
+                          src={footerLogoUrl} 
+                          alt="Logo del Pie de Página" 
+                          className="max-h-32 object-contain"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Texto "Acerca de"</label>
+                      <Input
+                        value={footerAboutText}
+                        onChange={(e) => setFooterAboutText(e.target.value)}
+                        className="border-lilac/30 mt-1"
+                        placeholder="Breve descripción sobre su negocio"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium">Título de Enlaces</label>
+                      <Input
+                        value={footerLinksTitle}
+                        onChange={(e) => setFooterLinksTitle(e.target.value)}
+                        className="border-lilac/30 mt-1"
+                        placeholder="Enlaces Rápidos"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium">Título de Contacto</label>
+                      <Input
+                        value={footerContactTitle}
+                        onChange={(e) => setFooterContactTitle(e.target.value)}
+                        className="border-lilac/30 mt-1"
+                        placeholder="Contacto"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Correo Electrónico</label>
+                      <Input
+                        type="email"
+                        value={emailAddress}
+                        onChange={(e) => setEmailAddress(e.target.value)}
+                        className="border-lilac/30 mt-1"
+                        placeholder="correo@ejemplo.com"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium">Dirección</label>
+                      <Input
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        className="border-lilac/30 mt-1"
+                        placeholder="Dirección física de su negocio"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium">Texto de Copyright</label>
+                      <Input
+                        value={footerCopyrightText}
+                        onChange={(e) => setFooterCopyrightText(e.target.value)}
+                        className="border-lilac/30 mt-1"
+                        placeholder="© 2023 Tu Empresa"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Información Adicional</label>
+                  <Input
+                    value={footerAdditionalInfo}
+                    onChange={(e) => setFooterAdditionalInfo(e.target.value)}
+                    className="border-lilac/30 mt-1"
+                    placeholder="Información adicional para el pie de página"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Enlaces Personalizados</label>
+                  
+                  <div className="space-y-2 mb-4">
+                    {footerCustomLinks.map((link, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <div className="border rounded-md px-3 py-1.5 flex-1 text-sm flex items-center justify-between">
+                          <span>{link.label}</span>
+                          <span className="text-xs text-gray-500 truncate max-w-[150px]">{link.url}</span>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveCustomLink(index)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                    <Input
+                      value={newLinkLabel}
+                      onChange={(e) => setNewLinkLabel(e.target.value)}
+                      placeholder="Texto del enlace"
+                      className="border-lilac/30 sm:col-span-1"
+                    />
+                    <Input
+                      value={newLinkUrl}
+                      onChange={(e) => setNewLinkUrl(e.target.value)}
+                      placeholder="URL (ej: https://...)"
+                      className="border-lilac/30 sm:col-span-2"
+                    />
+                    <Button
+                      onClick={handleAddCustomLink}
+                      disabled={!newLinkLabel || !newLinkUrl}
+                      className="bg-lilac hover:bg-lilac-dark sm:col-span-1"
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> 
+                      Agregar
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={handleFooterInfoUpdate}
+                  className="w-full bg-lilac hover:bg-lilac-dark"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Guardar Cambios
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="faq" className="animate-fade-in">
+            <FaqEditor />
+          </TabsContent>
+          
+          <TabsContent value="pedidos" className="animate-fade-in">
+            <PedidosManager />
+          </TabsContent>
+        </Tabs>
+      </div>
+      
+      <Footer />
+      
+      <ProductDetailModal
+        product={previewProduct}
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+      />
+    </div>
+  );
+};
+
+export default Admin;
