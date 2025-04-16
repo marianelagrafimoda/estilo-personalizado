@@ -1,11 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, ShoppingCart, X } from 'lucide-react';
+import { Menu, ShoppingCart, X, ChevronDown } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useSiteInfo } from '../contexts/SiteContext';
 import Cart from './Cart';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu"
 
 const Navbar: React.FC = () => {
   const { totalItems } = useCart();
@@ -47,7 +52,27 @@ const Navbar: React.FC = () => {
           
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-foreground hover:text-lilac-dark transition-colors">Inicio</Link>
-            <Link to="/#productos" className="text-foreground hover:text-lilac-dark transition-colors">Productos</Link>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger className="text-foreground hover:text-lilac-dark transition-colors flex items-center gap-1">
+                Productos <ChevronDown className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link to="/#camisetas" className="w-full cursor-pointer">Camisetas</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/#sudaderas" className="w-full cursor-pointer">Sudaderas</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/#cojines" className="w-full cursor-pointer">Cojines</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/#productos" className="w-full cursor-pointer">Ver todo</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <a 
               href={`https://wa.me/${siteInfo.whatsappNumber.replace(/\+/g, '')}?text=Quiero%20personalizar%20mi%20propio%20estilo`}
               target="_blank" 
@@ -96,54 +121,34 @@ const Navbar: React.FC = () => {
           </div>
         </div>
         
-        {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-md animate-slide-up">
             <div className="container-custom mx-auto py-4 flex flex-col space-y-4">
               <Link to="/" onClick={toggleMobileMenu} className="text-foreground hover:text-lilac-dark py-2 transition-colors">
                 Inicio
               </Link>
-              <Link to="/#productos" onClick={toggleMobileMenu} className="text-foreground hover:text-lilac-dark py-2 transition-colors">
-                Productos
-              </Link>
-              <a 
-                href={`https://wa.me/${siteInfo.whatsappNumber.replace(/\+/g, '')}?text=Quiero%20personalizar%20mi%20propio%20estilo`}
-                target="_blank" 
-                rel="noopener noreferrer"
-                onClick={toggleMobileMenu}
-                className="text-foreground hover:text-lilac-dark py-2 transition-colors"
-              >
-                Personalización
-              </a>
-              {isAuthenticated && isAdmin ? (
-                <Link to="/admin" onClick={toggleMobileMenu} className="text-foreground hover:text-lilac-dark py-2 transition-colors">
-                  Panel de Administración
+              <div className="space-y-2 pl-4">
+                <div className="text-foreground py-2">Productos</div>
+                <Link to="/#camisetas" onClick={toggleMobileMenu} className="block text-foreground hover:text-lilac-dark py-2 transition-colors pl-4">
+                  Camisetas
                 </Link>
-              ) : null}
-              {isAuthenticated ? (
-                <button 
-                  onClick={() => {
-                    logout();
-                    toggleMobileMenu();
-                  }} 
-                  className="text-left text-foreground hover:text-lilac-dark py-2 transition-colors"
-                >
-                  Cerrar Sesión
-                </button>
-              ) : (
-                <Link to="/login" onClick={toggleMobileMenu} className="text-foreground hover:text-lilac-dark py-2 transition-colors">
-                  Iniciar Sesión
+                <Link to="/#sudaderas" onClick={toggleMobileMenu} className="block text-foreground hover:text-lilac-dark py-2 transition-colors pl-4">
+                  Sudaderas
                 </Link>
-              )}
+                <Link to="/#cojines" onClick={toggleMobileMenu} className="block text-foreground hover:text-lilac-dark py-2 transition-colors pl-4">
+                  Cojines
+                </Link>
+                <Link to="/#productos" onClick={toggleMobileMenu} className="block text-foreground hover:text-lilac-dark py-2 transition-colors pl-4">
+                  Ver todo
+                </Link>
+              </div>
             </div>
           </div>
         )}
       </nav>
       
-      {/* Cart Drawer */}
       <Cart isOpen={isCartOpen} onClose={toggleCart} />
       
-      {/* Spacer to push content below fixed navbar */}
       <div className="h-[70px]"></div>
     </>
   );
