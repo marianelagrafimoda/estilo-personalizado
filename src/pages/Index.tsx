@@ -1,5 +1,5 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ArrowRight, Gem, Palette, Users } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -10,8 +10,21 @@ import { useProducts } from '../contexts/ProductContext';
 import { useSiteInfo } from '../contexts/SiteContext';
 
 const Index: React.FC = () => {
+  const location = useLocation();
   const { products } = useProducts();
   const { siteInfo } = useSiteInfo();
+
+  useEffect(() => {
+    const state = location.state as { scrollTo?: string };
+    if (state?.scrollTo) {
+      const element = document.getElementById(state.scrollTo);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+      // Clean up the state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -35,6 +48,57 @@ const Index: React.FC = () => {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map((product) => (
+              <div key={product.id} className="h-full">
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      
+      {/* Categories Sections */}
+      <section id="camisetas" className="py-16 bg-gray-50">
+        <div className="container-custom mx-auto">
+          <h2 className="text-3xl font-serif font-bold text-center mb-8">Camisetas</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {products.filter(product => 
+              product.title.toLowerCase().includes('camiseta') || 
+              product.description.toLowerCase().includes('camiseta')
+            ).map((product) => (
+              <div key={product.id} className="h-full">
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="sudaderas" className="py-16">
+        <div className="container-custom mx-auto">
+          <h2 className="text-3xl font-serif font-bold text-center mb-8">Sudaderas</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {products.filter(product => 
+              product.title.toLowerCase().includes('sudadera') || 
+              product.description.toLowerCase().includes('sudadera')
+            ).map((product) => (
+              <div key={product.id} className="h-full">
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="cojines" className="py-16 bg-gray-50">
+        <div className="container-custom mx-auto">
+          <h2 className="text-3xl font-serif font-bold text-center mb-8">Cojines</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {products.filter(product => 
+              product.title.toLowerCase().includes('cojin') || 
+              product.description.toLowerCase().includes('cojin') ||
+              product.title.toLowerCase().includes('cojín') || 
+              product.description.toLowerCase().includes('cojín')
+            ).map((product) => (
               <div key={product.id} className="h-full">
                 <ProductCard product={product} />
               </div>

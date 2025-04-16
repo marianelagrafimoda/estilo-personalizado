@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu, ShoppingCart, X, ChevronDown } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,6 +14,7 @@ import {
 } from "./ui/dropdown-menu"
 
 const Navbar: React.FC = () => {
+  const navigate = useNavigate();
   const { totalItems } = useCart();
   const { isAuthenticated, isAdmin, logout } = useAuth();
   const { siteInfo } = useSiteInfo();
@@ -27,6 +29,11 @@ const Navbar: React.FC = () => {
     e.preventDefault();
     const whatsappUrl = `https://wa.me/${siteInfo.whatsappNumber.replace(/\+/g, '')}`;
     window.open(whatsappUrl, '_blank');
+  };
+
+  const handleCategoryClick = (category: string) => {
+    navigate('/', { state: { scrollTo: category } });
+    setIsMobileMenuOpen(false); // Close mobile menu if open
   };
   
   useEffect(() => {
@@ -57,18 +64,18 @@ const Navbar: React.FC = () => {
               <DropdownMenuTrigger className="text-foreground hover:text-lilac-dark transition-colors flex items-center gap-1">
                 Productos <ChevronDown className="h-4 w-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="w-48">
-                <DropdownMenuItem asChild>
-                  <Link to="/#camisetas" className="w-full cursor-pointer">Camisetas</Link>
+              <DropdownMenuContent align="center" className="w-48 bg-white">
+                <DropdownMenuItem onClick={() => handleCategoryClick('camisetas')} className="cursor-pointer">
+                  Camisetas
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/#sudaderas" className="w-full cursor-pointer">Sudaderas</Link>
+                <DropdownMenuItem onClick={() => handleCategoryClick('sudaderas')} className="cursor-pointer">
+                  Sudaderas
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/#cojines" className="w-full cursor-pointer">Cojines</Link>
+                <DropdownMenuItem onClick={() => handleCategoryClick('cojines')} className="cursor-pointer">
+                  Cojines
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/#productos" className="w-full cursor-pointer">Ver todo</Link>
+                <DropdownMenuItem onClick={() => handleCategoryClick('productos')} className="cursor-pointer">
+                  Ver todo
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -129,18 +136,30 @@ const Navbar: React.FC = () => {
               </Link>
               <div className="space-y-2 pl-4">
                 <div className="text-foreground py-2">Productos</div>
-                <Link to="/#camisetas" onClick={toggleMobileMenu} className="block text-foreground hover:text-lilac-dark py-2 transition-colors pl-4">
+                <button 
+                  onClick={() => handleCategoryClick('camisetas')} 
+                  className="block w-full text-left text-foreground hover:text-lilac-dark py-2 transition-colors pl-4"
+                >
                   Camisetas
-                </Link>
-                <Link to="/#sudaderas" onClick={toggleMobileMenu} className="block text-foreground hover:text-lilac-dark py-2 transition-colors pl-4">
+                </button>
+                <button 
+                  onClick={() => handleCategoryClick('sudaderas')} 
+                  className="block w-full text-left text-foreground hover:text-lilac-dark py-2 transition-colors pl-4"
+                >
                   Sudaderas
-                </Link>
-                <Link to="/#cojines" onClick={toggleMobileMenu} className="block text-foreground hover:text-lilac-dark py-2 transition-colors pl-4">
+                </button>
+                <button 
+                  onClick={() => handleCategoryClick('cojines')} 
+                  className="block w-full text-left text-foreground hover:text-lilac-dark py-2 transition-colors pl-4"
+                >
                   Cojines
-                </Link>
-                <Link to="/#productos" onClick={toggleMobileMenu} className="block text-foreground hover:text-lilac-dark py-2 transition-colors pl-4">
+                </button>
+                <button 
+                  onClick={() => handleCategoryClick('productos')} 
+                  className="block w-full text-left text-foreground hover:text-lilac-dark py-2 transition-colors pl-4"
+                >
                   Ver todo
-                </Link>
+                </button>
               </div>
             </div>
           </div>
