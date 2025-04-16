@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ArrowRight, Gem, Palette, Users } from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -25,11 +24,11 @@ const Index: React.FC = () => {
         <div className="container-custom mx-auto">
           <div className="text-center mb-12">
             <span className="inline-block px-3 py-1 bg-lilac/10 text-lilac-dark text-sm font-medium rounded-full mb-2">
-              Nuestros Productos
+              {siteInfo.productsTitle}
             </span>
-            <h2 className="font-serif text-3xl md:text-4xl font-bold">Ropa Personalizada</h2>
+            <h2 className="font-serif text-3xl md:text-4xl font-bold">{siteInfo.productsSubtitle}</h2>
             <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
-              Descubre nuestra selección de prendas de alta calidad listas para ser personalizadas con tu estilo único.
+              {siteInfo.productsDescription}
             </p>
           </div>
           

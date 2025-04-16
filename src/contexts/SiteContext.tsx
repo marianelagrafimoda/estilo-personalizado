@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { saveSiteInfo, uploadImage, getCarouselImages, clearCarouselImages } from '../lib/supabase';
@@ -39,9 +38,11 @@ interface SiteInfo {
   address: string;
   footerAdditionalInfo: string;
   footerCopyrightText: string;
+  productsTitle: string;
+  productsSubtitle: string;
+  productsDescription: string;
 }
 
-// Define a type that matches the Supabase table schema
 interface SiteInfoSupabase {
   carousel_images: Json;
   created_at?: string;
@@ -120,6 +121,9 @@ const DEFAULT_SITE_INFO: SiteInfo = {
   address: "Guayaquil, Ecuador",
   footerAdditionalInfo: "",
   footerCopyrightText: "",
+  productsTitle: "Nuestros Productos",
+  productsSubtitle: "Ropa Personalizada",
+  productsDescription: "Descubre nuestra selección de prendas de alta calidad listas para ser personalizadas con tu estilo único.",
 };
 
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
@@ -140,7 +144,6 @@ const snakeToCamel = (str: string) => {
   return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 };
 
-// Convert siteInfo object to format suitable for Supabase
 const prepareForSupabase = (data: Partial<SiteInfo>): Partial<SiteInfoSupabase> => {
   const result: Partial<SiteInfoSupabase> = {};
   
@@ -155,7 +158,6 @@ const prepareForSupabase = (data: Partial<SiteInfo>): Partial<SiteInfoSupabase> 
     } else if (key === 'faqItems') {
       result.faq_items = value as Json;
     } else {
-      // Use type assertion to add the property to the result
       (result as any)[snakeKey] = value;
     }
   });
@@ -354,17 +356,13 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       let result;
       if (existingData && existingData.length > 0) {
-        // Type-safe update with supabaseData
         result = await supabase
           .from('site_info')
           .update(supabaseData)
           .eq('id', existingData[0].id);
       } else {
-        // For insertion, we need a complete record that satisfies the required fields
-        // Convert the full updatedInfo (not just updates) to Supabase format
         const fullData = prepareForSupabase(updatedInfo);
         
-        // Ensure all required fields are present
         const requiredFields: (keyof SiteInfoSupabase)[] = [
           'carousel_images', 'design_description', 'design_title', 'faq_title',
           'materials_description', 'materials_title', 'service_description', 
@@ -378,7 +376,6 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
           throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
         }
         
-        // Cast to any as a last resort since we've manually checked the required fields
         result = await supabase
           .from('site_info')
           .insert(fullData as any);

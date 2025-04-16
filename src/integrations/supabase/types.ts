@@ -136,6 +136,9 @@ export type Database = {
           instagram_link: string | null
           materials_description: string
           materials_title: string
+          products_description: string | null
+          products_subtitle: string | null
+          products_title: string | null
           service_description: string
           service_title: string
           slogan: string
@@ -155,6 +158,9 @@ export type Database = {
           instagram_link?: string | null
           materials_description: string
           materials_title: string
+          products_description?: string | null
+          products_subtitle?: string | null
+          products_title?: string | null
           service_description: string
           service_title: string
           slogan: string
@@ -174,6 +180,9 @@ export type Database = {
           instagram_link?: string | null
           materials_description?: string
           materials_title?: string
+          products_description?: string | null
+          products_subtitle?: string | null
+          products_title?: string | null
           service_description?: string
           service_title?: string
           slogan?: string
