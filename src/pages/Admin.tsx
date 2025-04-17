@@ -1339,7 +1339,7 @@ const Admin: React.FC = () => {
         <ProductDetailModal
           product={previewProduct}
           open={isPreviewModalOpen}
-          onClose={() => setIsPreviewModalOpen(false)}
+          onOpenChange={setIsPreviewModalOpen}
         />
       )}
     </div>

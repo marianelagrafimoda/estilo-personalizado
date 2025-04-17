@@ -9,17 +9,28 @@ interface ProductDetailModalProps {
   product: Product | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  // Add the onClose prop that Admin.tsx is using
+  onClose?: () => void;
 }
 
 const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ 
   product, 
   open, 
-  onOpenChange 
+  onOpenChange,
+  onClose 
 }) => {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  
+  // Handle both onOpenChange and onClose based on which one is provided
+  const handleOpenChange = (newOpen: boolean) => {
+    onOpenChange(newOpen);
+    if (!newOpen && onClose) {
+      onClose();
+    }
+  };
   
   if (!product) return null;
   
@@ -69,7 +80,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-4xl p-0 overflow-hidden bg-white rounded-lg">
         <div className="relative">
           <div className="absolute right-4 top-4 z-10 flex gap-2">
