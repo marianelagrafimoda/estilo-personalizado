@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ShoppingCart, Heart, Package, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
@@ -121,7 +122,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
         <CardHeader className="p-4 pb-2">
           <CardTitle 
-            className="font-medium text-xl mb-2 text-lilac-dark break-words whitespace-normal"
+            className="font-medium text-xl mb-2 text-lilac-dark break-words whitespace-normal w-full"
             title={product.title}
           >
             {product.title}
