@@ -59,6 +59,14 @@ const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-foreground hover:text-lilac-dark transition-colors">Inicio</Link>
             
+            <Link 
+              to="/quienes-somos" 
+              className="text-foreground hover:text-lilac-dark transition-colors flex items-center gap-2"
+            >
+              <Info className="h-4 w-4" />
+              Quiénes Somos
+            </Link>
+            
             <DropdownMenu>
               <DropdownMenuTrigger className="text-foreground hover:text-lilac-dark transition-colors flex items-center gap-1">
                 Productos <ChevronDown className="h-4 w-4" />
@@ -78,11 +86,6 @@ const Navbar: React.FC = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
-            <Link to="/quienes-somos" className="text-foreground hover:text-lilac-dark transition-colors flex items-center gap-2">
-              <Info className="h-4 w-4" />
-              Quiénes Somos
-            </Link>
 
             <a 
               href={`https://wa.me/${siteInfo.whatsappNumber.replace(/\+/g, '')}?text=Quiero%20personalizar%20mi%20propio%20estilo`}
