@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, ShoppingCart, X, ChevronDown } from 'lucide-react';
+import { Menu, ShoppingCart, X, ChevronDown, Info } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useSiteInfo } from '../contexts/SiteContext';
@@ -80,6 +79,11 @@ const Navbar: React.FC = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            <Link to="/quienes-somos" className="text-foreground hover:text-lilac-dark transition-colors flex items-center gap-2">
+              <Info className="h-4 w-4" />
+              Quiénes Somos
+            </Link>
+
             <a 
               href={`https://wa.me/${siteInfo.whatsappNumber.replace(/\+/g, '')}?text=Quiero%20personalizar%20mi%20propio%20estilo`}
               target="_blank" 
@@ -134,6 +138,12 @@ const Navbar: React.FC = () => {
               <Link to="/" onClick={toggleMobileMenu} className="text-foreground hover:text-lilac-dark py-2 transition-colors">
                 Inicio
               </Link>
+              
+              <Link to="/quienes-somos" onClick={toggleMobileMenu} className="text-foreground hover:text-lilac-dark py-2 transition-colors flex items-center gap-2">
+                <Info className="h-4 w-4" />
+                Quiénes Somos
+              </Link>
+
               <div className="space-y-2 pl-4">
                 <div className="text-foreground py-2">Productos</div>
                 <button 
