@@ -45,6 +45,7 @@ import ProductImagesUploader from '../components/ProductImagesUploader';
 import ProductDetailModal from '../components/ProductDetailModal';
 import FaqEditor from '../components/admin/FaqEditor';
 import PedidosManager from '../components/admin/PedidosManager';
+import AboutUsEditor from '../components/admin/AboutUsEditor';
 
 const Admin: React.FC = () => {
   const navigate = useNavigate();
@@ -547,6 +548,7 @@ const Admin: React.FC = () => {
             <TabsTrigger value="footer">Pie de página</TabsTrigger>
             <TabsTrigger value="faq">Preguntas Frecuentes</TabsTrigger>
             <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
+            <TabsTrigger value="about">Quiénes Somos</TabsTrigger>
           </TabsList>
           
           <TabsContent value="products" className="space-y-6 animate-fade-in">
@@ -1329,6 +1331,10 @@ const Admin: React.FC = () => {
           
           <TabsContent value="pedidos" className="animate-fade-in">
             <PedidosManager />
+          </TabsContent>
+          
+          <TabsContent value="about" className="animate-fade-in">
+            <AboutUsEditor />
           </TabsContent>
         </Tabs>
       </div>
