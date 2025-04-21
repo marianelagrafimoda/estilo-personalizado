@@ -63,7 +63,6 @@ const Navbar: React.FC = () => {
               to="/quienes-somos" 
               className="text-foreground hover:text-lilac-dark transition-colors flex items-center gap-2"
             >
-              <Info className="h-4 w-4" />
               Quiénes Somos
             </Link>
             
@@ -143,7 +142,6 @@ const Navbar: React.FC = () => {
               </Link>
               
               <Link to="/quienes-somos" onClick={toggleMobileMenu} className="text-foreground hover:text-lilac-dark py-2 transition-colors flex items-center gap-2">
-                <Info className="h-4 w-4" />
                 Quiénes Somos
               </Link>
 

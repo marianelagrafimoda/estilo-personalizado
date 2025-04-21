@@ -145,6 +145,12 @@ export type Database = {
           unique_style_title: string
           updated_at: string | null
           whatsapp_number: string
+          about_us_title: string | null
+          about_us_description: string | null
+          about_us_stats: Json | null
+          privacy_policy_title: string | null
+          privacy_policy_content: string | null
+          privacy_policy_last_updated: string | null
         }
         Insert: {
           carousel_images: Json
@@ -167,6 +173,12 @@ export type Database = {
           unique_style_title: string
           updated_at?: string | null
           whatsapp_number: string
+          about_us_title?: string | null
+          about_us_description?: string | null
+          about_us_stats?: Json | null
+          privacy_policy_title?: string | null
+          privacy_policy_content?: string | null
+          privacy_policy_last_updated?: string | null
         }
         Update: {
           carousel_images?: Json
@@ -189,6 +201,12 @@ export type Database = {
           unique_style_title?: string
           updated_at?: string | null
           whatsapp_number?: string
+          about_us_title?: string | null
+          about_us_description?: string | null
+          about_us_stats?: Json | null
+          privacy_policy_title?: string | null
+          privacy_policy_content?: string | null
+          privacy_policy_last_updated?: string | null
         }
         Relationships: []
       }

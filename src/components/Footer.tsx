@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useSiteInfo } from '../contexts/SiteContext';
@@ -85,6 +84,11 @@ const Footer: React.FC = () => {
               <li>
                 <Link to="/login" className="text-gray-600 hover:text-lilac-dark transition-colors">
                   Iniciar Sesión
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacidad" className="text-gray-600 hover:text-lilac-dark transition-colors">
+                  Política de Privacidad
                 </Link>
               </li>
               {siteInfo.footerCustomLinks && siteInfo.footerCustomLinks.map((link, index) => (

@@ -46,6 +46,7 @@ import ProductDetailModal from '../components/ProductDetailModal';
 import FaqEditor from '../components/admin/FaqEditor';
 import PedidosManager from '../components/admin/PedidosManager';
 import AboutUsEditor from '../components/admin/AboutUsEditor';
+import PrivacyPolicyEditor from '../components/admin/PrivacyPolicyEditor';
 
 const Admin: React.FC = () => {
   const navigate = useNavigate();
@@ -549,6 +550,7 @@ const Admin: React.FC = () => {
             <TabsTrigger value="faq">Preguntas Frecuentes</TabsTrigger>
             <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
             <TabsTrigger value="about">Quiénes Somos</TabsTrigger>
+            <TabsTrigger value="privacy">Política de Privacidad</TabsTrigger>
           </TabsList>
           
           <TabsContent value="products" className="space-y-6 animate-fade-in">
@@ -1335,6 +1337,10 @@ const Admin: React.FC = () => {
           
           <TabsContent value="about" className="animate-fade-in">
             <AboutUsEditor />
+          </TabsContent>
+          
+          <TabsContent value="privacy" className="animate-fade-in">
+            <PrivacyPolicyEditor />
           </TabsContent>
         </Tabs>
       </div>
