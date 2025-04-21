@@ -135,7 +135,7 @@ const Navbar: React.FC = () => {
         </div>
         
         {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-md animate-slide-up">
+          <div className="md:hidden fixed top-[70px] left-0 right-0 bg-white shadow-md z-50 transition-all duration-300 opacity-100 transform translate-y-0">
             <div className="container-custom mx-auto py-4 flex flex-col space-y-4">
               <Link to="/" onClick={toggleMobileMenu} className="text-foreground hover:text-lilac-dark py-2 transition-colors">
                 Inicio
@@ -172,6 +172,32 @@ const Navbar: React.FC = () => {
                   Ver todo
                 </button>
               </div>
+
+              <a 
+                href={`https://wa.me/${siteInfo.whatsappNumber.replace(/\+/g, '')}?text=Quiero%20personalizar%20mi%20propio%20estilo`}
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={toggleMobileMenu}
+                className="text-foreground hover:text-lilac-dark py-2 transition-colors"
+              >
+                Personalización
+              </a>
+
+              {isAuthenticated && isAdmin ? (
+                <Link to="/admin" onClick={toggleMobileMenu} className="text-foreground hover:text-lilac-dark py-2 transition-colors">
+                  Panel de Administración
+                </Link>
+              ) : null}
+              
+              {isAuthenticated ? (
+                <button onClick={() => { logout(); toggleMobileMenu(); }} className="text-foreground hover:text-lilac-dark py-2 transition-colors text-left">
+                  Cerrar Sesión
+                </button>
+              ) : (
+                <Link to="/login" onClick={toggleMobileMenu} className="text-foreground hover:text-lilac-dark py-2 transition-colors">
+                  Iniciar Sesión
+                </Link>
+              )}
             </div>
           </div>
         )}
