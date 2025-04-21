@@ -9,11 +9,13 @@ import TestCookies from './pages/TestCookies';
 import NotFound from './pages/NotFound';
 import { AppProviders } from './AppProviders';
 import CookieConsent from './components/CookieConsent';
+import RouteHandler from './components/RouteHandler';
 import './App.css';
 
 function App() {
   return (
     <AppProviders>
+      <RouteHandler />
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />

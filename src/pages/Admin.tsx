@@ -529,7 +529,7 @@ const Admin: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col" data-admin-panel="true">
       <Navbar />
       <div className="container mx-auto px-4 py-8 flex-grow">
         <div className="mb-8">
